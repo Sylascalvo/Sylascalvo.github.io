@@ -137,7 +137,7 @@
     pointer-events: none;
   }
 
-  .video-bg .yt-frame {
+  .video-bg iframe {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -151,7 +151,7 @@
     transition: opacity 0.8s ease;
   }
 
-  .video-bg .yt-frame.active { opacity: 1; }
+  .video-bg iframe.active { opacity: 1; }
 
   .overlay {
     position: absolute;
@@ -520,7 +520,7 @@
       letter-spacing: 2px;
     }
 
-    .video-bg .yt-frame { width: 300vw; height: 100vh; }
+    .video-bg iframe { width: 300vw; height: 100vh; }
 
     .carousel-arrow { width: 44px; height: 44px; }
     .carousel-arrow svg { width: 18px; height: 18px; }
@@ -565,13 +565,11 @@
 
 <!-- ============ HERO — SHOWREEL ============ -->
 <section class="hero" id="home">
-  <div class="video-bg">
-    <div id="heroPlayer" class="yt-frame active"></div>
-  </div>
+  <div class="video-bg" id="heroBg"></div>
   <div class="overlay"></div>
   <div class="hero-content">
     <h1>SHOWREEL</h1>
-    <a href="https://www.youtube.com/watch?v=1ws4OKBCApQ" target="_blank" id="heroPlayBtn" class="play-btn">
+    <a href="#" target="_blank" id="heroPlayBtn" class="play-btn">
       <div class="play-icon"></div>
       Reproducir video
     </a>
@@ -684,7 +682,6 @@
   <p>© 2026 BaldGames — Ilian Levio. Todos los derechos reservados.</p>
 </footer>
 
-<!-- YouTube IFrame API -->
 <script>
   // ===== Mobile menu =====
   const menuToggle = document.getElementById('menuToggle');
@@ -709,7 +706,7 @@
   });
 
   // ===== VIDEO DATA =====
-  const TARGET_QUALITY = 'hd720';
+  const ytParams = 'autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3&disablekb=1&vq=hd720';
 
   const gameSlides = [
     { id: '1qD6E-9pze0', title: 'Senjiro no Tabi — Trailer' },
@@ -728,108 +725,40 @@
     { id: 'ituye4JSvRI', title: 'Caminata + Escenario' },
   ];
 
-  // Showreel: selección aleatoria de la lista de videojuegos
+  // ===== HERO — Video aleatorio de Videojuegos =====
   const heroRandom = gameSlides[Math.floor(Math.random() * gameSlides.length)];
+  const heroBg = document.getElementById('heroBg');
+  const heroIframe = document.createElement('iframe');
+  heroIframe.src = `https://www.youtube.com/embed/${heroRandom.id}?${ytParams}&playlist=${heroRandom.id}`;
+  heroIframe.allow = 'autoplay; encrypted-media';
+  heroIframe.allowFullscreen = true;
+  heroIframe.classList.add('active');
+  heroBg.appendChild(heroIframe);
   document.getElementById('heroPlayBtn').href = `https://www.youtube.com/watch?v=${heroRandom.id}`;
-
-  // Cargar YouTube IFrame API
-  const tag = document.createElement('script');
-  tag.src = 'https://www.youtube.com/iframe_api';
-  document.head.appendChild(tag);
-
-  // Almacena todos los players
-  const allPlayers = {};
-
-  function createYTPlayer(elementId, videoId, quality, startActive) {
-    return new YT.Player(elementId, {
-      videoId: videoId,
-      playerVars: {
-        autoplay: 1,
-        mute: 1,
-        loop: 1,
-        playlist: videoId,
-        controls: 0,
-        showinfo: 0,
-        rel: 0,
-        modestbranding: 1,
-        playsinline: 1,
-        iv_load_policy: 3,
-        disablekb: 1,
-        origin: window.location.origin,
-      },
-      events: {
-        onReady: function(e) {
-          const iframe = e.target.getIframe();
-          iframe.classList.add('yt-frame');
-          if (startActive) iframe.classList.add('active');
-          e.target.setPlaybackQuality(quality);
-          e.target.playVideo();
-        },
-        onStateChange: function(e) {
-          if (e.data === YT.PlayerState.PLAYING) {
-            e.target.setPlaybackQuality(quality);
-          }
-        },
-        onPlaybackQualityChange: function(e) {
-          if (e.data !== quality) {
-            e.target.setPlaybackQuality(quality);
-          }
-        }
-      }
-    });
-  }
-
-  // Cuando la API esté lista, crear todos los players
-  function onYouTubeIframeAPIReady() {
-    // Hero player — video aleatorio
-    allPlayers.hero = createYTPlayer('heroPlayer', heroRandom.id, TARGET_QUALITY, true);
-
-    // Carrusel Videojuegos
-    initCarousel({
-      slides: gameSlides,
-      bgId: 'gameCarouselBg',
-      titleId: 'gameSlideTitle',
-      btnId: 'gameSlideBtn',
-      dotsId: 'gameDots',
-      prevId: 'gamePrev',
-      nextId: 'gameNext',
-      prefix: 'game',
-    });
-
-    // Carrusel Animación
-    initCarousel({
-      slides: animSlides,
-      bgId: 'carouselBg',
-      titleId: 'slideTitle',
-      btnId: 'slidePlayBtn',
-      dotsId: 'carouselDots',
-      prevId: 'prevSlide',
-      nextId: 'nextSlide',
-      prefix: 'anim',
-    });
-  }
 
   // ===== CAROUSEL FACTORY =====
   function initCarousel(config) {
-    const { slides, bgId, titleId, btnId, dotsId, prevId, nextId, prefix } = config;
+    const { slides, bgId, titleId, btnId, dotsId, prevId, nextId } = config;
     let cur = 0;
     const bg = document.getElementById(bgId);
     const title = document.getElementById(titleId);
     const btn = document.getElementById(btnId);
     const dots = document.getElementById(dotsId);
-    const players = [];
+    const iframes = [];
 
     slides.forEach((s, i) => {
-      // Crear div placeholder para cada player
-      const div = document.createElement('div');
-      div.id = `${prefix}Player${i}`;
-      div.classList.add('yt-frame');
-      if (i === 0) div.classList.add('active');
-      bg.appendChild(div);
-
-      // Crear YT player
-      const player = createYTPlayer(div.id, s.id, TARGET_QUALITY, i === 0);
-      players.push(player);
+      // Solo crear iframe del primer slide, los demás se crean bajo demanda
+      const iframe = document.createElement('iframe');
+      if (i === 0) {
+        iframe.src = `https://www.youtube.com/embed/${s.id}?${ytParams}&playlist=${s.id}`;
+        iframe.classList.add('active');
+      }
+      iframe.allow = 'autoplay; encrypted-media';
+      iframe.allowFullscreen = true;
+      iframe.title = s.title;
+      iframe.dataset.videoId = s.id;
+      bg.appendChild(iframe);
+      iframes.push(iframe);
 
       // Dot
       const dot = document.createElement('button');
@@ -843,23 +772,18 @@
     function goTo(index) {
       if (index === cur) return;
 
-      // Buscar iframes por ID
-      const curEl = document.getElementById(`${prefix}Player${cur}`);
-      const newEl = document.getElementById(`${prefix}Player${index}`);
-
-      if (curEl) curEl.classList.remove('active');
-      dots.children[cur]?.classList.remove('active');
+      iframes[cur].classList.remove('active');
+      dots.children[cur].classList.remove('active');
 
       cur = index;
 
-      if (newEl) newEl.classList.add('active');
-      dots.children[cur]?.classList.add('active');
-
-      // Re-forzar calidad en el slide activo
-      if (players[cur] && players[cur].setPlaybackQuality) {
-        players[cur].setPlaybackQuality(TARGET_QUALITY);
-        players[cur].playVideo();
+      // Lazy load: cargar src si no tiene
+      if (!iframes[cur].src || iframes[cur].src === 'about:blank' || !iframes[cur].src.includes('youtube')) {
+        iframes[cur].src = `https://www.youtube.com/embed/${slides[cur].id}?${ytParams}&playlist=${slides[cur].id}`;
       }
+
+      iframes[cur].classList.add('active');
+      dots.children[cur].classList.add('active');
 
       title.style.opacity = '0';
       setTimeout(() => {
@@ -876,6 +800,27 @@
       goTo(cur === slides.length - 1 ? 0 : cur + 1)
     );
   }
+
+  // ===== INIT CAROUSELS =====
+  initCarousel({
+    slides: gameSlides,
+    bgId: 'gameCarouselBg',
+    titleId: 'gameSlideTitle',
+    btnId: 'gameSlideBtn',
+    dotsId: 'gameDots',
+    prevId: 'gamePrev',
+    nextId: 'gameNext',
+  });
+
+  initCarousel({
+    slides: animSlides,
+    bgId: 'carouselBg',
+    titleId: 'slideTitle',
+    btnId: 'slidePlayBtn',
+    dotsId: 'carouselDots',
+    prevId: 'prevSlide',
+    nextId: 'nextSlide',
+  });
 </script>
 </body>
 </html>
