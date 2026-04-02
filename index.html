@@ -16,7 +16,6 @@
     --text-primary: #ffffff;
     --text-secondary: #b0b0b0;
     --accent: #3b82f6;
-    --accent-hover: #2563eb;
     --nav-height: 70px;
   }
 
@@ -106,7 +105,7 @@
     transition: 0.3s;
   }
 
-  /* ============ HERO ============ */
+  /* ============ HERO CON YOUTUBE BG ============ */
   .hero {
     position: relative;
     height: 100vh;
@@ -121,12 +120,19 @@
     position: absolute;
     inset: 0;
     overflow: hidden;
+    pointer-events: none;
   }
 
-  .hero-video-bg iframe,
-  .hero-video-bg video {
-    width: 100%; height: 100%;
-    object-fit: cover;
+  .hero-video-bg iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120vw;
+    height: 120vh;
+    min-width: 120%;
+    min-height: 120%;
+    transform: translate(-50%, -50%);
+    border: none;
   }
 
   .hero-overlay {
@@ -134,11 +140,12 @@
     inset: 0;
     background: linear-gradient(
       to bottom,
-      rgba(10,10,10,0.4) 0%,
-      rgba(10,10,10,0.2) 40%,
+      rgba(10,10,10,0.5) 0%,
+      rgba(10,10,10,0.25) 40%,
       rgba(10,10,10,0.6) 80%,
       rgba(10,10,10,1) 100%
     );
+    z-index: 1;
   }
 
   .hero-content {
@@ -205,9 +212,7 @@
     gap: 8px;
   }
 
-  .hero-cta:hover {
-    background: rgba(255,255,255,0.14);
-  }
+  .hero-cta:hover { background: rgba(255,255,255,0.14); }
 
   /* ============ BIO INTRO ============ */
   .bio-intro {
@@ -340,9 +345,7 @@
     margin-bottom: 16px;
   }
 
-  .video-placeholder .play-circle .play-icon {
-    margin-left: 4px;
-  }
+  .video-placeholder .play-circle .play-icon { margin-left: 4px; }
 
   .video-placeholder span {
     font-family: 'Oswald', sans-serif;
@@ -366,54 +369,7 @@
     cursor: pointer;
   }
 
-  .btn-all-videos:hover {
-    background: rgba(255,255,255,0.12);
-  }
-
-  /* ============ BIO PAGE ============ */
-  .bio-full {
-    padding: 120px 40px 80px;
-    max-width: 700px;
-  }
-
-  .bio-full .label {
-    font-family: 'Oswald', sans-serif;
-    font-size: 1rem;
-    font-style: italic;
-    font-weight: 300;
-    margin-bottom: 6px;
-  }
-
-  .bio-full h2 {
-    font-family: 'Oswald', sans-serif;
-    font-size: 2.2rem;
-    font-weight: 400;
-    margin-bottom: 36px;
-  }
-
-  .bio-full p {
-    font-size: 1.1rem;
-    line-height: 1.9;
-    color: var(--text-secondary);
-    margin-bottom: 24px;
-  }
-
-  .linkedin-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--text-primary);
-    text-decoration: none;
-    font-family: 'Oswald', sans-serif;
-    font-size: 1rem;
-    letter-spacing: 1.5px;
-    margin-top: 20px;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.3);
-    transition: border-color 0.3s, gap 0.3s;
-  }
-
-  .linkedin-btn:hover { border-color: var(--text-primary); gap: 16px; }
+  .btn-all-videos:hover { background: rgba(255,255,255,0.12); }
 
   /* ============ CONTACT ============ */
   .contact-section {
@@ -493,17 +449,14 @@
     }
 
     .nav-links.active { display: flex; }
-
     .menu-toggle { display: flex; }
 
     .hero-content h1 { font-size: 2.8rem; letter-spacing: 6px; }
+    .hero-video-bg iframe { width: 300vw; height: 100vh; }
 
     .categories { grid-template-columns: 1fr; }
-
-    .bio-intro, .bio-full { padding: 80px 24px 60px; }
-
+    .bio-intro { padding: 80px 24px 60px; }
     .video-section h2 { font-size: 2rem; }
-
     .contact-links { flex-direction: column; align-items: center; }
   }
 
@@ -524,7 +477,7 @@
 
 <!-- NAVBAR -->
 <nav>
-  <a href="#home" class="logo">
+  <a href="index.html" class="logo">
     <div class="logo-icon">BG</div>
     BALDGAMES
   </a>
@@ -532,7 +485,7 @@
     <li><a href="#videojuegos">Videojuegos</a></li>
     <li><a href="#animacion">Animación</a></li>
     <li><a href="#trailer">Trailer</a></li>
-    <li><a href="#bio">Bio</a></li>
+    <li><a href="bio.html">Bio</a></li>
     <li><a href="#contacto">Contacto</a></li>
   </ul>
   <button class="menu-toggle" id="menuToggle" aria-label="Menú">
@@ -540,27 +493,20 @@
   </button>
 </nav>
 
-<!-- HERO -->
+<!-- HERO CON YOUTUBE VIDEO BACKGROUND -->
 <section class="hero" id="home">
   <div class="hero-video-bg">
-    <!-- REEMPLAZA con tu video de YouTube o archivo local -->
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#0d1b2a 0%,#1b2838 30%,#2d4a3e 60%,#415d43 100%);display:flex;align-items:center;justify-content:center;">
-      <span style="font-family:Oswald;font-size:1rem;letter-spacing:3px;color:rgba(255,255,255,0.3);">VIDEO BACKGROUND — Reemplazar con tu video</span>
-    </div>
-    <!--
-    Opción YouTube:
-    <iframe src="https://www.youtube.com/embed/TU_VIDEO_ID?autoplay=1&mute=1&loop=1&playlist=TU_VIDEO_ID&controls=0&showinfo=0" allow="autoplay" allowfullscreen></iframe>
-
-    Opción local:
-    <video autoplay muted loop playsinline>
-      <source src="assets/videos/trailer.mp4" type="video/mp4">
-    </video>
-    -->
+    <iframe
+      src="https://www.youtube.com/embed/1ws4OKBCApQ?autoplay=1&mute=1&loop=1&playlist=1ws4OKBCApQ&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3&disablekb=1"
+      allow="autoplay; encrypted-media"
+      allowfullscreen
+      title="Background Video"
+    ></iframe>
   </div>
   <div class="hero-overlay"></div>
   <div class="hero-content">
     <h1>TRAILER</h1>
-    <a href="#trailer" class="play-btn">
+    <a href="https://www.youtube.com/watch?v=1ws4OKBCApQ" target="_blank" class="play-btn">
       <div class="play-icon"></div>
       Reproducir video
     </a>
@@ -574,7 +520,7 @@
   <h2>Ilian Levio</h2>
   <h3>Estudiante en Ingeniería en Realidad Virtual y Diseño de videojuegos</h3>
   <p>En la actualidad, me desenvuelvo en el modelado, rigging y animación, así como en la programación en diversos lenguajes. En este portafolio, presentaré un resumen de mis proyectos durante mi periodo académico, como en una certificación en Unreal Engine que completé.</p>
-  <a href="#bio" class="read-more">Leer más →</a>
+  <a href="bio.html" class="read-more">Leer más →</a>
 </section>
 
 <!-- CATEGORIES -->
@@ -594,14 +540,10 @@
   <p class="section-label">N A R R A T I V A</p>
   <h2>VIDEOJUEGOS</h2>
   <div class="video-container">
-    <div class="video-placeholder" onclick="this.innerHTML='<iframe src=\'https://www.youtube.com/embed/TU_VIDEO_ID?autoplay=1\' allow=\'autoplay\' allowfullscreen></iframe>'">
+    <div class="video-placeholder" onclick="this.outerHTML='<iframe src=&quot;https://www.youtube.com/embed/TU_VIDEO_ID?autoplay=1&quot; allow=&quot;autoplay; encrypted-media&quot; allowfullscreen></iframe>'">
       <div class="play-circle"><div class="play-icon"></div></div>
       <span>Reproducir video</span>
     </div>
-    <!--
-    Reemplaza TU_VIDEO_ID con el ID de tu video de YouTube
-    o usa: <iframe src="https://www.youtube.com/embed/VIDEO_ID"></iframe>
-    -->
   </div>
   <a href="#" class="btn-all-videos">Todos los videos +</a>
 </section>
@@ -611,7 +553,7 @@
   <p class="section-label">C O M E R C I A L</p>
   <h2>MODELADO / ANIMACIÓN</h2>
   <div class="video-container">
-    <div class="video-placeholder" onclick="this.innerHTML='<iframe src=\'https://www.youtube.com/embed/TU_VIDEO_ID_2?autoplay=1\' allow=\'autoplay\' allowfullscreen></iframe>'">
+    <div class="video-placeholder" onclick="this.outerHTML='<iframe src=&quot;https://www.youtube.com/embed/TU_VIDEO_ID_2?autoplay=1&quot; allow=&quot;autoplay; encrypted-media&quot; allowfullscreen></iframe>'">
       <div class="play-circle"><div class="play-icon"></div></div>
       <span>Reproducir video</span>
     </div>
@@ -624,22 +566,13 @@
   <p class="section-label">S H O W R E E L</p>
   <h2>TRAILER</h2>
   <div class="video-container">
-    <div class="video-placeholder" onclick="this.innerHTML='<iframe src=\'https://www.youtube.com/embed/TU_VIDEO_ID_3?autoplay=1\' allow=\'autoplay\' allowfullscreen></iframe>'">
-      <div class="play-circle"><div class="play-icon"></div></div>
-      <span>Reproducir video</span>
-    </div>
+    <iframe
+      src="https://www.youtube.com/embed/1ws4OKBCApQ"
+      allow="autoplay; encrypted-media"
+      allowfullscreen
+      title="Trailer"
+    ></iframe>
   </div>
-</section>
-
-<!-- BIO -->
-<section class="bio-full fade-in" id="bio">
-  <p class="label"><em>Sobre mí</em></p>
-  <h2>Creador digital y programador.</h2>
-  <p>Soy Ilian Levio, Ingeniero en Realidad Virtual y Diseño de Juegos Digitales, Chile. Poseo un certificado de Unreal Engine Fundamentals otorgado por CRTIC y experiencia en el desarrollo de videojuegos con Unity y Unreal.</p>
-  <p>Mis habilidades incluyen programación en C#, C++, Python, HTML y CSS, con conocimientos básicos de bases de datos. Graduado de un colegio técnico en telecomunicaciones, tengo experiencia en software y servicio técnico. Estoy comprometido con mi crecimiento profesional en la industria de los videojuegos.</p>
-  <a href="https://www.linkedin.com/in/tu-perfil/" target="_blank" class="linkedin-btn">
-    LinkedIn →
-  </a>
 </section>
 
 <!-- CONTACTO -->
@@ -671,34 +604,25 @@
   // Mobile menu toggle
   const menuToggle = document.getElementById('menuToggle');
   const navLinks = document.getElementById('navLinks');
-  menuToggle.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-  });
-
-  // Close menu on link click
-  navLinks.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => navLinks.classList.remove('active'));
-  });
+  menuToggle.addEventListener('click', () => navLinks.classList.toggle('active'));
+  navLinks.querySelectorAll('a').forEach(link =>
+    link.addEventListener('click', () => navLinks.classList.remove('active'))
+  );
 
   // Scroll animations
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
+      if (entry.isIntersecting) entry.target.classList.add('visible');
     });
   }, { threshold: 0.15 });
-
   document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-  // Navbar background on scroll
+  // Navbar solid on scroll
   const nav = document.querySelector('nav');
   window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-      nav.style.background = 'rgba(10,10,10,0.98)';
-    } else {
-      nav.style.background = 'rgba(10,10,10,0.92)';
-    }
+    nav.style.background = window.scrollY > 50
+      ? 'rgba(10,10,10,0.98)'
+      : 'rgba(10,10,10,0.92)';
   });
 </script>
 </body>
