@@ -143,9 +143,10 @@
     inset: 0;
     background: linear-gradient(
       to bottom,
-      rgba(10,10,10,0.5) 0%,
-      rgba(10,10,10,0.25) 40%,
-      rgba(10,10,10,0.6) 80%,
+      rgba(10,10,10,0.85) 0%,
+      rgba(10,10,10,0.3) 25%,
+      rgba(10,10,10,0.2) 50%,
+      rgba(10,10,10,0.4) 75%,
       rgba(10,10,10,1) 100%
     );
     z-index: 1;
@@ -463,23 +464,37 @@
 
   /* ============ SECTION DIVIDER ============ */
   .section-divider {
-    height: 120px;
-    background: linear-gradient(
-      to bottom,
-      rgba(10,10,10,1) 0%,
-      rgba(20,20,20,1) 40%,
-      rgba(20,20,20,1) 60%,
-      rgba(10,10,10,1) 100%
-    );
+    height: 180px;
+    background: var(--bg-primary);
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
+  .section-divider::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.6), rgba(10,10,10,1));
+    pointer-events: none;
+  }
+
+  .section-divider::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(to top, rgba(10,10,10,0.6), rgba(10,10,10,1));
+    pointer-events: none;
+  }
+
   .divider-line {
     width: 60px;
     height: 1px;
-    background: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.1);
+    z-index: 1;
   }
 
   /* ============ CONTACT ============ */
