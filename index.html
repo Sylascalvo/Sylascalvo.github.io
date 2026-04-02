@@ -638,17 +638,31 @@
   </a>
 </section>
 
-<!-- ============ VIDEOJUEGOS ============ -->
-<section class="video-section" id="videojuegos">
-  <p class="section-label">N A R R A T I V A</p>
-  <h2>VIDEOJUEGOS</h2>
-  <div class="video-container">
-    <div class="video-placeholder" onclick="this.outerHTML='<iframe src=&quot;https://www.youtube.com/embed/TU_VIDEO_ID?autoplay=1&quot; allow=&quot;autoplay; encrypted-media&quot; allowfullscreen></iframe>'">
-      <div class="play-circle"><div class="play-icon"></div></div>
-      <span>Reproducir video</span>
-    </div>
+<!-- ============ VIDEOJUEGOS — CARRUSEL ============ -->
+<section class="carousel-section" id="videojuegos">
+  <div class="video-bg" id="gameCarouselBg"></div>
+  <div class="overlay"></div>
+
+  <div class="carousel-nav">
+    <button class="carousel-arrow" id="gamePrev" aria-label="Anterior">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="carousel-arrow" id="gameNext" aria-label="Siguiente">
+      <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
+    </button>
   </div>
-  <a href="#" class="btn-all-videos">Todos los videos +</a>
+
+  <div class="carousel-content">
+    <p class="section-label" style="letter-spacing:8px;color:var(--text-secondary);margin-bottom:12px;">N A R R A T I V A</p>
+    <h1>VIDEOJUEGOS</h1>
+    <p class="slide-title" id="gameSlideTitle">Senjiro no Tabi — Trailer</p>
+    <a id="gameSlideBtn" href="https://www.youtube.com/watch?v=1qD6E-9pze0" target="_blank" class="play-btn">
+      <div class="play-icon"></div>
+      Reproducir video
+    </a>
+  </div>
+
+  <div class="carousel-dots" id="gameDots"></div>
 </section>
 
 <!-- ============ MODELADO / ANIMACIÓN — CARRUSEL ============ -->
@@ -729,78 +743,89 @@
       : 'rgba(10,10,10,0.92)';
   });
 
-  // ===== CAROUSEL =====
-  const slides = [
-    { id: '_Al5tvHPh1Q', title: 'Caminata' },
-    { id: 'ZfHPRWWBAtE', title: 'Animación Fuerza y Peso' },
-    { id: 'tEFwSOiEmTk', title: 'Fuerza y Peso + HUD' },
-    { id: 'NaXQp7j5xnw', title: 'Levantamiento de Silla y Salto' },
-    { id: 'J58cn4Nv3yA', title: 'Patada de Taekwondo' },
-    { id: 'ituye4JSvRI', title: 'Caminata + Escenario' },
-  ];
-
-  let current = 0;
-  const bgContainer = document.getElementById('carouselBg');
-  const slideTitle = document.getElementById('slideTitle');
-  const slidePlayBtn = document.getElementById('slidePlayBtn');
-  const dotsContainer = document.getElementById('carouselDots');
-
-  // Build iframes for all slides
+  // ===== CAROUSEL FACTORY =====
   const ytParams = 'autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3&disablekb=1';
 
-  slides.forEach((slide, i) => {
-    // iframe
-    const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube.com/embed/${slide.id}?${ytParams}&playlist=${slide.id}`;
-    iframe.allow = 'autoplay; encrypted-media';
-    iframe.allowFullscreen = true;
-    iframe.title = slide.title;
-    if (i === 0) iframe.classList.add('active');
-    bgContainer.appendChild(iframe);
+  function initCarousel(config) {
+    const { slides, bgId, titleId, btnId, dotsId, prevId, nextId } = config;
+    let cur = 0;
+    const bg = document.getElementById(bgId);
+    const title = document.getElementById(titleId);
+    const btn = document.getElementById(btnId);
+    const dots = document.getElementById(dotsId);
 
-    // dot
-    const dot = document.createElement('button');
-    dot.classList.add('carousel-dot');
-    if (i === 0) dot.classList.add('active');
-    dot.setAttribute('aria-label', slide.title);
-    dot.addEventListener('click', () => goTo(i));
-    dotsContainer.appendChild(dot);
-  });
+    slides.forEach((s, i) => {
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube.com/embed/${s.id}?${ytParams}&playlist=${s.id}`;
+      iframe.allow = 'autoplay; encrypted-media';
+      iframe.allowFullscreen = true;
+      iframe.title = s.title;
+      if (i === 0) iframe.classList.add('active');
+      bg.appendChild(iframe);
 
-  function goTo(index) {
-    if (index === current) return;
+      const dot = document.createElement('button');
+      dot.classList.add('carousel-dot');
+      if (i === 0) dot.classList.add('active');
+      dot.setAttribute('aria-label', s.title);
+      dot.addEventListener('click', () => goTo(i));
+      dots.appendChild(dot);
+    });
 
-    // Fade out current
-    bgContainer.children[current].classList.remove('active');
-    dotsContainer.children[current].classList.remove('active');
+    function goTo(index) {
+      if (index === cur) return;
+      bg.children[cur].classList.remove('active');
+      dots.children[cur].classList.remove('active');
+      cur = index;
+      bg.children[cur].classList.add('active');
+      dots.children[cur].classList.add('active');
+      title.style.opacity = '0';
+      setTimeout(() => {
+        title.textContent = slides[cur].title;
+        btn.href = `https://www.youtube.com/watch?v=${slides[cur].id}`;
+        title.style.opacity = '1';
+      }, 300);
+    }
 
-    current = index;
-
-    // Fade in new
-    bgContainer.children[current].classList.add('active');
-    dotsContainer.children[current].classList.add('active');
-
-    // Update text & link
-    slideTitle.style.opacity = '0';
-    setTimeout(() => {
-      slideTitle.textContent = slides[current].title;
-      slidePlayBtn.href = `https://www.youtube.com/watch?v=${slides[current].id}`;
-      slideTitle.style.opacity = '1';
-    }, 300);
+    document.getElementById(prevId).addEventListener('click', () =>
+      goTo(cur === 0 ? slides.length - 1 : cur - 1)
+    );
+    document.getElementById(nextId).addEventListener('click', () =>
+      goTo(cur === slides.length - 1 ? 0 : cur + 1)
+    );
   }
 
-  document.getElementById('prevSlide').addEventListener('click', () => {
-    goTo(current === 0 ? slides.length - 1 : current - 1);
+  // ===== VIDEOJUEGOS CAROUSEL =====
+  initCarousel({
+    slides: [
+      { id: '1qD6E-9pze0', title: 'Senjiro no Tabi — Trailer' },
+      { id: 'CF7nloSvmls', title: 'Hikari — Gameplay' },
+      { id: '3H3O5QOmq4w', title: 'Soulless Odyssey — Gameplay' },
+      { id: '835pa7-75Ig', title: 'VR VideoVolumétrico — Ithaca Company' },
+    ],
+    bgId: 'gameCarouselBg',
+    titleId: 'gameSlideTitle',
+    btnId: 'gameSlideBtn',
+    dotsId: 'gameDots',
+    prevId: 'gamePrev',
+    nextId: 'gameNext',
   });
 
-  document.getElementById('nextSlide').addEventListener('click', () => {
-    goTo(current === slides.length - 1 ? 0 : current + 1);
-  });
-
-  // Keyboard arrows
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') document.getElementById('prevSlide').click();
-    if (e.key === 'ArrowRight') document.getElementById('nextSlide').click();
+  // ===== ANIMACIÓN CAROUSEL =====
+  initCarousel({
+    slides: [
+      { id: '_Al5tvHPh1Q', title: 'Caminata' },
+      { id: 'ZfHPRWWBAtE', title: 'Animación Fuerza y Peso' },
+      { id: 'tEFwSOiEmTk', title: 'Fuerza y Peso + HUD' },
+      { id: 'NaXQp7j5xnw', title: 'Levantamiento de Silla y Salto' },
+      { id: 'J58cn4Nv3yA', title: 'Patada de Taekwondo' },
+      { id: 'ituye4JSvRI', title: 'Caminata + Escenario' },
+    ],
+    bgId: 'carouselBg',
+    titleId: 'slideTitle',
+    btnId: 'slidePlayBtn',
+    dotsId: 'carouselDots',
+    prevId: 'prevSlide',
+    nextId: 'nextSlide',
   });
 </script>
 </body>
