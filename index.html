@@ -875,25 +875,6 @@
     document.getElementById(nextId).addEventListener('click', () =>
       goTo(cur === slides.length - 1 ? 0 : cur + 1)
     );
-
-    // En móvil: pausar/reanudar al entrar/salir de vista
-    if (isMobile) {
-      const section = bg.closest('.carousel-section');
-      if (section) {
-        const visObs = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            const p = players[cur];
-            if (!p || !p.pauseVideo) return;
-            if (entry.isIntersecting) {
-              p.playVideo();
-            } else {
-              p.pauseVideo();
-            }
-          });
-        }, { threshold: 0.1 });
-        visObs.observe(section);
-      }
-    }
   }
 </script>
 </body>
