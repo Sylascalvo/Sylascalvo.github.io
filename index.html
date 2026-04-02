@@ -33,14 +33,23 @@
     position: fixed;
     top: 0; left: 0; right: 0;
     height: var(--nav-height);
-    background: rgba(10,10,10,0.92);
-    backdrop-filter: blur(12px);
+    background: rgba(10,10,10,0.75);
+    backdrop-filter: blur(14px);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 40px;
     z-index: 1000;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: none;
+  }
+
+  nav::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 12px;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.3), transparent);
+    pointer-events: none;
   }
 
   .logo {
@@ -787,8 +796,8 @@
   const nav = document.querySelector('nav');
   window.addEventListener('scroll', () => {
     nav.style.background = window.scrollY > 50
-      ? 'rgba(10,10,10,0.98)'
-      : 'rgba(10,10,10,0.92)';
+      ? 'rgba(10,10,10,0.88)'
+      : 'rgba(10,10,10,0.75)';
   });
 
   // ===== CAROUSEL FACTORY =====
