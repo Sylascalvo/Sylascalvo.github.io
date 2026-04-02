@@ -571,7 +571,7 @@
   <div class="overlay"></div>
   <div class="hero-content">
     <h1>SHOWREEL</h1>
-    <a href="https://www.youtube.com/watch?v=1ws4OKBCApQ" target="_blank" class="play-btn">
+    <a href="https://www.youtube.com/watch?v=1ws4OKBCApQ" target="_blank" id="heroPlayBtn" class="play-btn">
       <div class="play-icon"></div>
       Reproducir video
     </a>
@@ -708,8 +708,29 @@
       : 'rgba(10,10,10,0.75)';
   });
 
-  // ===== YOUTUBE API =====
-  const TARGET_QUALITY = 'hd720'; // opciones: small, medium, large, hd720, hd1080, highres
+  // ===== VIDEO DATA =====
+  const TARGET_QUALITY = 'hd720';
+
+  const gameSlides = [
+    { id: '1qD6E-9pze0', title: 'Senjiro no Tabi — Trailer' },
+    { id: 'CF7nloSvmls', title: 'Hikari — Gameplay' },
+    { id: '3H3O5QOmq4w', title: 'Soulless Odyssey — Gameplay' },
+    { id: '835pa7-75Ig', title: 'VR VideoVolumétrico — Ithaca Company' },
+    { id: '1ws4OKBCApQ', title: 'Escenario 360 Unity' },
+  ];
+
+  const animSlides = [
+    { id: '_Al5tvHPh1Q', title: 'Caminata' },
+    { id: 'ZfHPRWWBAtE', title: 'Animación Fuerza y Peso' },
+    { id: 'tEFwSOiEmTk', title: 'Fuerza y Peso + HUD' },
+    { id: 'NaXQp7j5xnw', title: 'Levantamiento de Silla y Salto' },
+    { id: 'J58cn4Nv3yA', title: 'Patada de Taekwondo' },
+    { id: 'ituye4JSvRI', title: 'Caminata + Escenario' },
+  ];
+
+  // Showreel: selección aleatoria de la lista de videojuegos
+  const heroRandom = gameSlides[Math.floor(Math.random() * gameSlides.length)];
+  document.getElementById('heroPlayBtn').href = `https://www.youtube.com/watch?v=${heroRandom.id}`;
 
   // Cargar YouTube IFrame API
   const tag = document.createElement('script');
@@ -760,17 +781,12 @@
 
   // Cuando la API esté lista, crear todos los players
   function onYouTubeIframeAPIReady() {
-    // Hero player
-    allPlayers.hero = createYTPlayer('heroPlayer', '1ws4OKBCApQ', TARGET_QUALITY, true);
+    // Hero player — video aleatorio
+    allPlayers.hero = createYTPlayer('heroPlayer', heroRandom.id, TARGET_QUALITY, true);
 
-    // Iniciar carruseles
+    // Carrusel Videojuegos
     initCarousel({
-      slides: [
-        { id: '1qD6E-9pze0', title: 'Senjiro no Tabi — Trailer' },
-        { id: 'CF7nloSvmls', title: 'Hikari — Gameplay' },
-        { id: '3H3O5QOmq4w', title: 'Soulless Odyssey — Gameplay' },
-        { id: '835pa7-75Ig', title: 'VR VideoVolumétrico — Ithaca Company' },
-      ],
+      slides: gameSlides,
       bgId: 'gameCarouselBg',
       titleId: 'gameSlideTitle',
       btnId: 'gameSlideBtn',
@@ -780,15 +796,9 @@
       prefix: 'game',
     });
 
+    // Carrusel Animación
     initCarousel({
-      slides: [
-        { id: '_Al5tvHPh1Q', title: 'Caminata' },
-        { id: 'ZfHPRWWBAtE', title: 'Animación Fuerza y Peso' },
-        { id: 'tEFwSOiEmTk', title: 'Fuerza y Peso + HUD' },
-        { id: 'NaXQp7j5xnw', title: 'Levantamiento de Silla y Salto' },
-        { id: 'J58cn4Nv3yA', title: 'Patada de Taekwondo' },
-        { id: 'ituye4JSvRI', title: 'Caminata + Escenario' },
-      ],
+      slides: animSlides,
       bgId: 'carouselBg',
       titleId: 'slideTitle',
       btnId: 'slidePlayBtn',
