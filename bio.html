@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B I O | BaldGames Portafolio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #111111;
+    --bg-card: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --accent: #3b82f6;
+    --nav-height: 70px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  /* ============ NAVBAR ============ */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--nav-height);
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .logo {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+    color: var(--text-primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: var(--text-primary);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    color: var(--bg-primary);
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+
+  .nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 400;
+    font-size: 0.85rem;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    transition: color 0.3s;
+    position: relative;
+  }
+
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 0; height: 2px;
+    background: var(--accent);
+    transition: width 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--text-primary); }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-links a.active { color: var(--text-primary); }
+  .nav-links a.active::after { width: 100%; }
+
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: none; border: none;
+  }
+  .menu-toggle span {
+    width: 26px; height: 2px;
+    background: var(--text-primary);
+    transition: 0.3s;
+  }
+
+  /* ============ BIO PAGE ============ */
+  .bio-page {
+    min-height: 100vh;
+    padding: 140px 40px 80px;
+    max-width: 760px;
+  }
+
+  .bio-page .label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    font-weight: 300;
+    margin-bottom: 8px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+
+  .bio-page h1 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 2.6rem;
+    font-weight: 400;
+    margin-bottom: 48px;
+    line-height: 1.3;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.4s forwards;
+  }
+
+  .bio-text {
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.6s forwards;
+  }
+
+  .bio-text p {
+    font-size: 1.15rem;
+    line-height: 2;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+  }
+
+  /* ============ SKILLS ============ */
+  .skills-section {
+    margin-top: 50px;
+    padding-top: 50px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.8s forwards;
+  }
+
+  .skills-section h3 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 4px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .skill-tag {
+    padding: 10px 22px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 1.5px;
+    color: var(--text-primary);
+    transition: all 0.3s;
+  }
+
+  .skill-tag:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+  }
+
+  /* ============ LINKS ============ */
+  .bio-links {
+    margin-top: 50px;
+    padding-top: 50px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 1s forwards;
+  }
+
+  .bio-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-family: 'Oswald', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 1.5px;
+    padding: 14px 28px;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.3s;
+  }
+
+  .bio-link:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.5);
+    gap: 16px;
+  }
+
+  .bio-link svg { width: 20px; height: 20px; }
+
+  /* ============ FOOTER ============ */
+  footer {
+    padding: 40px;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin-top: 60px;
+  }
+
+  footer p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+  }
+
+  /* ============ ANIMATIONS ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(25px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+
+    .nav-links {
+      display: none;
+      position: absolute;
+      top: var(--nav-height);
+      left: 0; right: 0;
+      background: rgba(10,10,10,0.97);
+      flex-direction: column;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    .nav-links.active { display: flex; }
+    .menu-toggle { display: flex; }
+
+    .bio-page {
+      padding: 110px 24px 60px;
+    }
+
+    .bio-page h1 { font-size: 2rem; }
+
+    .bio-links { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-icon">BG</div>
+    BALDGAMES
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html#videojuegos">Videojuegos</a></li>
+    <li><a href="index.html#animacion">Animación</a></li>
+    <li><a href="index.html#trailer">Trailer</a></li>
+    <li><a href="bio.html" class="active">Bio</a></li>
+    <li><a href="index.html#contacto">Contacto</a></li>
+  </ul>
+  <button class="menu-toggle" id="menuToggle" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- BIO -->
+<main class="bio-page">
+  <p class="label"><em>Sobre mí</em></p>
+  <h1>Creador digital y programador.</h1>
+
+  <div class="bio-text">
+    <p>Soy Ilian Levio, Ingeniero en Realidad Virtual y Diseño de Juegos Digitales, Chile. Poseo un certificado de Unreal Engine Fundamentals otorgado por CRTIC y experiencia en el desarrollo de videojuegos con Unity y Unreal.</p>
+
+    <p>Mis habilidades incluyen programación en C#, C++, Python, HTML y CSS, con conocimientos básicos de bases de datos. Graduado de un colegio técnico en telecomunicaciones, tengo experiencia en software y servicio técnico. Estoy comprometido con mi crecimiento profesional en la industria de los videojuegos.</p>
+  </div>
+
+  <!-- SKILLS -->
+  <div class="skills-section">
+    <h3>H A B I L I D A D E S</h3>
+    <div class="skills-grid">
+      <span class="skill-tag">Unreal Engine</span>
+      <span class="skill-tag">Unity</span>
+      <span class="skill-tag">C#</span>
+      <span class="skill-tag">C++</span>
+      <span class="skill-tag">Python</span>
+      <span class="skill-tag">HTML / CSS</span>
+      <span class="skill-tag">Modelado 3D</span>
+      <span class="skill-tag">Rigging</span>
+      <span class="skill-tag">Animación</span>
+      <span class="skill-tag">Bases de datos</span>
+    </div>
+  </div>
+
+  <!-- LINKS -->
+  <div class="bio-links">
+    <a href="https://www.linkedin.com/in/tu-perfil/" target="_blank" class="bio-link">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      LinkedIn →
+    </a>
+    <a href="assets/pdf/CV_Ilian_Levio.pdf" download class="bio-link">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6zm5-7.5l-3.5 3.5 1.41 1.41L11 15.33V21h2v-5.67l2.09 2.08L16.5 16 12 11.5l-1 1z"/></svg>
+      Descargar CV
+    </a>
+    <a href="mailto:tu@email.com" class="bio-link">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      Email →
+    </a>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 BaldGames — Ilian Levio. Todos los derechos reservados.</p>
+</footer>
+
+<script>
+  const menuToggle = document.getElementById('menuToggle');
+  const navLinks = document.getElementById('navLinks');
+  menuToggle.addEventListener('click', () => navLinks.classList.toggle('active'));
+  navLinks.querySelectorAll('a').forEach(link =>
+    link.addEventListener('click', () => navLinks.classList.remove('active'))
+  );
+</script>
+</body>
+</html>
