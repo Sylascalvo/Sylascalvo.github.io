@@ -461,6 +461,27 @@
 
   .btn-all-videos:hover { background: rgba(255,255,255,0.12); }
 
+  /* ============ SECTION DIVIDER ============ */
+  .section-divider {
+    height: 120px;
+    background: linear-gradient(
+      to bottom,
+      rgba(10,10,10,1) 0%,
+      rgba(20,20,20,1) 40%,
+      rgba(20,20,20,1) 60%,
+      rgba(10,10,10,1) 100%
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .divider-line {
+    width: 60px;
+    height: 1px;
+    background: rgba(255,255,255,0.15);
+  }
+
   /* ============ CONTACT ============ */
   .contact-section {
     padding: 100px 40px;
@@ -664,6 +685,11 @@
 
   <div class="carousel-dots" id="gameDots"></div>
 </section>
+
+<!-- ============ SEPARADOR ============ -->
+<div class="section-divider">
+  <span class="divider-line"></span>
+</div>
 
 <!-- ============ MODELADO / ANIMACIÓN — CARRUSEL ============ -->
 <section class="carousel-section" id="animacion">
