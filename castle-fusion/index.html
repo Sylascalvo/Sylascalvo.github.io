@@ -144,12 +144,28 @@ const TOWERS = {
   catapulta: { name:'Catapulta', color:0xd9b06a, cost:120, damage:40, rate:0.35,range:170, splash:55 },
 };
 
-/* 2) MAPA MÁS GRANDE: path serpenteante + más slots (world coords) */
-const PATH = [
-  {x:-40,y:150},{x:260,y:150},{x:260,y:430},{x:520,y:430},{x:520,y:180},
-  {x:820,y:180},{x:820,y:560},{x:1080,y:560},{x:1080,y:300},{x:1250,y:300},
+/* 2) MAPA GRANDE: camino con curvatura (spline Catmull-Rom) + slots */
+function catmullRom2D(pts, perSeg){
+  const out=[], P=i=>pts[Math.max(0,Math.min(pts.length-1,i))];
+  for(let i=0;i<pts.length-1;i++){
+    const p0=P(i-1),p1=P(i),p2=P(i+1),p3=P(i+2);
+    for(let j=0;j<perSeg;j++){
+      const t=j/perSeg, t2=t*t, t3=t2*t;
+      out.push({
+        x:0.5*(2*p1.x+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
+        y:0.5*(2*p1.y+(-p0.y+p2.y)*t+(2*p0.y-5*p1.y+4*p2.y-p3.y)*t2+(-p0.y+3*p1.y-3*p2.y+p3.y)*t3),
+      });
+    }
+  }
+  out.push(pts[pts.length-1]);
+  return out;
+}
+const PATH_CTRL = [
+  {x:-60,y:170},{x:260,y:150},{x:250,y:440},{x:520,y:430},{x:520,y:170},
+  {x:820,y:190},{x:820,y:560},{x:1090,y:560},{x:1080,y:300},{x:1290,y:300},
 ];
-const CASTLE = PATH[PATH.length-1];
+const PATH = catmullRom2D(PATH_CTRL, 16);   // densificado y curvo
+const CASTLE = PATH_CTRL[PATH_CTRL.length-1];
 const SLOTS = [
   {x:130,y:270},{x:370,y:280},{x:370,y:110},{x:400,y:520},
   {x:640,y:430},{x:640,y:230},{x:520,y:640},{x:700,y:120},
@@ -165,7 +181,7 @@ function sz(wy){ return (wy - CY) * SC; }
 
 /* 4) THREE + cámara orbital */
 let scene, camera, renderer, raycaster, pointer;
-const cam = { target:new THREE.Vector3(0,0,0), yaw:Math.PI/4, pitch:0.92, view:32, dist:180 };
+const cam = { target:new THREE.Vector3(0,0,0), yaw:Math.PI/4, pitch:0.92, view:38, dist:260 };
 const ASPECT = 940/520;
 
 function initThree() {
@@ -174,9 +190,9 @@ function initThree() {
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x8ec9ff);
-  scene.fog = new THREE.Fog(0x8ec9ff, 170, 300);
+  scene.fog = new THREE.Fog(0x8ec9ff, 250, 470);
 
-  camera = new THREE.OrthographicCamera(-1,1,1,-1,1,600);
+  camera = new THREE.OrthographicCamera(-1,1,1,-1,1,1000);
 
   renderer = new THREE.WebGLRenderer({ antialias:true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio||1));
@@ -189,10 +205,10 @@ function initThree() {
   const dir = new THREE.DirectionalLight(0xfff2d6, 0.9);
   dir.position.set(50, 90, 30); dir.castShadow = true;
   dir.shadow.mapSize.set(2048,2048);
-  const d = 70;
+  const d = 95;
   dir.shadow.camera.left=-d; dir.shadow.camera.right=d;
   dir.shadow.camera.top=d; dir.shadow.camera.bottom=-d;
-  dir.shadow.camera.near=1; dir.shadow.camera.far=260;
+  dir.shadow.camera.near=1; dir.shadow.camera.far=340;
   scene.add(dir);
 
   buildWorld();
@@ -247,37 +263,53 @@ function mixColor(a,b,t){
 }
 
 function buildWorld() {
-  // base amplia bajo el terreno
-  const base = new THREE.Mesh(new THREE.BoxGeometry(96,2,70),
-    new THREE.MeshLambertMaterial({ color:0x2f5540 }));
-  base.position.set(0,-2,0); base.receiveShadow=true; scene.add(base);
-
-  // Cada tile es una columna voxel; su altura sigue el campo de terreno => relieve.
-  // Columnas casi sin hueco + color por altura => se pierde el aspecto de cuadrícula.
-  const tileW=40, side=tileW*SC*0.995, COL=8;
+  const tileW=40, side=tileW*SC*0.995, COL=9, MAXH=4.6;
   const colGeo=new THREE.BoxGeometry(side,COL,side);
   const greens=[];
-  for(let i=0;i<7;i++) greens.push(new THREE.MeshLambertMaterial({color:mixColor(0x33583d,0x74a85c,i/6)}));
+  for(let i=0;i<7;i++) greens.push(new THREE.MeshLambertMaterial({color:mixColor(0x2f5238,0x77ab5e,i/6)}));
   const pathMat=new THREE.MeshLambertMaterial({color:0xb59468});
-  const grassTiles=[];
-  for(let c=0;c<30;c++) for(let r=0;r<20;r++){
+
+  // backdrop profundo para que nunca se vean huecos al alejar o rotar
+  const backdrop=new THREE.Mesh(new THREE.BoxGeometry(220,2,170),
+    new THREE.MeshLambertMaterial({color:0x223c2c}));
+  backdrop.position.set(0,-7,0); backdrop.receiveShadow=true; scene.add(backdrop);
+
+  // grilla GRANDE: el voxel cubre todo el mapa (con margen alrededor del campo)
+  const buckets=Array.from({length:7},()=>[]); const pathList=[]; const grassTiles=[];
+  for(let c=-6;c<36;c++) for(let r=-5;r<25;r++){
     const wx=c*tileW+tileW/2, wy=r*tileW+tileW/2;
-    if(isOnPath(wx,wy)){
-      const m=new THREE.Mesh(colGeo, pathMat);
-      m.position.set(sx(wx), PATH_Y-COL/2, sz(wy)); m.receiveShadow=true; scene.add(m);
-    } else {
+    if(isOnPath(wx,wy)) pathList.push({wx,wy});
+    else{
       const top=terrainH(wx,wy);
-      const bucket=Math.max(0,Math.min(6,Math.floor(top/4.6*6)));
-      const m=new THREE.Mesh(colGeo, greens[bucket]);
-      m.position.set(sx(wx), top-COL/2, sz(wy)); m.receiveShadow=true; scene.add(m);
-      grassTiles.push({wx,wy,top});
+      const b=Math.max(0,Math.min(6,Math.floor(top/MAXH*7)));
+      buckets[b].push({wx,wy,top}); grassTiles.push({wx,wy,top});
     }
   }
+  // InstancedMesh por bucket de color => miles de bloques con pocas draw calls
+  const dummy=new THREE.Object3D();
+  const addInstanced=(mat,list,yOf)=>{
+    const im=new THREE.InstancedMesh(colGeo, mat, list.length); im.receiveShadow=true;
+    list.forEach((t,i)=>{ dummy.position.set(sx(t.wx), yOf(t)-COL/2, sz(t.wy)); dummy.updateMatrix(); im.setMatrixAt(i,dummy.matrix); });
+    im.instanceMatrix.needsUpdate=true; scene.add(im);
+  };
+  for(let b=0;b<7;b++) if(buckets[b].length) addInstanced(greens[b], buckets[b], t=>t.top);
+  if(pathList.length) addInstanced(pathMat, pathList, ()=>PATH_Y);
+
   buildDecor(grassTiles);
   buildCastle();
 }
 
 function buildCastle() {
+  // plataforma de voxel elevada para que el castillo se asiente sobre relieve
+  const tileW=40, side=tileW*SC*0.995, platformH=2.6;
+  const colGeo=new THREE.BoxGeometry(side,9,side);
+  const rockMat=new THREE.MeshLambertMaterial({color:0x5c6a54});
+  for(let dc=-1;dc<=1;dc++) for(let dr=-1;dr<=1;dr++){
+    const b=new THREE.Mesh(colGeo, rockMat);
+    b.position.set(sx(CASTLE.x+dc*tileW), platformH-4.5, sz(CASTLE.y+dr*tileW));
+    b.receiveShadow=true; scene.add(b);
+  }
+
   const g=new THREE.Group();
   const stone=new THREE.MeshLambertMaterial({color:0x9aa0b5});
   const stoneD=new THREE.MeshLambertMaterial({color:0x7f8599});
@@ -285,52 +317,73 @@ function buildCastle() {
   baseB.position.y=55*SC/2; g.add(baseB);
   const top=new THREE.Mesh(new THREE.BoxGeometry(80*SC,14*SC,80*SC), stoneD);
   top.position.y=55*SC+14*SC/2; g.add(top);
-  // 4 torreones
+  // 4 torreones con techo cónico y banderín (detalle)
   for(const [ox,oz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){
     const t=new THREE.Mesh(new THREE.CylinderGeometry(9*SC,9*SC,72*SC,10), stone);
     t.position.set(ox*38*SC, 72*SC/2, oz*38*SC); g.add(t);
     const cone=new THREE.Mesh(new THREE.ConeGeometry(11*SC,20*SC,10),
-      new THREE.MeshLambertMaterial({color:0xc0563f}));
+      new THREE.MeshLambertMaterial({color:0x8f2531}));
     cone.position.set(ox*38*SC, 72*SC+20*SC/2, oz*38*SC); g.add(cone);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.5,4),
+      new THREE.MeshLambertMaterial({color:0x2a2320}));
+    pole.position.set(ox*38*SC, 72*SC+20*SC+0.25, oz*38*SC); g.add(pole);
+    const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.35,0.2),
+      new THREE.MeshLambertMaterial({color:0xb8934a, side:THREE.DoubleSide}));
+    flag.position.set(ox*38*SC+0.18, 72*SC+20*SC+0.38, oz*38*SC); g.add(flag);
   }
   g.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
-  g.position.set(sx(CASTLE.x-10), groundTop(CASTLE.x-10, CASTLE.y), sz(CASTLE.y));
+  g.position.set(sx(CASTLE.x), platformH, sz(CASTLE.y));
   scene.add(g);
 }
 
 function buildDecor(grassTiles) {
   const trunkMat=new THREE.MeshLambertMaterial({color:0x5a3f28});
-  const leafMats=[0x33632f,0x2c5a34,0x264d2b].map(c=>new THREE.MeshLambertMaterial({color:c}));
-  const trunkGeo=new THREE.CylinderGeometry(0.12,0.16,0.9,6);
-  const leafGeo=new THREE.IcosahedronGeometry(0.62,0); // redondeado low-poly => "no tan cuadrado"
-  let placed=0;
+  const deadMat =new THREE.MeshLambertMaterial({color:0x3d332a});
+  const leafMats=[0x2f5e2e,0x28532f,0x224727].map(c=>new THREE.MeshLambertMaterial({color:c}));
+  const pineMats=[0x244a28,0x1e3f24].map(c=>new THREE.MeshLambertMaterial({color:c}));
+  const bushMat =new THREE.MeshLambertMaterial({color:0x2b5230});
+  const rockMat =new THREE.MeshLambertMaterial({color:0x6b7362});
+  const graveMat=new THREE.MeshLambertMaterial({color:0x8b8f98});
+  const trunkGeo=new THREE.CylinderGeometry(0.1,0.15,0.9,6);
+  const leafGeo =new THREE.IcosahedronGeometry(0.6,0);
+  const coneGeo =new THREE.ConeGeometry(0.6,1.0,7);
+  const cone2Geo=new THREE.ConeGeometry(0.42,0.8,7);
+  const bushGeo =new THREE.IcosahedronGeometry(0.34,0);
+  const graveGeo=new THREE.BoxGeometry(0.35,0.6,0.12);
+
+  let trees=0;
   for(const t of grassTiles){
-    if(Math.random()<0.11 && placed<75){
-      placed++;
-      const gx=sx(t.wx)+(Math.random()-.5)*0.6, gz=sz(t.wy)+(Math.random()-.5)*0.6;
+    const gx=sx(t.wx)+(Math.random()-.5)*0.7, gz=sz(t.wy)+(Math.random()-.5)*0.7;
+    const roll=Math.random();
+    if(roll<0.11 && trees<190){
+      trees++;
       const trunk=new THREE.Mesh(trunkGeo, trunkMat); trunk.position.set(gx,t.top+0.45,gz);
-      const leaf=new THREE.Mesh(leafGeo, leafMats[placed%3]);
-      leaf.position.set(gx,t.top+1.1,gz); leaf.scale.set(1,0.95,1);
-      trunk.receiveShadow=true; leaf.castShadow=true;
-      scene.add(trunk); scene.add(leaf);
+      trunk.receiveShadow=true; scene.add(trunk);
+      if(Math.random()<0.45){ // pino
+        const c1=new THREE.Mesh(coneGeo, pineMats[0]); c1.position.set(gx,t.top+1.2,gz); c1.castShadow=true; scene.add(c1);
+        const c2=new THREE.Mesh(cone2Geo, pineMats[1]); c2.position.set(gx,t.top+1.75,gz); c2.castShadow=true; scene.add(c2);
+      } else { // árbol redondo
+        const leaf=new THREE.Mesh(leafGeo, leafMats[trees%3]);
+        leaf.position.set(gx,t.top+1.15,gz); leaf.scale.set(1,0.95,1); leaf.castShadow=true; scene.add(leaf);
+      }
+    } else if(roll<0.135){ // arbusto
+      const bush=new THREE.Mesh(bushGeo, bushMat); bush.position.set(gx,t.top+0.2,gz);
+      bush.scale.set(1.2,0.8,1.2); bush.castShadow=true; scene.add(bush);
+    } else if(roll<0.15){ // roca
+      const rk=new THREE.Mesh(new THREE.DodecahedronGeometry(0.3+Math.random()*0.4,0), rockMat);
+      rk.position.set(gx,t.top+0.2,gz); rk.rotation.set(Math.random(),Math.random(),Math.random());
+      rk.castShadow=true; scene.add(rk);
+    } else if(roll<0.158){ // árbol muerto (tétrico)
+      const dt=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.11,1.3,5), deadMat);
+      dt.position.set(gx,t.top+0.65,gz); dt.rotation.z=(Math.random()-.5)*0.5; dt.castShadow=true; scene.add(dt);
     }
   }
-  // rocas dispersas sobre el relieve
-  const rockMat=new THREE.MeshLambertMaterial({color:0x7c8290});
-  for(let i=0;i<12;i++){
-    const t=grassTiles[Math.floor(Math.random()*grassTiles.length)]; if(!t)break;
-    const rk=new THREE.Mesh(new THREE.DodecahedronGeometry(0.35+Math.random()*0.5,0), rockMat);
-    rk.position.set(sx(t.wx)+(Math.random()-.5)*0.8, t.top+0.25, sz(t.wy)+(Math.random()-.5)*0.8);
-    rk.rotation.set(Math.random(),Math.random(),Math.random());
-    rk.castShadow=true; scene.add(rk);
-  }
-  // colinas redondeadas en los bordes (domos)
-  const hillMat=new THREE.MeshLambertMaterial({color:0x2f5540});
-  const hills=[[-42,-27],[44,-25],[-46,21],[48,25],[0,-32],[-48,-2],[30,30]];
-  for(const [hx,hz] of hills){
-    const rad=6+Math.random()*5;
-    const dome=new THREE.Mesh(new THREE.SphereGeometry(rad,10,7,0,Math.PI*2,0,Math.PI/2), hillMat);
-    dome.scale.y=0.5; dome.position.set(hx,-0.5,hz); dome.receiveShadow=true; scene.add(dome);
+  // lápidas dispersas (detalle tétrico)
+  for(let i=0;i<16;i++){
+    const t=grassTiles[Math.floor(Math.random()*grassTiles.length)]; if(!t)continue;
+    const gv=new THREE.Mesh(graveGeo, graveMat);
+    gv.position.set(sx(t.wx)+(Math.random()-.5)*0.6, t.top+0.3, sz(t.wy)+(Math.random()-.5)*0.6);
+    gv.rotation.y=Math.random()*0.5-0.25; gv.rotation.z=(Math.random()-.5)*0.15; gv.castShadow=true; scene.add(gv);
   }
 }
 
@@ -549,7 +602,7 @@ function setupControls(){
   });
   el.addEventListener('wheel', e=>{
     e.preventDefault();
-    cam.view = Math.max(14, Math.min(52, cam.view * (e.deltaY>0?1.1:0.9)));
+    cam.view = Math.max(10, Math.min(110, cam.view * (e.deltaY>0?1.1:0.9)));
   }, {passive:false});
   el.addEventListener('contextmenu', e=>e.preventDefault());
 }
