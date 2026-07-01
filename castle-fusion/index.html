@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Castle Fusion Defense — Prototipo</title>
+<style>
+  :root {
+    --bg: #12141c;
+    --panel: #1c2030;
+    --path: #2a2f42;
+    --ink: #e8eaf0;
+    --muted: #8b90a5;
+    --gold: #ffcf5c;
+    --hp: #ff5b5b;
+    --accent: #6cc4ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app { max-width: 900px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: .3px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  #hud {
+    display: flex; gap: 18px; align-items: center;
+    background: var(--panel); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px;
+    font-size: 14px; flex-wrap: wrap;
+  }
+  #hud b { font-variant-numeric: tabular-nums; }
+  .gold { color: var(--gold); }
+  .hp { color: var(--hp); }
+  #wrap { position: relative; }
+  canvas { display: block; background: var(--bg); border-radius: 10px; width: 100%; height: auto; }
+  #shop {
+    display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .tower-btn {
+    background: var(--panel); border: 1px solid #2c3145; color: var(--ink);
+    border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 13px;
+    display: flex; flex-direction: column; gap: 2px; min-width: 92px; text-align: left;
+    transition: border-color .12s, transform .05s;
+  }
+  .tower-btn:hover { border-color: var(--accent); }
+  .tower-btn:active { transform: translateY(1px); }
+  .tower-btn.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .tower-btn .name { font-weight: 600; }
+  .tower-btn .cost { color: var(--gold); font-size: 12px; }
+  .tower-btn:disabled { opacity: .4; cursor: not-allowed; }
+  #msg { margin-top: 10px; color: var(--muted); font-size: 13px; min-height: 18px; }
+  .row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+  button.ctrl {
+    background: var(--accent); color: #06121e; border: 0; border-radius: 8px;
+    padding: 9px 14px; font-weight: 600; cursor: pointer; font-size: 14px;
+  }
+  button.ctrl.secondary { background: #2c3145; color: var(--ink); }
+  #overlay {
+    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    background: rgba(10,12,18,.82); border-radius: 10px; flex-direction: column; gap: 12px; text-align: center;
+  }
+  #overlay h2 { margin: 0; font-size: 24px; }
+  #overlay p { margin: 0; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Castle Fusion Defense</h1>
+  <p class="sub">Prototipo — hito 1: enemigos, path, torres base y targeting FIRST</p>
+
+  <div id="hud">
+    <span>💰 <b class="gold" id="gold">0</b></span>
+    <span>🏰 <b class="hp" id="castle">0</b></span>
+    <span>🌊 Oleada <b id="wave">0</b> / <b id="waveMax">0</b></span>
+    <span id="waveState" style="color:var(--muted)"></span>
+  </div>
+
+  <div id="wrap">
+    <canvas id="cv" width="880" height="480"></canvas>
+    <div id="overlay">
+      <h2 id="ovTitle"></h2>
+      <p id="ovText"></p>
+      <button class="ctrl" id="ovBtn">Reiniciar</button>
+    </div>
+  </div>
+
+  <div id="shop"></div>
+
+  <div class="row">
+    <button class="ctrl" id="startBtn">Iniciar oleada</button>
+    <button class="ctrl secondary" id="sellBtn">Modo vender: OFF</button>
+    <span style="color:var(--muted);font-size:13px">Selecciona una torre y haz clic en un slot vacío.</span>
+  </div>
+
+  <div id="msg"></div>
+</div>
+
+<script>
+/* =========================================================================
+   Castle Fusion Defense — Prototipo (hito 1)
+   Vanilla JS + Canvas, un solo archivo. Listo para GitHub Pages.
+
+   Arquitectura pensada para que ENCIMA se añadan sin reescribir:
+   - Sistema de fusión (2 torres -> 1): ver TOWERS + placeTower()
+   - Economía / libro de descubrimiento: ver GOLD y clase Tower
+   - Mecánicas especiales (chain Tesla, shatter, etc.): ver Tower.fire()
+
+   Balance: los stats base siguen los valores de "poder" del diseño
+   (Hielo 1.0, Tesla 1.4, Arquero 1.6, Fuego 2.0, Catapulta 2.5).
+   ========================================================================= */
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+
+/* ---------------------------------------------------------------------------
+   1) DEFINICIÓN DE TORRES BASE (data-driven, esto es tu config)
+   damage: daño por disparo | rate: disparos por segundo | range: px
+   splash: radio de área (0 = single target) | slow: {mult, dur} opcional
+--------------------------------------------------------------------------- */
+const TOWERS = {
+  tesla:     { name:'Tesla',     color:'#8f7bff', cost:60,  damage:8,  rate:1.2, range:110, splash:0,  note:'cadena (simplificada)' },
+  hielo:     { name:'Hielo',     color:'#5ad2ff', cost:50,  damage:2,  rate:1.0, range:100, splash:0,  slow:{mult:0.55, dur:1.5} },
+  fuego:     { name:'Fuego',     color:'#ff7a3c', cost:70,  damage:15, rate:0.6, range:90,  splash:42 },
+  arquero:   { name:'Arquero',   color:'#7de08a', cost:50,  damage:12, rate:1.8, range:160, splash:0 },
+  catapulta: { name:'Catapulta', color:'#d9b06a', cost:120, damage:40, rate:0.35,range:170, splash:55 },
+};
+
+/* ---------------------------------------------------------------------------
+   2) PATH (waypoints). Los enemigos siguen esta línea de inicio a castillo.
+--------------------------------------------------------------------------- */
+const PATH = [
+  {x:-30, y:110}, {x:180, y:110}, {x:180, y:360}, {x:420, y:360},
+  {x:420, y:130}, {x:660, y:130}, {x:660, y:400}, {x:910, y:400},
+];
+const CASTLE = PATH[PATH.length-1];
+
+/* ---------------------------------------------------------------------------
+   3) SLOTS de construcción (fijos, como decidimos para el MVP).
+--------------------------------------------------------------------------- */
+const SLOTS = [
+  {x:110, y:210}, {x:270, y:230}, {x:270, y:110},
+  {x:340, y:280}, {x:500, y:250}, {x:500, y:130},
+  {x:590, y:230}, {x:740, y:250}, {x:740, y:130}, {x:600, y:400},
+].map(s => ({...s, tower:null}));
+
+/* ---------------------------------------------------------------------------
+   4) ESTADO DEL JUEGO
+--------------------------------------------------------------------------- */
+let GOLD, CASTLE_HP, waveIndex, running, gameOver, sellMode, selectedType;
+const enemies = [];
+const projectiles = [];
+
+const WAVES = buildWaves(12); // 12 oleadas para el MVP
+
+function reset() {
+  GOLD = 250;
+  CASTLE_HP = 25;
+  waveIndex = 0;
+  running = false;
+  gameOver = false;
+  sellMode = false;
+  selectedType = null;
+  enemies.length = 0;
+  projectiles.length = 0;
+  SLOTS.forEach(s => s.tower = null);
+  spawnQueue = [];
+  spawnTimer = 0;
+  document.getElementById('overlay').style.display = 'none';
+  refreshShop();
+  updateHud();
+  setMsg('Coloca torres y pulsa "Iniciar oleada".');
+}
+
+/* ---------------------------------------------------------------------------
+   5) OLEADAS. Cada oleada es una lista de spawns {type, hp, speed, delay}.
+      Enemigos crecen en HP y cantidad con el número de oleada.
+--------------------------------------------------------------------------- */
+function buildWaves(n) {
+  const waves = [];
+  for (let i = 1; i <= n; i++) {
+    const count = 6 + i * 2;
+    const hp = Math.round(20 * Math.pow(1.22, i - 1));
+    const speed = 55 + i * 1.5; // px/seg
+    const list = [];
+    for (let k = 0; k < count; k++) {
+      // cada 5ª oleada mete un "tanque" más lento y gordo
+      const tank = (i % 5 === 0) && (k % 4 === 0);
+      list.push({
+        hp: tank ? hp * 4 : hp,
+        speed: tank ? speed * 0.6 : speed,
+        radius: tank ? 13 : 9,
+        color: tank ? '#ff5b5b' : '#c9cede',
+        reward: tank ? 12 : 5,
+        delay: 0.65,
+      });
+    }
+    waves.push(list);
+  }
+  return waves;
+}
+
+let spawnQueue = [];
+let spawnTimer = 0;
+
+function startWave() {
+  if (running || gameOver) return;
+  if (waveIndex >= WAVES.length) return;
+  spawnQueue = WAVES[waveIndex].slice();
+  spawnTimer = 0;
+  running = true;
+  updateHud();
+}
+
+/* ---------------------------------------------------------------------------
+   6) ENTIDADES
+--------------------------------------------------------------------------- */
+class Enemy {
+  constructor(spec) {
+    this.x = PATH[0].x; this.y = PATH[0].y;
+    this.seg = 0;                 // índice del waypoint objetivo
+    this.hp = spec.hp; this.maxHp = spec.hp;
+    this.speed = spec.speed;
+    this.radius = spec.radius;
+    this.color = spec.color;
+    this.reward = spec.reward;
+    this.dead = false;
+    this.reached = false;
+    this.slowT = 0; this.slowMult = 1; // debuff de ralentización
+    this.dist = 0;                // distancia recorrida (para targeting FIRST)
+  }
+  update(dt) {
+    // aplicar slow
+    let sp = this.speed;
+    if (this.slowT > 0) { this.slowT -= dt; sp *= this.slowMult; if (this.slowT <= 0) this.slowMult = 1; }
+    let move = sp * dt;
+    while (move > 0 && this.seg < PATH.length) {
+      const t = PATH[this.seg + 1];
+      if (!t) { this.reached = true; return; }
+      const dx = t.x - this.x, dy = t.y - this.y;
+      const d = Math.hypot(dx, dy);
+      if (d <= move) { this.x = t.x; this.y = t.y; move -= d; this.dist += d; this.seg++; }
+      else { this.x += dx / d * move; this.y += dy / d * move; this.dist += move; move = 0; }
+    }
+    if (this.seg >= PATH.length - 1) this.reached = true;
+  }
+  hit(dmg) { this.hp -= dmg; if (this.hp <= 0) this.dead = true; }
+  applySlow(slow) { this.slowT = slow.dur; this.slowMult = Math.min(this.slowMult, slow.mult); }
+}
+
+class Tower {
+  constructor(type, slot) {
+    const def = TOWERS[type];
+    this.type = type; this.def = def;
+    this.x = slot.x; this.y = slot.y;
+    this.cooldown = 0;
+  }
+  update(dt) {
+    this.cooldown -= dt;
+    if (this.cooldown > 0) return;
+    const target = this.pickTarget(); // modo FIRST (default del diseño)
+    if (target) { this.fire(target); this.cooldown = 1 / this.def.rate; }
+  }
+  pickTarget() {
+    // FIRST = el enemigo en rango que más lejos ha avanzado por el path
+    let best = null, bestDist = -1;
+    for (const e of enemies) {
+      if (e.dead || e.reached) continue;
+      if (Math.hypot(e.x - this.x, e.y - this.y) <= this.def.range && e.dist > bestDist) {
+        best = e; bestDist = e.dist;
+      }
+    }
+    return best;
+  }
+  fire(target) {
+    projectiles.push(new Projectile(this.x, this.y, target, this.def));
+    // TODO fusión: aquí entran mecánicas especiales (chain Tesla, shatter, etc.)
+  }
+}
+
+class Projectile {
+  constructor(x, y, target, def) {
+    this.x = x; this.y = y; this.target = target; this.def = def;
+    this.speed = 420; this.dead = false;
+  }
+  update(dt) {
+    if (this.target.dead || this.target.reached) { this.dead = true; return; }
+    const dx = this.target.x - this.x, dy = this.target.y - this.y;
+    const d = Math.hypot(dx, dy);
+    const move = this.speed * dt;
+    if (d <= move) { this.impact(); this.dead = true; }
+    else { this.x += dx / d * move; this.y += dy / d * move; }
+  }
+  impact() {
+    const def = this.def;
+    if (def.splash > 0) {
+      for (const e of enemies) {
+        if (e.dead || e.reached) continue;
+        if (Math.hypot(e.x - this.x, e.y - this.y) <= def.splash) {
+          e.hit(def.damage);
+          if (def.slow) e.applySlow(def.slow);
+          grantIfDead(e);
+        }
+      }
+    } else {
+      this.target.hit(def.damage);
+      if (def.slow) this.target.applySlow(def.slow);
+      grantIfDead(this.target);
+    }
+  }
+}
+
+function grantIfDead(e) {
+  if (e.dead && !e._counted) { e._counted = true; GOLD += e.reward; }
+}
+
+/* ---------------------------------------------------------------------------
+   7) LOOP PRINCIPAL
+--------------------------------------------------------------------------- */
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.033, (now - last) / 1000);
+  last = now;
+  if (!gameOver) { update(dt); }
+  render();
+  requestAnimationFrame(loop);
+}
+
+function update(dt) {
+  // spawn de enemigos de la oleada
+  if (running) {
+    spawnTimer -= dt;
+    if (spawnTimer <= 0 && spawnQueue.length) {
+      const spec = spawnQueue.shift();
+      enemies.push(new Enemy(spec));
+      spawnTimer = spec.delay;
+    }
+    if (!spawnQueue.length && enemies.length === 0) {
+      // oleada superada
+      running = false;
+      waveIndex++;
+      GOLD += 40; // ingreso por completar oleada
+      if (waveIndex >= WAVES.length) { endGame(true); }
+    }
+  }
+
+  for (const s of SLOTS) if (s.tower) s.tower.update(dt);
+
+  for (const e of enemies) {
+    e.update(dt);
+    if (e.reached && !e.dead) {
+      e.dead = true;
+      CASTLE_HP -= 1;
+      if (CASTLE_HP <= 0) endGame(false);
+    }
+  }
+  for (const p of projectiles) p.update(dt);
+
+  // limpieza
+  for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].dead) enemies.splice(i, 1);
+  for (let i = projectiles.length - 1; i >= 0; i--) if (projectiles[i].dead) projectiles.splice(i, 1);
+
+  updateHud();
+}
+
+/* ---------------------------------------------------------------------------
+   8) RENDER
+--------------------------------------------------------------------------- */
+function render() {
+  ctx.clearRect(0, 0, W, H);
+
+  // path
+  ctx.lineWidth = 34; ctx.strokeStyle = getVar('--path');
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(PATH[0].x, PATH[0].y);
+  for (let i = 1; i < PATH.length; i++) ctx.lineTo(PATH[i].x, PATH[i].y);
+  ctx.stroke();
+
+  // castillo
+  ctx.fillStyle = '#3a4160';
+  ctx.fillRect(CASTLE.x - 34, CASTLE.y - 34, 40, 68);
+  ctx.fillStyle = getVar('--hp');
+  ctx.font = '20px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('🏰', CASTLE.x - 14, CASTLE.y + 7);
+
+  // slots
+  for (const s of SLOTS) {
+    if (s.tower) {
+      const d = s.tower.def;
+      // rango tenue
+      ctx.beginPath(); ctx.arc(s.x, s.y, d.range, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1; ctx.stroke();
+      // cuerpo
+      ctx.fillStyle = d.color;
+      ctx.fillRect(s.x - 12, s.y - 12, 24, 24);
+    } else {
+      ctx.beginPath(); ctx.arc(s.x, s.y, 12, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,.06)';
+      ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 2;
+      ctx.fill(); ctx.stroke();
+    }
+  }
+
+  // proyectiles
+  for (const p of projectiles) {
+    ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
+    ctx.fillStyle = p.def.color; ctx.fill();
+  }
+
+  // enemigos + barra de vida
+  for (const e of enemies) {
+    ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI*2);
+    ctx.fillStyle = e.slowT > 0 ? '#5ad2ff' : e.color; ctx.fill();
+    const w = e.radius * 2, ratio = Math.max(0, e.hp / e.maxHp);
+    ctx.fillStyle = '#000'; ctx.fillRect(e.x - w/2, e.y - e.radius - 7, w, 3);
+    ctx.fillStyle = '#5ee06a'; ctx.fillRect(e.x - w/2, e.y - e.radius - 7, w * ratio, 3);
+  }
+}
+
+function getVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+/* ---------------------------------------------------------------------------
+   9) UI / INPUT
+--------------------------------------------------------------------------- */
+function refreshShop() {
+  const shop = document.getElementById('shop');
+  shop.innerHTML = '';
+  for (const [key, d] of Object.entries(TOWERS)) {
+    const b = document.createElement('button');
+    b.className = 'tower-btn' + (selectedType === key ? ' selected' : '');
+    b.disabled = GOLD < d.cost;
+    b.innerHTML = `<span class="name">${d.name}</span><span class="cost">${d.cost} oro</span>`;
+    b.onclick = () => { selectedType = (selectedType === key ? null : key); sellMode = false; syncSellBtn(); refreshShop(); };
+    shop.appendChild(b);
+  }
+}
+
+function canvasPos(evt) {
+  const r = cv.getBoundingClientRect();
+  return { x: (evt.clientX - r.left) * (W / r.width), y: (evt.clientY - r.top) * (H / r.height) };
+}
+
+cv.addEventListener('click', (evt) => {
+  if (gameOver) return;
+  const p = canvasPos(evt);
+  const slot = SLOTS.find(s => Math.hypot(s.x - p.x, s.y - p.y) <= 16);
+  if (!slot) return;
+
+  if (sellMode) {
+    if (slot.tower) { GOLD += Math.round(slot.tower.def.cost * 0.6); slot.tower = null; refreshShop(); updateHud(); }
+    return;
+  }
+  if (!selectedType) { setMsg('Primero selecciona una torre abajo.'); return; }
+  if (slot.tower) { setMsg('Ese slot ya está ocupado.'); return; }
+  const def = TOWERS[selectedType];
+  if (GOLD < def.cost) { setMsg('No tienes oro suficiente.'); return; }
+  GOLD -= def.cost;
+  slot.tower = new Tower(selectedType, slot);
+  refreshShop(); updateHud(); setMsg('');
+});
+
+document.getElementById('startBtn').onclick = startWave;
+document.getElementById('sellBtn').onclick = () => { sellMode = !sellMode; selectedType = null; syncSellBtn(); refreshShop(); };
+function syncSellBtn(){ document.getElementById('sellBtn').textContent = 'Modo vender: ' + (sellMode ? 'ON' : 'OFF'); }
+
+document.getElementById('ovBtn').onclick = reset;
+
+function updateHud() {
+  document.getElementById('gold').textContent = GOLD;
+  document.getElementById('castle').textContent = CASTLE_HP;
+  document.getElementById('wave').textContent = Math.min(waveIndex + (running?1:0), WAVES.length);
+  document.getElementById('waveMax').textContent = WAVES.length;
+  document.getElementById('waveState').textContent = running ? 'En combate' : (gameOver ? '' : 'Planificación');
+  document.getElementById('startBtn').disabled = running || gameOver;
+}
+
+function setMsg(t){ document.getElementById('msg').textContent = t; }
+
+function endGame(win) {
+  gameOver = true; running = false;
+  const ov = document.getElementById('overlay');
+  document.getElementById('ovTitle').textContent = win ? '¡Victoria!' : 'Derrota';
+  document.getElementById('ovText').textContent = win
+    ? 'Sobreviviste las 12 oleadas.'
+    : 'El castillo cayó. Ajusta tu defensa e inténtalo de nuevo.';
+  ov.style.display = 'flex';
+  updateHud();
+}
+
+/* ---------------------------------------------------------------------------
+   10) ARRANQUE
+--------------------------------------------------------------------------- */
+reset();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
