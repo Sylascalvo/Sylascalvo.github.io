@@ -365,57 +365,121 @@ function update(dt) {
 }
 
 /* ---------------------------------------------------------------------------
-   8) RENDER
+   8) RENDER ISOMÉTRICO (cubos, vista aérea 3/4 tipo voxel)
+   La lógica sigue en world coords 2D (x,y). Aquí SOLO se proyecta al dibujar.
+   Proyección iso 2:1:  screenX = OX + (c - r)*HW ;  screenY = OY + (c + r)*HH - z
+   donde c,r son coords en "tiles" y z es altura en píxeles de pantalla.
 --------------------------------------------------------------------------- */
+const TILE = 40, X0 = 0, Y0 = 60;   // origen y tamaño de tile en world units
+const HW = 24, HH = 12;             // media anchura / altura de tile en pantalla
+const OX = 236, OY = 46;            // desplazamiento para centrar
+
+function iso(wx, wy, wz = 0) {
+  const c = (wx - X0) / TILE, r = (wy - Y0) / TILE;
+  return { x: OX + (c - r) * HW, y: OY + (c + r) * HH - wz };
+}
+function depthOf(wx, wy) { return (wx - X0) / TILE + (wy - Y0) / TILE; } // mayor = más al frente
+
+// oscurecer un color hex para sombrear caras
+function shade(hex, f) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 255) * f);
+  const g = Math.round(((n >> 8) & 255) * f);
+  const b = Math.round((n & 255) * f);
+  return `rgb(${r},${g},${b})`;
+}
+
+// dibuja un cubo voxel: cara superior + dos laterales sombreadas
+function drawCube(wx, wy, hWorld, heightPx, color) {
+  const P = (dx, dy, z) => iso(wx + dx, wy + dy, z);
+  const h = hWorld;
+  const top   = [P(-h,-h,heightPx), P(h,-h,heightPx), P(h,h,heightPx), P(-h,h,heightPx)];
+  const right = [P(h,-h,heightPx),  P(h,h,heightPx),  P(h,h,0),        P(h,-h,0)];
+  const left  = [P(-h,h,heightPx),  P(h,h,heightPx),  P(h,h,0),        P(-h,h,0)];
+  poly(left,  shade(color, 0.78));
+  poly(right, shade(color, 0.60));
+  poly(top,   color);
+}
+function poly(pts, fill) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill();
+}
+
+// distancia de un punto a un segmento (para marcar tiles de camino)
+function distToSeg(px, py, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const L2 = dx*dx + dy*dy || 1;
+  let t = ((px - a.x) * dx + (py - a.y) * dy) / L2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (a.x + t*dx), py - (a.y + t*dy));
+}
+
+// precomputar la grilla de suelo una sola vez
+const GROUND = (() => {
+  const tiles = [];
+  for (let c = 0; c < 22; c++) for (let r = 0; r < 10; r++) {
+    const wx = X0 + c*TILE + TILE/2, wy = Y0 + r*TILE + TILE/2;
+    let onPath = false;
+    for (let i = 0; i < PATH.length - 1; i++) {
+      if (distToSeg(wx, wy, PATH[i], PATH[i+1]) < 24) { onPath = true; break; }
+    }
+    tiles.push({ wx, wy, onPath, depth: depthOf(wx, wy) });
+  }
+  tiles.sort((a, b) => a.depth - b.depth);
+  return tiles;
+})();
+
 function render() {
   ctx.clearRect(0, 0, W, H);
 
-  // path
-  ctx.lineWidth = 34; ctx.strokeStyle = getVar('--path');
-  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(PATH[0].x, PATH[0].y);
-  for (let i = 1; i < PATH.length; i++) ctx.lineTo(PATH[i].x, PATH[i].y);
-  ctx.stroke();
+  // --- SUELO: cada tile es un cubo bajo. Camino en tono más claro. ---
+  for (const t of GROUND) {
+    drawCube(t.wx, t.wy, TILE/2, 8, t.onPath ? '#404867' : '#232838');
+  }
 
-  // castillo
-  ctx.fillStyle = '#3a4160';
-  ctx.fillRect(CASTLE.x - 34, CASTLE.y - 34, 40, 68);
-  ctx.fillStyle = getVar('--hp');
-  ctx.font = '20px system-ui'; ctx.textAlign = 'center';
-  ctx.fillText('🏰', CASTLE.x - 14, CASTLE.y + 7);
-
-  // slots
+  // marcadores de slots vacíos (rombo plano sobre el suelo)
   for (const s of SLOTS) {
-    if (s.tower) {
-      const d = s.tower.def;
-      // rango tenue
-      ctx.beginPath(); ctx.arc(s.x, s.y, d.range, 0, Math.PI*2);
-      ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1; ctx.stroke();
-      // cuerpo
-      ctx.fillStyle = d.color;
-      ctx.fillRect(s.x - 12, s.y - 12, 24, 24);
+    if (s.tower) continue;
+    const a = iso(s.x-14, s.y-14, 10), b = iso(s.x+14, s.y-14, 10),
+          c = iso(s.x+14, s.y+14, 10), d = iso(s.x-14, s.y+14, 10);
+    poly([a,b,c,d], 'rgba(120,180,255,.12)');
+    ctx.strokeStyle = 'rgba(140,190,255,.4)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+    ctx.lineTo(c.x,c.y); ctx.lineTo(d.x,d.y); ctx.closePath(); ctx.stroke();
+  }
+
+  // --- OBJETOS ALTOS ordenados por profundidad (atrás -> frente) ---
+  const tall = [];
+  tall.push({ depth: depthOf(CASTLE.x, CASTLE.y), kind: 'castle' });
+  for (const s of SLOTS) if (s.tower) tall.push({ depth: depthOf(s.x, s.y), kind: 'tower', slot: s });
+  for (const e of enemies) tall.push({ depth: depthOf(e.x, e.y), kind: 'enemy', e });
+  tall.sort((a, b) => a.depth - b.depth);
+
+  for (const o of tall) {
+    if (o.kind === 'castle') {
+      drawCube(CASTLE.x - 6, CASTLE.y, 20, 58, '#5a6488');
+    } else if (o.kind === 'tower') {
+      drawCube(o.slot.x, o.slot.y, 13, 34, o.slot.tower.def.color);
     } else {
-      ctx.beginPath(); ctx.arc(s.x, s.y, 12, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(255,255,255,.06)';
-      ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 2;
-      ctx.fill(); ctx.stroke();
+      const e = o.e, col = e.slowT > 0 ? '#5ad2ff' : e.color;
+      const hh = e.radius * 1.1, ht = e.radius * 1.7;
+      drawCube(e.x, e.y, hh, ht, col);
+      // barra de vida flotante
+      const top = iso(e.x, e.y, ht + e.radius + 8);
+      const w = e.radius * 2.4, ratio = Math.max(0, e.hp / e.maxHp);
+      ctx.fillStyle = '#000'; ctx.fillRect(top.x - w/2, top.y, w, 3);
+      ctx.fillStyle = '#5ee06a'; ctx.fillRect(top.x - w/2, top.y, w * ratio, 3);
     }
   }
 
-  // proyectiles
+  // --- PROYECTILES (vuelan un poco elevados) ---
   for (const p of projectiles) {
-    ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
+    const sp = iso(p.x, p.y, 26);
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, 3.5, 0, Math.PI*2);
     ctx.fillStyle = p.def.color; ctx.fill();
-  }
-
-  // enemigos + barra de vida
-  for (const e of enemies) {
-    ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI*2);
-    ctx.fillStyle = e.slowT > 0 ? '#5ad2ff' : e.color; ctx.fill();
-    const w = e.radius * 2, ratio = Math.max(0, e.hp / e.maxHp);
-    ctx.fillStyle = '#000'; ctx.fillRect(e.x - w/2, e.y - e.radius - 7, w, 3);
-    ctx.fillStyle = '#5ee06a'; ctx.fillRect(e.x - w/2, e.y - e.radius - 7, w * ratio, 3);
   }
 }
 
@@ -445,7 +509,11 @@ function canvasPos(evt) {
 cv.addEventListener('click', (evt) => {
   if (gameOver) return;
   const p = canvasPos(evt);
-  const slot = SLOTS.find(s => Math.hypot(s.x - p.x, s.y - p.y) <= 16);
+  // los slots ahora se dibujan proyectados: comparamos contra su posición iso
+  const slot = SLOTS.find(s => {
+    const sp = iso(s.x, s.y, 0);
+    return Math.hypot(sp.x - p.x, sp.y - p.y) <= 24;
+  });
   if (!slot) return;
 
   if (sellMode) {
