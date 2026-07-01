@@ -252,11 +252,20 @@ function terrainH(wx,wy){
           + 0.30*Math.sin((wx+wy)*0.02+2.1);
   return (n+1.85)*1.25;               // ~ [0 .. 4.6] unidades de escena
 }
-function isOnPath(wx,wy){
-  for(let i=0;i<PATH.length-1;i++){ if(distToSeg(wx,wy,PATH[i],PATH[i+1])<26) return true; }
-  return false;
+function pathDist(wx,wy){
+  let m=1e9;
+  for(let i=0;i<PATH.length-1;i++){ const d=distToSeg(wx,wy,PATH[i],PATH[i+1]); if(d<m){m=d;} }
+  return m;
 }
-function groundTop(wx,wy){ return isOnPath(wx,wy) ? PATH_Y : terrainH(wx,wy); }
+function isOnPath(wx,wy){ return pathDist(wx,wy) < 26; }
+function carveHeight(d, full){
+  // baja el terreno junto al camino y lo mezcla hacia el relieve pleno más lejos
+  const inner=26, blend=105;
+  if(d<=inner) return PATH_Y;
+  const t=Math.min(1,(d-inner)/(blend-inner)); const s=t*t*(3-2*t); // suavizado
+  return PATH_Y + (full-PATH_Y)*s;
+}
+function groundTop(wx,wy){ return carveHeight(pathDist(wx,wy), terrainH(wx,wy)); }
 function mixColor(a,b,t){
   const ar=(a>>16)&255, ag=(a>>8)&255, ab=a&255, br=(b>>16)&255, bg=(b>>8)&255, bb=b&255;
   return (Math.round(ar+(br-ar)*t)<<16)|(Math.round(ag+(bg-ag)*t)<<8)|Math.round(ab+(bb-ab)*t);
@@ -278,9 +287,10 @@ function buildWorld() {
   const buckets=Array.from({length:7},()=>[]); const pathList=[]; const grassTiles=[];
   for(let c=-6;c<36;c++) for(let r=-5;r<25;r++){
     const wx=c*tileW+tileW/2, wy=r*tileW+tileW/2;
-    if(isOnPath(wx,wy)) pathList.push({wx,wy});
+    const d=pathDist(wx,wy);
+    if(d<26) pathList.push({wx,wy});
     else{
-      const top=terrainH(wx,wy);
+      const top=carveHeight(d, terrainH(wx,wy));
       const b=Math.max(0,Math.min(6,Math.floor(top/MAXH*7)));
       buckets[b].push({wx,wy,top}); grassTiles.push({wx,wy,top});
     }
@@ -332,6 +342,7 @@ function buildCastle() {
     flag.position.set(ox*38*SC+0.18, 72*SC+20*SC+0.38, oz*38*SC); g.add(flag);
   }
   g.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
+  g.scale.set(1.6,1.6,1.6);
   g.position.set(sx(CASTLE.x), platformH, sz(CASTLE.y));
   scene.add(g);
 }
