@@ -138,6 +138,25 @@
   #liveEs{font-size:15px;color:var(--live);white-space:pre-wrap;margin-top:6px;display:none}
   #liveEs:not(:empty){display:block}
   button.ghost.active{border-color:var(--live);color:var(--live);font-weight:700}
+  button.ghost.hlon{border-color:var(--signal-dim);color:var(--signal)}
+
+  /* --- términos UE resaltados --- */
+  mark.ue{background:rgba(62,230,196,.13);color:var(--signal);border-bottom:1px solid var(--signal-dim);
+    border-radius:3px;padding:0 2px;cursor:help}
+  .seg-es mark.ue,#fulltext mark.ue{color:var(--signal)}
+
+  /* --- panel de glosario detectado --- */
+  #glossary{margin-top:26px}
+  #glossary.empty-hidden{display:none}
+  .gloss-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+  .gloss-head h2{font-size:15px;margin:0;font-weight:700}
+  .gloss-head .count{font-family:var(--mono)}
+  .gloss-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+  .gterm{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:11px 13px}
+  .gterm .gt{font-weight:700;font-size:14px}
+  .gterm .gc{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--signal);margin-left:8px}
+  .gterm .gd{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.45}
 
   /* --- vista texto completo --- */
   #fulltextWrap{display:none}
@@ -257,6 +276,7 @@
     <button id="viewFull">Texto completo</button>
   </div>
   <div class="toolbar">
+    <button id="hlBtn" class="ghost hlon">Resaltar UE: on</button>
     <button id="autoTr" class="ghost">Traducir en vivo: off</button>
     <button id="translateAll" class="ghost" disabled>Traducir todo</button>
     <button id="copyBtn" class="ghost" disabled>Copiar</button>
@@ -289,6 +309,9 @@
   <div id="liveEs"></div>
 </div>
 
+<!-- glosario UE detectado -->
+<section id="glossary"></section>
+
 <input type="file" id="jsonInput" accept="application/json" hidden>
 
 <footer id="foot">Whisper vía transformers.js · Traducción on-device · v1</footer>
@@ -296,6 +319,182 @@
 <script type="module">
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
 env.allowLocalModels = false;
+
+/* =========================================================================
+   GLOSARIO UNREAL ENGINE
+   Edita/añade términos libremente. Campos:
+     l = etiqueta (nombre canónico que se muestra)
+     p = variantes habladas a detectar (minúsculas; se matchean sin mayúsc. y con plural)
+     c = categoría
+     d = definición corta (aparece en el tooltip y en el panel)
+   Nota: evita palabras sueltas muy comunes (state, level, tag, cast, gas…) para no
+   marcar falsos positivos; usa la frase completa cuando exista.
+   ========================================================================= */
+const GLOSSARY = [
+  // --- Gameplay Framework ---
+  { l:'Actor', p:['actor'], c:'Gameplay', d:'Objeto base que puede colocarse o spawnearse en un nivel.' },
+  { l:'Pawn', p:['pawn'], c:'Gameplay', d:'Actor que puede ser poseído y controlado por un Controller (jugador o IA).' },
+  { l:'Character', p:['character'], c:'Gameplay', d:'Pawn con cápsula y CharacterMovementComponent, pensado para bípedos.' },
+  { l:'Controller', p:['controller'], c:'Gameplay', d:'Clase que posee y dirige a un Pawn.' },
+  { l:'Player Controller', p:['player controller'], c:'Gameplay', d:'Controller del jugador: input, cámara y UI.' },
+  { l:'AI Controller', p:['ai controller'], c:'Gameplay', d:'Controller que maneja a un Pawn mediante lógica de IA.' },
+  { l:'Game Mode', p:['game mode'], c:'Gameplay', d:'Define las reglas de la partida; existe solo en el servidor.' },
+  { l:'Game State', p:['game state'], c:'Gameplay', d:'Estado global de la partida replicado a todos los clientes.' },
+  { l:'Player State', p:['player state'], c:'Gameplay', d:'Estado por jugador (puntaje, nombre…) replicado.' },
+  { l:'Actor Component', p:['actor component'], c:'Gameplay', d:'Componente sin transform que añade lógica reutilizable a un Actor.' },
+  { l:'Scene Component', p:['scene component'], c:'Gameplay', d:'Componente con transform; puede anidarse en jerarquía.' },
+  { l:'Subsystem', p:['subsystem'], c:'Gameplay', d:'Singleton gestionado por el engine con ciclo de vida definido.' },
+  { l:'Data Asset', p:['data asset'], c:'Gameplay', d:'Asset para almacenar datos configurables sin lógica.' },
+  { l:'Primary Data Asset', p:['primary data asset'], c:'Gameplay', d:'Data Asset gestionable por el Asset Manager (carga bajo demanda).' },
+  { l:'Data Table', p:['data table'], c:'Gameplay', d:'Tabla de filas tipadas por un Struct; ideal para balance.' },
+  { l:'Gameplay Tag', p:['gameplay tag'], c:'Gameplay', d:'Etiqueta jerárquica para clasificar estados y objetos sin strings.' },
+  { l:'Delegate', p:['delegate'], c:'Gameplay', d:'Sistema de callbacks/eventos con binding dinámico o estático.' },
+  { l:'Blueprint Interface', p:['blueprint interface'], c:'Gameplay', d:'Contrato de funciones que varias clases pueden implementar.' },
+  { l:'World Partition', p:['world partition'], c:'Gameplay', d:'Sistema de streaming de mundos grandes por grilla.' },
+  { l:'Level Instance', p:['level instance'], c:'Gameplay', d:'Nivel reutilizable e instanciable dentro de otro nivel.' },
+
+  // --- Blueprints / Scripting ---
+  { l:'Blueprint', p:['blueprint'], c:'Blueprints', d:'Sistema de scripting visual por nodos de Unreal.' },
+  { l:'Cast To', p:['cast to'], c:'Blueprints', d:'Convierte una referencia a una clase específica (falla si no coincide).' },
+  { l:'Event Tick', p:['event tick','tick'], c:'Blueprints', d:'Evento que se ejecuta cada frame; úsalo con criterio.' },
+  { l:'Timeline', p:['timeline'], c:'Blueprints', d:'Nodo que anima valores en el tiempo dentro de un Blueprint.' },
+  { l:'Enum', p:['enum','enumeration'], c:'Blueprints', d:'Tipo con un conjunto fijo de valores con nombre.' },
+  { l:'Struct', p:['struct','structure'], c:'Blueprints', d:'Tipo que agrupa varias variables en una sola.' },
+  { l:'Soft Reference', p:['soft reference','soft object reference'], c:'Blueprints', d:'Puntero que NO carga el asset hasta pedirlo; ahorra memoria.' },
+  { l:'Hard Reference', p:['hard reference'], c:'Blueprints', d:'Referencia directa que carga el asset junto al que la contiene.' },
+  { l:'Lerp', p:['lerp','linear interpolate'], c:'Blueprints', d:'Interpolación lineal entre dos valores según un alpha 0–1.' },
+  { l:'Construction Script', p:['construction script'], c:'Blueprints', d:'Se ejecuta al editar/colocar el Actor (no en runtime).' },
+  { l:'Macro', p:['macro'], c:'Blueprints', d:'Nodo reutilizable que agrupa una red de nodos con entradas/salidas.' },
+
+  // --- Gameplay Ability System ---
+  { l:'Gameplay Ability System', p:['gameplay ability system'], c:'GAS', d:'Framework de habilidades, efectos y atributos en red.' },
+  { l:'Gameplay Ability', p:['gameplay ability'], c:'GAS', d:'Acción activable (habilidad) con costos, cooldowns y tags.' },
+  { l:'Gameplay Effect', p:['gameplay effect'], c:'GAS', d:'Modifica atributos de forma instantánea, con duración o infinita.' },
+  { l:'Gameplay Cue', p:['gameplay cue'], c:'GAS', d:'Feedback cosmético (VFX/SFX) disparado por tags, replicable.' },
+  { l:'Ability System Component', p:['ability system component'], c:'GAS', d:'Componente que gestiona habilidades, atributos y efectos.' },
+  { l:'Attribute Set', p:['attribute set'], c:'GAS', d:'Conjunto de atributos (vida, stamina…) manejados por GAS.' },
+
+  // --- Animación ---
+  { l:'Animation Blueprint', p:['animation blueprint','anim blueprint','animbp'], c:'Animación', d:'Blueprint que controla la animación de un Skeletal Mesh.' },
+  { l:'Anim Graph', p:['anim graph','animation graph'], c:'Animación', d:'Grafo donde se mezclan poses para producir la salida final.' },
+  { l:'State Machine', p:['state machine'], c:'Animación', d:'Máquina de estados de animación con transiciones entre poses.' },
+  { l:'Blend Space', p:['blend space','blendspace'], c:'Animación', d:'Mezcla animaciones según uno o dos ejes (ej. velocidad/dirección).' },
+  { l:'Aim Offset', p:['aim offset'], c:'Animación', d:'Aditivo que orienta la pose hacia una dirección (apuntar/mirar).' },
+  { l:'Montage', p:['montage','anim montage','animation montage'], c:'Animación', d:'Animación por secciones controlable desde código/BP (ataques, etc.).' },
+  { l:'Anim Notify', p:['anim notify','animation notify'], c:'Animación', d:'Evento en un punto de la animación (sonido, VFX, hitbox…).' },
+  { l:'Anim Notify State', p:['anim notify state','notify state'], c:'Animación', d:'Notify con duración (ventana de inicio/fin).' },
+  { l:'Layered Blend Per Bone', p:['layered blend per bone'], c:'Animación', d:'Mezcla poses por rama del esqueleto (ej. torso vs piernas).' },
+  { l:'Blend Mask', p:['blend mask'], c:'Animación', d:'Máscara de pesos por hueso para blends más finos que el Branch Filter.' },
+  { l:'Branch Filter', p:['branch filter'], c:'Animación', d:'Selección de rama por hueso base en un Layered Blend.' },
+  { l:'Inertialization', p:['inertialization','inertialize'], c:'Animación', d:'Blending que amortigua la pose actual en vez de mezclar dos clips.' },
+  { l:'Motion Matching', p:['motion matching'], c:'Animación', d:'Elige poses de una base de datos según trayectoria/entrada actual.' },
+  { l:'Motion Warping', p:['motion warping'], c:'Animación', d:'Ajusta el root motion en runtime para alinear la animación a un objetivo.' },
+  { l:'Root Motion', p:['root motion'], c:'Animación', d:'Movimiento extraído del hueso raíz de la animación.' },
+  { l:'Poseable Mesh', p:['poseable mesh'], c:'Animación', d:'Mesh cuyos huesos se posan manualmente por código (ej. after-images).' },
+  { l:'Skeletal Mesh', p:['skeletal mesh'], c:'Animación', d:'Malla deformada por un esqueleto animable.' },
+  { l:'Skeleton', p:['skeleton'], c:'Animación', d:'Jerarquía de huesos compartida por varias animaciones.' },
+  { l:'IK Retargeting', p:['retarget','retargeting','ik retargeter'], c:'Animación', d:'Adapta animaciones entre esqueletos distintos.' },
+  { l:'Control Rig', p:['control rig'], c:'Animación', d:'Sistema de rigging/animación procedural por grafo dentro de UE.' },
+  { l:'Inverse Kinematics', p:['inverse kinematics','two bone ik','foot placement','leg ik'], c:'Animación', d:'Calcula la rotación de huesos para alcanzar una posición objetivo.' },
+  { l:'Additive Animation', p:['additive animation'], c:'Animación', d:'Animación que se suma sobre una pose base.' },
+  { l:'Sync Group', p:['sync group'], c:'Animación', d:'Sincroniza la fase de varias animaciones (ej. ciclos de pisada).' },
+
+  // --- State Tree / IA ---
+  { l:'State Tree', p:['state tree'], c:'IA / Lógica', d:'Máquina de estados jerárquica basada en selección, más flexible que el Behavior Tree.' },
+  { l:'Behavior Tree', p:['behavior tree','behaviour tree'], c:'IA / Lógica', d:'Árbol de decisión para IA con tareas, selectores y decoradores.' },
+  { l:'Blackboard', p:['blackboard'], c:'IA / Lógica', d:'Memoria de claves/valores que alimenta al Behavior Tree.' },
+  { l:'Nav Mesh', p:['nav mesh','navmesh','navigation mesh'], c:'IA / Lógica', d:'Malla que define dónde puede navegar la IA.' },
+  { l:'Environment Query', p:['environment query'], c:'IA / Lógica', d:'EQS: consulta el entorno para elegir posiciones/objetivos.' },
+
+  // --- Render / Materiales ---
+  { l:'Material', p:['material'], c:'Render', d:'Define cómo se ve una superficie (color, rugosidad, etc.).' },
+  { l:'Material Instance', p:['material instance'], c:'Render', d:'Variante de un material con parámetros ajustables sin recompilar.' },
+  { l:'Material Function', p:['material function'], c:'Render', d:'Bloque reutilizable de nodos dentro de materiales.' },
+  { l:'Nanite', p:['nanite'], c:'Render', d:'Geometría virtualizada: mallas con muchísimos polígonos sin coste manual de LODs.' },
+  { l:'Lumen', p:['lumen'], c:'Render', d:'Iluminación global y reflexiones dinámicas en tiempo real.' },
+  { l:'Niagara', p:['niagara'], c:'Render', d:'Sistema de VFX y partículas de Unreal.' },
+  { l:'Post Process', p:['post process','post processing'], c:'Render', d:'Efectos de imagen aplicados tras el render (bloom, color grading…).' },
+  { l:'Groom', p:['groom'], c:'Render', d:'Sistema de pelo/fibras por strands (XGen, Alembic…).' },
+  { l:'MetaHuman', p:['metahuman','meta human'], c:'Render', d:'Framework de personajes humanos realistas de Epic.' },
+  { l:'Fresnel', p:['fresnel'], c:'Render', d:'Efecto según el ángulo de vista; útil para rims y bordes.' },
+  { l:'Emissive', p:['emissive'], c:'Render', d:'Canal de material que emite luz/color propio.' },
+  { l:'Roughness', p:['roughness'], c:'Render', d:'Controla cuán difusa o pulida se ve una superficie.' },
+  { l:'Dithering', p:['dithering','dither'], c:'Render', d:'Patrón de puntos para simular transparencia/disolución.' },
+  { l:'Shader', p:['shader'], c:'Render', d:'Programa que calcula el aspecto de píxeles/vértices.' },
+  { l:'Render Target', p:['render target'], c:'Render', d:'Textura donde se dibuja para reusar el resultado en runtime.' },
+  { l:'TSR', p:['temporal super resolution'], c:'Render', d:'Upscaling temporal antialiasing de Unreal.' },
+
+  // --- Cámara / Cine ---
+  { l:'Spring Arm', p:['spring arm'], c:'Cámara', d:'Brazo que sostiene la cámara y evita atravesar geometría.' },
+  { l:'Camera Modifier', p:['camera modifier'], c:'Cámara', d:'Modifica la cámara en runtime (shakes, offsets, blends).' },
+  { l:'Sequencer', p:['sequencer'], c:'Cámara', d:'Editor de cinemáticas y animaciones por pistas.' },
+  { l:'Movie Render Queue', p:['movie render queue'], c:'Cámara', d:'Render de alta calidad a imagen/video (MRQ).' },
+  { l:'Camera Animation Sequence', p:['camera animation sequence'], c:'Cámara', d:'Animación de cámara aditiva reutilizable (CAS).' },
+  { l:'Field of View', p:['field of view'], c:'Cámara', d:'Ángulo de visión de la cámara (FOV).' },
+
+  // --- C++ / Engine ---
+  { l:'Garbage Collection', p:['garbage collection'], c:'C++', d:'Liberación automática de UObjects sin referencias.' },
+  { l:'Replication', p:['replication','replicated','replicate'], c:'C++', d:'Sincronización de estado servidor→clientes en multijugador.' },
+  { l:'RepNotify', p:['rep notify','repnotify'], c:'C++', d:'Callback que se dispara cuando una variable replicada cambia.' },
+  { l:'Multicast', p:['multicast'], c:'C++', d:'RPC que el servidor envía a todos los clientes.' },
+  { l:'Live Coding', p:['live coding'], c:'C++', d:'Recompila C++ sin cerrar el editor.' },
+
+  // --- Input ---
+  { l:'Enhanced Input', p:['enhanced input'], c:'Input', d:'Sistema moderno de input por acciones y contextos.' },
+  { l:'Input Action', p:['input action'], c:'Input', d:'Acción abstracta (ej. Saltar) desacoplada de la tecla física.' },
+  { l:'Input Mapping Context', p:['input mapping context','mapping context'], c:'Input', d:'Conjunto de mapeos tecla→acción activable por capas.' },
+  { l:'Common UI', p:['common ui'], c:'Input', d:'Framework de UI con foco/navegación para mando y multiplataforma.' },
+
+  // --- Física ---
+  { l:'Line Trace', p:['line trace'], c:'Física', d:'Rayo que detecta lo primero que cruza (raycast).' },
+  { l:'Hit Result', p:['hit result'], c:'Física', d:'Struct con la info de una colisión/trace (impacto, normal…).' },
+  { l:'Overlap', p:['overlap'], c:'Física', d:'Solapamiento entre volúmenes sin bloquear el movimiento.' },
+  { l:'Collision', p:['collision'], c:'Física', d:'Configuración de cómo un objeto choca o solapa con otros.' },
+  { l:'Chaos Physics', p:['chaos physics'], c:'Física', d:'Motor de física y destrucción de Unreal.' },
+  { l:'Ragdoll', p:['ragdoll'], c:'Física', d:'Simulación física del esqueleto (cuerpo inerte).' },
+  { l:'Capsule Component', p:['capsule component'], c:'Física', d:'Cápsula de colisión estándar de un Character.' },
+
+  // --- Editor / Proyecto ---
+  { l:'Content Browser', p:['content browser'], c:'Editor', d:'Explorador de assets del proyecto.' },
+  { l:'Details Panel', p:['details panel'], c:'Editor', d:'Panel de propiedades del objeto seleccionado.' },
+  { l:'World Outliner', p:['outliner','world outliner'], c:'Editor', d:'Lista jerárquica de los actores del nivel.' },
+  { l:'Play In Editor', p:['play in editor'], c:'Editor', d:'Ejecutar el juego dentro del editor (PIE).' },
+  { l:'Console Variable', p:['console variable','cvar'], c:'Editor', d:'Variable ajustable por consola (r.*, a.*…) para tuning/debug.' },
+];
+
+/* --- motor de resaltado --- */
+const UE_MAP = new Map();
+const _uePats = [];
+for (const e of GLOSSARY){ for (const p of e.p){ UE_MAP.set(p.toLowerCase(), e); _uePats.push(p.toLowerCase()); } }
+_uePats.sort((a,b) => b.length - a.length);            // frases largas primero (state machine > state)
+const _ueEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const UE_RE = new RegExp('\\b(?:' + _uePats.map(_ueEsc).join('|') + ')s?\\b', 'gi');
+
+function ueLookup(match){
+  const k = match.toLowerCase();
+  return UE_MAP.get(k) || (k.endsWith('s') ? UE_MAP.get(k.slice(0, -1)) : null);
+}
+function attrEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// resalta términos UE en un texto YA escapado (escapeHtml)
+function highlightUE(escaped){
+  if (!S.hl) return escaped;
+  return escaped.replace(UE_RE, (m) => {
+    const e = ueLookup(m);
+    if (!e) return m;
+    return `<mark class="ue" title="${attrEsc(e.l + ' · ' + e.c + ' — ' + e.d)}">${m}</mark>`;
+  });
+}
+// junta los términos únicos detectados en toda la nota (ordenados por categoría)
+function collectGlossary(){
+  const found = new Map();
+  const re = new RegExp(UE_RE.source, 'gi');
+  for (const o of S.segments){
+    if (o.silent || o.pending) continue;
+    let m; re.lastIndex = 0;
+    while ((m = re.exec(o.text))){ const e = ueLookup(m[0]); if (e) found.set(e.l, e); }
+  }
+  return [...found.values()].sort((a,b) => a.c.localeCompare(b.c) || a.l.localeCompare(b.l));
+}
 
 /* ---------------- estado ---------------- */
 const S = {
@@ -315,6 +514,7 @@ const S = {
   live: '',                 // texto provisional en vivo (original)
   liveEs: '',               // texto provisional en vivo (español)
   autoTr: false,            // traducir en vivo mientras transcribe
+  hl: true,                 // resaltar términos de Unreal Engine
   view: 'seg',              // 'seg' | 'full'
   fullLang: 'orig',         // 'orig' | 'es'
   pumpTimer: null,
@@ -334,6 +534,7 @@ const segEl = $('segments'), countEl = $('count');
 const fullWrap = $('fulltextWrap'), fullEl = $('fulltext');
 const liveCard = $('liveCard'), liveText = $('liveText'), liveEs = $('liveEs');
 const viewSeg = $('viewSeg'), viewFull = $('viewFull'), fullOrig = $('fullOrig'), fullEs = $('fullEs');
+const glossaryEl = $('glossary'), hlBtn = $('hlBtn');
 const translateAll = $('translateAll'), autoTrBtn = $('autoTr'), copyBtn = $('copyBtn'), mdBtn = $('mdBtn'),
       jsonBtn = $('jsonBtn'), clearBtn = $('clearBtn'), loadJsonBtn = $('loadJsonBtn'), jsonInput = $('jsonInput');
 
@@ -607,7 +808,7 @@ function liveSrcIso(){
 }
 async function showLive(text){
   S.live = text;
-  liveText.textContent = text || 'escuchando…';
+  liveText.innerHTML = text ? highlightUE(escapeHtml(text)) : 'escuchando…';
   if (S.autoTr && text){
     try { S.liveEs = await translateText(text, liveSrcIso()); }
     catch (e) { S.liveEs = ''; }
@@ -662,7 +863,7 @@ function renderSeg(o){
       <span class="lang">${badge}</span>
       <span class="seg-actions">${showBtn ? `<button data-act="tr">Traducir</button>` : ''}</span>
     </div>
-    <div class="seg-text">${escapeHtml(o.text)}</div>
+    <div class="seg-text">${highlightUE(escapeHtml(o.text))}</div>
     ${o.es ? `<div class="seg-es"><span class="tag">ES</span>${escapeHtml(o.es)}</div>` : ''}`;
 }
 function wireSeg(el, o){
@@ -695,14 +896,16 @@ function renderFull(){
     .filter(Boolean);
   if (!parts.length && !S.live){
     fullEl.innerHTML = `<p class="ph">Aún no hay texto. Inicia la captura y aparecerá aquí de corrido.</p>`;
+    updateGlossaryPanel();
     return;
   }
   const paras = [];
   for (let i = 0; i < parts.length; i += 4) paras.push(parts.slice(i, i+4).join(' '));
-  let html = paras.map(p => `<p>${escapeHtml(p)}</p>`).join('');
+  let html = paras.map(p => useEs ? `<p>${escapeHtml(p)}</p>` : `<p>${highlightUE(escapeHtml(p))}</p>`).join('');
   if (useEs && S.liveEs) html += `<p class="live-tail">${escapeHtml(S.liveEs)}…</p>`;
-  else if (!useEs && S.live) html += `<p class="live-tail">${escapeHtml(S.live)}…</p>`;
+  else if (!useEs && S.live) html += `<p class="live-tail">${highlightUE(escapeHtml(S.live))}…</p>`;
   fullEl.innerHTML = html;
+  updateGlossaryPanel();
 }
 function updateLive(){
   liveCard.style.display = (S.capturing && S.view === 'seg') ? 'block' : 'none';
@@ -720,6 +923,38 @@ viewSeg.addEventListener('click', () => setView('seg'));
 viewFull.addEventListener('click', () => setView('full'));
 fullOrig.addEventListener('click', () => { S.fullLang='orig'; fullOrig.classList.add('active'); fullEs.classList.remove('active'); renderFull(); });
 fullEs.addEventListener('click', () => { S.fullLang='es'; fullEs.classList.add('active'); fullOrig.classList.remove('active'); renderFull(); });
+
+/* ---------------- glosario detectado + resaltado ---------------- */
+function updateGlossaryPanel(){
+  const items = collectGlossary();
+  if (!items.length){ glossaryEl.classList.add('empty-hidden'); glossaryEl.innerHTML = ''; return; }
+  glossaryEl.classList.remove('empty-hidden');
+  glossaryEl.innerHTML = `
+    <div class="gloss-head">
+      <h2>Glosario UE detectado</h2>
+      <span class="count">${items.length} término${items.length===1?'':'s'}</span>
+    </div>
+    <div class="gloss-grid">
+      ${items.map(e => `<div class="gterm"><span class="gt">${escapeHtml(e.l)}</span><span class="gc">${escapeHtml(e.c)}</span><div class="gd">${escapeHtml(e.d)}</div></div>`).join('')}
+    </div>`;
+}
+// re-dibuja segmentos + vista completa (tras cambiar el resaltado)
+function redraw(){
+  segEl.innerHTML = S.segments.length ? '' : emptyHtml();
+  for (const o of S.segments){
+    const el = document.createElement('div');
+    el.className = 'seg' + (o.pending ? ' pending' : '') + (o.silent ? ' silent' : '');
+    el.id = o.id; el.innerHTML = renderSeg(o); segEl.appendChild(el); wireSeg(el, o);
+  }
+  renderFull();
+}
+hlBtn.addEventListener('click', () => {
+  S.hl = !S.hl;
+  hlBtn.classList.toggle('hlon', S.hl);
+  hlBtn.textContent = 'Resaltar UE: ' + (S.hl ? 'on' : 'off');
+  redraw();
+  if (S.live) liveText.innerHTML = highlightUE(escapeHtml(S.live));
+});
 
 /* ---------------- traducción al español ---------------- */
 function resolveSrcIso(o){
@@ -797,6 +1032,15 @@ function asMarkdown(){
     if (o.silent || o.pending) continue;
     md += `**[${fmt(o.t)}] (${o.iso})** ${o.text}\n\n`;
     if (o.es) md += `> 🇪🇸 ${o.es}\n\n`;
+  }
+  const g = collectGlossary();
+  if (g.length){
+    md += `\n---\n\n## Glosario UE detectado\n\n`;
+    let cat = '';
+    for (const e of g){
+      if (e.c !== cat){ cat = e.c; md += `\n### ${cat}\n\n`; }
+      md += `- **${e.l}** — ${e.d}\n`;
+    }
   }
   return md;
 }
