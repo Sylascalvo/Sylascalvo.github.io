@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monitor de Transcripción — BaldGames</title>
+<title>Monitor de Transcripción — Sylascalvo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -177,7 +177,7 @@
 
 <header>
   <div class="brand">
-    <span class="kicker">BaldGames · Herramienta interna</span>
+    <span class="kicker">Sylascalvo · Herramienta interna</span>
     <h1>Monitor de Transcripción</h1>
     <span class="sub">Captura el audio que suena en tu PC (una pestaña o toda la pantalla), lo transcribe con Whisper en el navegador y lo traduce al español. Todo local, sin servidor.</span>
   </div>
@@ -1020,6 +1020,7 @@ function setView(v){
   segEl.style.display = v === 'seg' ? '' : 'none';
   fullWrap.style.display = v === 'full' ? 'block' : 'none';
   updateLive();
+  copyBtn.textContent = copyLabel();
   if (v === 'full') renderFull();
 }
 viewSeg.addEventListener('click', () => setView('seg'));
@@ -1147,11 +1148,27 @@ function asMarkdown(){
   }
   return md;
 }
+// texto continuo en plano, igual que la vista de texto completo (respeta Original/Español)
+function fullPlainText(){
+  const useEs = S.fullLang === 'es';
+  const parts = S.segments.filter(o => !o.silent && !o.pending)
+    .map(o => useEs ? (o.es || o.text) : o.text).filter(Boolean);
+  const paras = [];
+  for (let i = 0; i < parts.length; i += 4) paras.push(parts.slice(i, i+4).join(' '));
+  return paras.join('\n\n');
+}
+// texto por segmentos con marca de tiempo (y traduccion si existe)
+function segmentsPlainText(){
+  return S.segments.filter(o => !o.silent && !o.pending)
+    .map(o => `[${fmt(o.t)}] ${o.text}${o.es ? `\n(ES) ${o.es}` : ''}`).join('\n\n');
+}
+function copyLabel(){ return S.view === 'full' ? 'Copiar texto' : 'Copiar segmentos'; }
+
 copyBtn.addEventListener('click', () => {
-  const text = S.segments.filter(o => !o.silent && !o.pending)
-    .map(o => `[${fmt(o.t)}] ${o.text}${o.es?`\n(ES) ${o.es}`:''}`).join('\n\n');
+  const text = S.view === 'full' ? fullPlainText() : segmentsPlainText();
   navigator.clipboard.writeText(text);
-  copyBtn.textContent = 'Copiado ✓'; setTimeout(()=>copyBtn.textContent='Copiar', 1200);
+  copyBtn.textContent = 'Copiado ✓';
+  setTimeout(() => copyBtn.textContent = copyLabel(), 1200);
 });
 mdBtn.addEventListener('click', () => download(`transcripcion-${Date.now()}.md`, asMarkdown(), 'text/markdown'));
 jsonBtn.addEventListener('click', () => download(`transcripcion-${Date.now()}.json`, JSON.stringify(S.segments, null, 2), 'application/json'));
@@ -1217,6 +1234,7 @@ function emptyHtml(){ return `<div class="empty"><b>Sin transcripción todavía.
 if (!restore()) segEl.innerHTML = emptyHtml();
 refreshToolbar();
 renderFull();
+copyBtn.textContent = copyLabel();
 </script>
 </body>
 </html>
