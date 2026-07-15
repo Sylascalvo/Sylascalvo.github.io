@@ -135,6 +135,9 @@
     animation:pulse 1.1s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
   #liveText{font-size:15px;color:var(--muted);font-style:italic;white-space:pre-wrap}
+  #liveEs{font-size:15px;color:var(--live);white-space:pre-wrap;margin-top:6px;display:none}
+  #liveEs:not(:empty){display:block}
+  button.ghost.active{border-color:var(--live);color:var(--live);font-weight:700}
 
   /* --- vista texto completo --- */
   #fulltextWrap{display:none}
@@ -254,6 +257,7 @@
     <button id="viewFull">Texto completo</button>
   </div>
   <div class="toolbar">
+    <button id="autoTr" class="ghost">Traducir en vivo: off</button>
     <button id="translateAll" class="ghost" disabled>Traducir todo</button>
     <button id="copyBtn" class="ghost" disabled>Copiar</button>
     <button id="mdBtn" class="ghost" disabled>Guardar .md</button>
@@ -282,6 +286,7 @@
 <div id="liveCard">
   <div class="live-meta"><span class="pulse"></span> En vivo · provisional</div>
   <div id="liveText"></div>
+  <div id="liveEs"></div>
 </div>
 
 <input type="file" id="jsonInput" accept="application/json" hidden>
@@ -307,7 +312,9 @@ const S = {
   segIndex: 0,
   busy: false,              // cerrojo: solo una transcripción a la vez
   lastPartial: 0,           // timestamp del último pase provisional
-  live: '',                 // texto provisional en vivo
+  live: '',                 // texto provisional en vivo (original)
+  liveEs: '',               // texto provisional en vivo (español)
+  autoTr: false,            // traducir en vivo mientras transcribe
   view: 'seg',              // 'seg' | 'full'
   fullLang: 'orig',         // 'orig' | 'es'
   pumpTimer: null,
@@ -325,9 +332,9 @@ const loadBtn = $('loadBtn'), startBtn = $('startBtn'), stopBtn = $('stopBtn');
 const loadBox = $('loadBox'), loadBar = $('loadBar'), loadStatus = $('loadStatus'), loadFile = $('loadFile');
 const segEl = $('segments'), countEl = $('count');
 const fullWrap = $('fulltextWrap'), fullEl = $('fulltext');
-const liveCard = $('liveCard'), liveText = $('liveText');
+const liveCard = $('liveCard'), liveText = $('liveText'), liveEs = $('liveEs');
 const viewSeg = $('viewSeg'), viewFull = $('viewFull'), fullOrig = $('fullOrig'), fullEs = $('fullEs');
-const translateAll = $('translateAll'), copyBtn = $('copyBtn'), mdBtn = $('mdBtn'),
+const translateAll = $('translateAll'), autoTrBtn = $('autoTr'), copyBtn = $('copyBtn'), mdBtn = $('mdBtn'),
       jsonBtn = $('jsonBtn'), clearBtn = $('clearBtn'), loadJsonBtn = $('loadJsonBtn'), jsonInput = $('jsonInput');
 
 /* ---------------- compat ---------------- */
@@ -455,7 +462,7 @@ startBtn.addEventListener('click', async () => {
   S.capturing = true;
   S.win = []; S.winLen = 0; S.segIndex = 0; S.live = ''; S.lastPartial = 0;
   updateLive();
-  S.pumpTimer = setInterval(pump, 1500);   // reintenta pases provisionales
+  S.pumpTimer = setInterval(pump, 700);    // reintenta pases provisionales
   S.startTime = performance.now();
   startBtn.disabled = true; stopBtn.disabled = false; loadBtn.disabled = true;
   ['model','lang','seg'].forEach(id => $(id).disabled = true);
@@ -504,6 +511,20 @@ function concatWindow(){
   for (const c of S.win){ out.set(c, f); f += c.length; }
   return out;
 }
+// copia SOLO los últimos `sec` segundos de la ventana (preview rápido y de tiempo casi constante)
+function tailWindow(sec){
+  const want = Math.round(sec * S.sampleRate);
+  if (S.winLen <= want) return concatWindow();
+  const out = new Float32Array(want);
+  let need = want, pos = want;
+  for (let i = S.win.length - 1; i >= 0 && need > 0; i--){
+    const c = S.win[i];
+    const take = Math.min(c.length, need);
+    out.set(c.subarray(c.length - take), pos - take);
+    pos -= take; need -= take;
+  }
+  return out;
+}
 // extrae y CONSUME n muestras del inicio de la ventana
 function takeWindow(n){
   const size = Math.min(n, S.winLen);
@@ -533,23 +554,23 @@ async function pump(){
     return;
   }
 
-  // 2) pase provisional en vivo (mínimo ~1.5 s de audio, refresco cada ~2 s)
-  if (S.capturing && S.winLen > S.sampleRate * 1.5 && (performance.now() - S.lastPartial) > 2000){
+  // 2) pase provisional en vivo (ventana deslizante de ~8 s, refresco ~1 s)
+  if (S.capturing && S.winLen > S.sampleRate * 0.8 && (performance.now() - S.lastPartial) > 900){
     S.busy = true;
     S.lastPartial = performance.now();
     try {
-      const audio = await to16k(concatWindow(), S.sampleRate);
+      const audio = await to16k(tailWindow(8), S.sampleRate);
       const out = await transcribe(audio);
-      showLive((out.text || '').trim());
+      await showLive((out.text || '').trim());
     } catch (e) { /* silencioso: es solo una vista previa */ }
     S.busy = false;
   }
 }
 
-// una sola llamada a Whisper con las opciones actuales
+// una sola llamada a Whisper (sin chunking forzado: Whisper procesa <=30 s en una ventana)
 async function transcribe(audio16k){
   const langSel = $('lang').value;
-  const opts = { task:'transcribe', chunk_length_s:30, stride_length_s:4 };
+  const opts = { task:'transcribe' };
   if (langSel !== 'auto') opts.language = langSel;
   return S.transcriber(audio16k, opts);
 }
@@ -568,8 +589,8 @@ async function commitSegment(samples, t){
     const audio = await to16k(samples, S.sampleRate);
     const out = await transcribe(audio);
     const text = (out.text || '').trim();
-    if (isFiller(text)) updateSegment(ph, '(silencio)', true);
-    else updateSegment(ph, text, false);
+    if (isFiller(text)) { updateSegment(ph, '(silencio)', true); }
+    else { updateSegment(ph, text, false); if (S.autoTr) translateSegment(ph); }
   } catch (e) {
     console.error(e);
     updateSegment(ph, '⚠ error al transcribir este segmento', false);
@@ -577,14 +598,26 @@ async function commitSegment(samples, t){
 }
 
 /* ---------------- línea provisional en vivo ---------------- */
-function showLive(text){
+function liveSrcIso(){
+  const forced = $('src').value;
+  if (forced !== 'auto') return forced;
+  const iso = LANG_ISO[$('lang').value];
+  if (iso && iso !== 'auto' && iso !== 'es') return iso;
+  return 'en';
+}
+async function showLive(text){
   S.live = text;
   liveText.textContent = text || 'escuchando…';
+  if (S.autoTr && text){
+    try { S.liveEs = await translateText(text, liveSrcIso()); }
+    catch (e) { S.liveEs = ''; }
+    liveEs.textContent = S.liveEs;
+  }
   if (S.view === 'full') renderFull();
 }
 function clearLive(){
-  S.live = '';
-  liveText.textContent = '';
+  S.live = ''; S.liveEs = '';
+  liveText.textContent = ''; liveEs.textContent = '';
   if (S.view === 'full') renderFull();
 }
 
@@ -667,7 +700,8 @@ function renderFull(){
   const paras = [];
   for (let i = 0; i < parts.length; i += 4) paras.push(parts.slice(i, i+4).join(' '));
   let html = paras.map(p => `<p>${escapeHtml(p)}</p>`).join('');
-  if (S.live && !useEs) html += `<p class="live-tail">${escapeHtml(S.live)}…</p>`;
+  if (useEs && S.liveEs) html += `<p class="live-tail">${escapeHtml(S.liveEs)}…</p>`;
+  else if (!useEs && S.live) html += `<p class="live-tail">${escapeHtml(S.live)}…</p>`;
   fullEl.innerHTML = html;
 }
 function updateLive(){
@@ -735,8 +769,15 @@ async function translateSegment(o){
   } catch (e) {
     banner('No hay traductor disponible para ese idioma. Activa la <b>API de traducción de Chrome</b> (Chrome/Edge recientes) o usa contenido en inglés para la traducción local.', 'err');
     if (btn){ btn.disabled = false; btn.textContent = 'Traducir'; }
+    if (S.autoTr){ S.autoTr = false; autoTrBtn.classList.remove('active'); autoTrBtn.textContent = 'Traducir en vivo: off'; }
   }
 }
+autoTrBtn.addEventListener('click', () => {
+  S.autoTr = !S.autoTr;
+  autoTrBtn.classList.toggle('active', S.autoTr);
+  autoTrBtn.textContent = 'Traducir en vivo: ' + (S.autoTr ? 'on' : 'off');
+  if (!S.autoTr){ S.liveEs = ''; liveEs.textContent = ''; if (S.view==='full') renderFull(); }
+});
 translateAll.addEventListener('click', async () => {
   translateAll.disabled = true; translateAll.textContent = 'Traduciendo…';
   for (const o of S.segments){ if (!o.es && !o.pending && !o.silent){ await translateSegment(o); } }
