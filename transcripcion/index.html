@@ -177,7 +177,7 @@
 
 <header>
   <div class="brand">
-    <span class="kicker">Sylascalvo · Herramienta interna</span>
+    <span class="kicker">BaldGames · Herramienta interna</span>
     <h1>Monitor de Transcripción</h1>
     <span class="sub">Captura el audio que suena en tu PC (una pestaña o toda la pantalla), lo transcribe con Whisper en el navegador y lo traduce al español. Todo local, sin servidor.</span>
   </div>
@@ -333,133 +333,236 @@ env.allowLocalModels = false;
 const GLOSSARY = [
   // --- Gameplay Framework ---
   { l:'Actor', p:['actor'], c:'Gameplay', d:'Objeto base que puede colocarse o spawnearse en un nivel.' },
-  { l:'Pawn', p:['pawn'], c:'Gameplay', d:'Actor que puede ser poseído y controlado por un Controller (jugador o IA).' },
-  { l:'Character', p:['character'], c:'Gameplay', d:'Pawn con cápsula y CharacterMovementComponent, pensado para bípedos.' },
+  { l:'Pawn', p:['pawn'], c:'Gameplay', d:'Actor que puede ser poseido y controlado por un Controller.', d2:'Actor que un Controller (jugador o IA) puede poseer y controlar. Base de todo lo que se maneja en el mundo.' },
+  { l:'Character', p:['character'], c:'Gameplay', d:'Pawn con capsula y CharacterMovementComponent, para bipedos.' },
   { l:'Controller', p:['controller'], c:'Gameplay', d:'Clase que posee y dirige a un Pawn.' },
-  { l:'Player Controller', p:['player controller'], c:'Gameplay', d:'Controller del jugador: input, cámara y UI.' },
-  { l:'AI Controller', p:['ai controller'], c:'Gameplay', d:'Controller que maneja a un Pawn mediante lógica de IA.' },
-  { l:'Game Mode', p:['game mode'], c:'Gameplay', d:'Define las reglas de la partida; existe solo en el servidor.' },
-  { l:'Game State', p:['game state'], c:'Gameplay', d:'Estado global de la partida replicado a todos los clientes.' },
-  { l:'Player State', p:['player state'], c:'Gameplay', d:'Estado por jugador (puntaje, nombre…) replicado.' },
-  { l:'Actor Component', p:['actor component'], c:'Gameplay', d:'Componente sin transform que añade lógica reutilizable a un Actor.' },
-  { l:'Scene Component', p:['scene component'], c:'Gameplay', d:'Componente con transform; puede anidarse en jerarquía.' },
+  { l:'Player Controller', p:['player controller'], c:'Gameplay', d:'El cerebro del jugador humano: input, camara y UI.', d2:'Voluntad del jugador humano. Persiste aunque el Pawn muera; procesa inputs, gestiona camara y HUD/Widgets. En multijugador cada cliente solo tiene el suyo.' },
+  { l:'AI Controller', p:['ai controller'], c:'Gameplay', d:'Controller gobernado por IA que posee a los NPC.', d2:'Equivalente al Player Controller pero para IA. Ejecuta Behavior Trees, aloja la percepcion sensorial y es el puente entre el actor fisico y la logica.' },
+  { l:'Game Mode', p:['game mode','game mode base'], c:'Gameplay', d:'Define las reglas de la partida; existe solo en el servidor.', d2:'Define reglas, condiciones de victoria y que Pawn/PlayerController se instancian. Solo existe en la Autoridad (servidor). AGameMode agrega match states; Base es mas ligero.' },
+  { l:'Game State', p:['game state','game state base'], c:'Gameplay', d:'Estado global de la partida replicado a todos los clientes.', d2:'Contenedor de datos globales replicados: tiempo restante, puntajes de equipos, progreso de misiones. Lo que todos necesitan saber.' },
+  { l:'Player State', p:['player state'], c:'Gameplay', d:'Estado por jugador (nombre, ping, puntaje) replicado a todos.', d2:'Estado replicado de un jugador. A diferencia del Player Controller, el Player State de TODOS se replica a todos (util para tablas de puntajes).' },
+  { l:'Game Instance', p:['game instance'], c:'Gameplay', d:'Objeto persistente que sobrevive a la carga de niveles.', d2:'Objeto de alto nivel que vive desde que abre hasta que cierra el juego, sobreviviendo a los cambios de nivel. Ideal para datos globales, sesiones de red o audio persistente.' },
+  { l:'HUD', p:['a hud'], c:'Gameplay', d:'Clase clasica para dibujar en pantalla, hoy reemplazada por UMG.', d2:'Clase heredada de la vieja arquitectura, hoy sustituida por UMG. Aun util en C++ puro para dibujar debug o miras simples via DrawHUD sobre el canvas.' },
+  { l:'World', p:['uworld'], c:'Gameplay', d:'Objeto que representa el mapa/nivel cargado en memoria.', d2:'Objeto superior que representa el nivel actual: contiene los Actores, la fisica, el render de escena y el flujo de Tick.' },
   { l:'Subsystem', p:['subsystem'], c:'Gameplay', d:'Singleton gestionado por el engine con ciclo de vida definido.' },
-  { l:'Data Asset', p:['data asset'], c:'Gameplay', d:'Asset para almacenar datos configurables sin lógica.' },
+  { l:'World Partition', p:['world partition'], c:'Gameplay', d:'Streaming de mundos grandes por grilla.' },
+  { l:'Level Instance', p:['level instance'], c:'Gameplay', d:'Nivel reutilizable e instanciable dentro de otro nivel.' },
+  { l:'Gameplay Tag', p:['gameplay tag'], c:'Gameplay', d:'Etiqueta jerarquica para clasificar estados sin usar strings.' },
+  { l:'Data Asset', p:['data asset'], c:'Gameplay', d:'Asset para almacenar datos configurables sin logica.' },
   { l:'Primary Data Asset', p:['primary data asset'], c:'Gameplay', d:'Data Asset gestionable por el Asset Manager (carga bajo demanda).' },
   { l:'Data Table', p:['data table'], c:'Gameplay', d:'Tabla de filas tipadas por un Struct; ideal para balance.' },
-  { l:'Gameplay Tag', p:['gameplay tag'], c:'Gameplay', d:'Etiqueta jerárquica para clasificar estados y objetos sin strings.' },
-  { l:'Delegate', p:['delegate'], c:'Gameplay', d:'Sistema de callbacks/eventos con binding dinámico o estático.' },
-  { l:'Blueprint Interface', p:['blueprint interface'], c:'Gameplay', d:'Contrato de funciones que varias clases pueden implementar.' },
-  { l:'World Partition', p:['world partition'], c:'Gameplay', d:'Sistema de streaming de mundos grandes por grilla.' },
-  { l:'Level Instance', p:['level instance'], c:'Gameplay', d:'Nivel reutilizable e instanciable dentro de otro nivel.' },
+
+  // --- Componentes ---
+  { l:'Actor Component', p:['actor component'], c:'Componentes', d:'Componente sin transform que anade logica reutilizable a un Actor.' },
+  { l:'Scene Component', p:['scene component'], c:'Componentes', d:'Componente con transform; se anida en jerarquia.', d2:'Componente fundacional para todo lo que existe en el espacio 3D: tiene FTransform y permite jerarquias padre-hijo. No tiene geometria ni colision propia.' },
+  { l:'Primitive Component', p:['primitive component'], c:'Componentes', d:'Base de los componentes con geometria y colision.', d2:'Hereda de Scene Component. Clase base de todo componente que renderiza geometria y puede generar eventos de fisica/colision (Overlap o Hit).' },
+  { l:'Static Mesh Component', p:['static mesh component'], c:'Componentes', d:'Renderiza geometria rigida (no deformable).', d2:'Primitive Component para geometria rigida sin huesos. Muy optimizado en UE5 con Nanite (millones de poligonos a bajo coste).' },
+  { l:'Skeletal Mesh Component', p:['skeletal mesh component'], c:'Componentes', d:'Renderiza malla deformable atada a un esqueleto.', d2:'Renderiza geometria deformable ligada a un Skeleton. Calcula el skinning por frame y procesa el Animation Blueprint. Base de personajes.' },
+  { l:'Camera Component', p:['camera component'], c:'Componentes', d:'Punto de vista desde el que se renderiza el mundo.', d2:'Define el punto de vista del jugador. Acepta FOV, relacion de aspecto y post-proceso local.' },
+  { l:'Child Actor Component', p:['child actor component'], c:'Componentes', d:'Instancia un Actor completo dentro de otro Actor.', d2:'Permite anidar un Actor entero dentro de otro. Util para sistemas modulares, aunque en C++ se prefiere componer con componentes estandar por rendimiento.' },
+
+  // --- Tipos y C++ (Compilacion y Memoria) ---
+  { l:'UCLASS / GENERATED_BODY', p:['u class','uclass','generated body'], c:'C++', d:'Expone una clase C++ al sistema de reflexion del motor.', d2:'UCLASS expone la clase C++ a reflexion (Blueprints y GC). GENERATED_BODY es la macro obligatoria que inyecta el codigo generado por Unreal Header Tool durante la compilacion.' },
+  { l:'UPROPERTY', p:['u property','uproperty'], c:'C++', d:'Macro que expone una variable a editor, Blueprint o red.', d2:'Macro de serializacion. Especificadores clave: EditAnywhere (editable en el panel de detalles), BlueprintReadWrite (accesible desde nodos) y Replicated (marca para red).' },
+  { l:'TObjectPtr', p:['object pointer','t object pointer'], c:'C++', d:'Puntero inteligente moderno de UE5 a UObjects.', d2:'Puntero UE5: en el editor rastrea dependencias y carga dinamica; en shipping se resuelve como puntero crudo T* sin coste. Reemplaza al puntero desnudo.' },
+  { l:'TWeakObjectPtr', p:['weak object pointer','weak pointer'], c:'C++', d:'Puntero que no impide que el GC destruya el objeto.', d2:'Apunta a un objeto sin incrementar su conteo de referencias. Si el GC lo destruye, es seguro de verificar (IsValid) en vez de causar un crash.' },
+  { l:'TSubclassOf', p:['subclass of','sub class of','t subclass of'], c:'C++', d:'Referencia type-safe a una clase (no a una instancia).', d2:'Plantilla que garantiza seguridad de tipos al referenciar una clase. En el editor eliges que clase spawnear (ej. la clase C++ del arma a instanciar en la mano).' },
+  { l:'FString', p:['f string','fstring'], c:'C++', d:'Cadena de texto dinamica y mutable, para uso interno.', d2:'Texto mutable para manipulacion en codigo (concatenar, parsear JSON, prints de debug). No usar en la UI del jugador final.' },
+  { l:'FName', p:['f name','fname'], c:'C++', d:'Cadena inmutable e indexada, rapidisima; case-insensitive.', d2:'Texto inmutable guardado en una tabla global por indice. No distingue mayusculas. Obligatorio para identificadores criticos (ej. nombre de un hueso o socket).' },
+  { l:'FText', p:['f text','ftext'], c:'C++', d:'Texto para el usuario final, con soporte de localizacion.', d2:'El tipo de texto mas pesado, con datos de cultura/localizacion. Todo lo que ve el jugador (UMG, subtitulos) debe ser FText para que el motor pueda traducirlo.' },
+  { l:'Garbage Collection', p:['garbage collection'], c:'C++', d:'Liberacion automatica de UObjects sin referencias.' },
+  { l:'Live Coding', p:['live coding'], c:'C++', d:'Recompila C++ sin cerrar el editor.' },
 
   // --- Blueprints / Scripting ---
   { l:'Blueprint', p:['blueprint'], c:'Blueprints', d:'Sistema de scripting visual por nodos de Unreal.' },
-  { l:'Cast To', p:['cast to'], c:'Blueprints', d:'Convierte una referencia a una clase específica (falla si no coincide).' },
-  { l:'Event Tick', p:['event tick','tick'], c:'Blueprints', d:'Evento que se ejecuta cada frame; úsalo con criterio.' },
+  { l:'Blueprint Class', p:['blueprint class'], c:'Blueprints', d:'Asset que hereda de una clase base con componentes y logica.', d2:'Hereda de una clase base (C++ u otro BP) con su jerarquia de componentes, variables y grafos. Equivale a crear una clase instanciable de POO.' },
+  { l:'Level Blueprint', p:['level blueprint'], c:'Blueprints', d:'Grafo logico unico y exclusivo de cada nivel.', d2:'Logica exclusiva de un nivel (UWorld). Para eventos cinematicos cerrados o referencias a actores colocados a mano. No se reutiliza en otros niveles.' },
+  { l:'Event Graph', p:['event graph'], c:'Blueprints', d:'Lienzo principal de logica en runtime de un Blueprint.', d2:'Donde ocurre la logica en runtime, respondiendo a eventos (BeginPlay, Tick, personalizados) con nodos conectados por pines de ejecucion.' },
+  { l:'Construction Script', p:['construction script'], c:'Blueprints', d:'Se ejecuta al editar/colocar el Actor, antes de BeginPlay.', d2:'Grafo que corre antes del BeginPlay y se actualiza al editar el Actor en el viewport. Ideal para herramientas procedurales (ej. una valla que agrega postes al estirarla).' },
+  { l:'Cast To', p:['cast to','cast'], c:'Blueprints', d:'Convierte una referencia a una clase especifica.', d2:'Conversion dinamica de tipos. Verifica en runtime si un puntero base es de una clase derivada; si falla devuelve nullptr sin romper la memoria.' },
+  { l:'Event Tick', p:['event tick','tick'], c:'Blueprints', d:'Evento que se ejecuta cada frame; usar con criterio.' },
   { l:'Timeline', p:['timeline'], c:'Blueprints', d:'Nodo que anima valores en el tiempo dentro de un Blueprint.' },
   { l:'Enum', p:['enum','enumeration'], c:'Blueprints', d:'Tipo con un conjunto fijo de valores con nombre.' },
   { l:'Struct', p:['struct','structure'], c:'Blueprints', d:'Tipo que agrupa varias variables en una sola.' },
   { l:'Soft Reference', p:['soft reference','soft object reference'], c:'Blueprints', d:'Puntero que NO carga el asset hasta pedirlo; ahorra memoria.' },
   { l:'Hard Reference', p:['hard reference'], c:'Blueprints', d:'Referencia directa que carga el asset junto al que la contiene.' },
-  { l:'Lerp', p:['lerp','linear interpolate'], c:'Blueprints', d:'Interpolación lineal entre dos valores según un alpha 0–1.' },
-  { l:'Construction Script', p:['construction script'], c:'Blueprints', d:'Se ejecuta al editar/colocar el Actor (no en runtime).' },
-  { l:'Macro', p:['macro'], c:'Blueprints', d:'Nodo reutilizable que agrupa una red de nodos con entradas/salidas.' },
+  { l:'Macro Library', p:['macro library'], c:'Blueprints', d:'Coleccion de macros reutilizables.', d2:'Contenedor de macros. Las macros no son codigo real: el motor copia y pega su contenido en cada uso. Permiten multiples pines de ejecucion (ej. un ForLoop propio).' },
+  { l:'Function Library', p:['function library'], c:'Blueprints', d:'Coleccion de funciones estaticas globales.', d2:'Funciones puramente estaticas que no dependen del estado de un Actor. Utiles para calculos genericos accesibles desde cualquier Blueprint.' },
+  { l:'Macro', p:['macro'], c:'Blueprints', d:'Nodo reutilizable que agrupa una red de nodos.' },
+  { l:'Blueprint Interface', p:['blueprint interface'], c:'Blueprints', d:'Contrato de funciones que varias clases implementan.', d2:'Coleccion de funciones vacias. Si un barril y un enemigo implementan IDamageable, envias Recibir Dano a ambos sin hacer Cast. Reduce el acoplamiento.' },
+
+  // --- Delegados / Comunicacion ---
+  { l:'Delegate', p:['delegate'], c:'Delegados', d:'Sistema de callbacks/eventos con binding.', d2:'Single-cast: puntero a funcion seguro que guarda un solo bind. Al ejecutarse (ExecuteIfBound) llama a esa funcion. Rapido, para callbacks directos.' },
+  { l:'Multicast Delegate', p:['multicast delegate','multicast'], c:'Delegados', d:'Delegado al que varios objetos se suscriben a la vez.', d2:'Multiples objetos se suscriben; al ocurrir el evento hace Broadcast y notifica a todos (UI de vida, audio, emisor de sangre) sin que el emisor los conozca.' },
+  { l:'Dynamic Delegate', p:['dynamic delegate'], c:'Delegados', d:'Delegado serializable, expuesto a reflexion y a Blueprints.', d2:'Variante serializable, algo mas lenta, pero la unica que se expone a reflexion (UPROPERTY) y se conecta desde los grafos de Blueprint.' },
+  { l:'Event Dispatcher', p:['event dispatcher'], c:'Delegados', d:'Nombre en el editor de los Dynamic Multicast Delegates.', d2:'Como se llaman los Dynamic Multicast Delegates en la UI de Blueprints. Permite arrastrar eventos propios y enlazar nodos a eventos asincronos.' },
+  { l:'BlueprintImplementableEvent', p:['blueprint implementable event','implementable event'], c:'Delegados', d:'Funcion declarada en C++ pero implementada solo en Blueprint.', d2:'Se declara en el .h sin cuerpo en el .cpp. Se invoca desde C++, pero su logica la programa el disenador en el Blueprint hijo.' },
+  { l:'BlueprintNativeEvent', p:['blueprint native event','native event'], c:'Delegados', d:'Funcion con implementacion base en C++ sobreescribible en BP.', d2:'Como la anterior pero con implementacion por defecto en C++ (_Implementation). Si el Blueprint la sobreescribe corre esa; si no, la base en C++.' },
 
   // --- Gameplay Ability System ---
   { l:'Gameplay Ability System', p:['gameplay ability system'], c:'GAS', d:'Framework de habilidades, efectos y atributos en red.' },
-  { l:'Gameplay Ability', p:['gameplay ability'], c:'GAS', d:'Acción activable (habilidad) con costos, cooldowns y tags.' },
-  { l:'Gameplay Effect', p:['gameplay effect'], c:'GAS', d:'Modifica atributos de forma instantánea, con duración o infinita.' },
-  { l:'Gameplay Cue', p:['gameplay cue'], c:'GAS', d:'Feedback cosmético (VFX/SFX) disparado por tags, replicable.' },
+  { l:'Gameplay Ability', p:['gameplay ability'], c:'GAS', d:'Accion activable con costos, cooldowns y tags.' },
+  { l:'Gameplay Effect', p:['gameplay effect'], c:'GAS', d:'Modifica atributos instantaneo, con duracion o infinito.' },
+  { l:'Gameplay Cue', p:['gameplay cue'], c:'GAS', d:'Feedback cosmetico (VFX/SFX) disparado por tags, replicable.' },
   { l:'Ability System Component', p:['ability system component'], c:'GAS', d:'Componente que gestiona habilidades, atributos y efectos.' },
-  { l:'Attribute Set', p:['attribute set'], c:'GAS', d:'Conjunto de atributos (vida, stamina…) manejados por GAS.' },
+  { l:'Attribute Set', p:['attribute set'], c:'GAS', d:'Conjunto de atributos (vida, stamina) manejados por GAS.' },
 
-  // --- Animación ---
-  { l:'Animation Blueprint', p:['animation blueprint','anim blueprint','animbp'], c:'Animación', d:'Blueprint que controla la animación de un Skeletal Mesh.' },
-  { l:'Anim Graph', p:['anim graph','animation graph'], c:'Animación', d:'Grafo donde se mezclan poses para producir la salida final.' },
-  { l:'State Machine', p:['state machine'], c:'Animación', d:'Máquina de estados de animación con transiciones entre poses.' },
-  { l:'Blend Space', p:['blend space','blendspace'], c:'Animación', d:'Mezcla animaciones según uno o dos ejes (ej. velocidad/dirección).' },
-  { l:'Aim Offset', p:['aim offset'], c:'Animación', d:'Aditivo que orienta la pose hacia una dirección (apuntar/mirar).' },
-  { l:'Montage', p:['montage','anim montage','animation montage'], c:'Animación', d:'Animación por secciones controlable desde código/BP (ataques, etc.).' },
-  { l:'Anim Notify', p:['anim notify','animation notify'], c:'Animación', d:'Evento en un punto de la animación (sonido, VFX, hitbox…).' },
-  { l:'Anim Notify State', p:['anim notify state','notify state'], c:'Animación', d:'Notify con duración (ventana de inicio/fin).' },
-  { l:'Layered Blend Per Bone', p:['layered blend per bone'], c:'Animación', d:'Mezcla poses por rama del esqueleto (ej. torso vs piernas).' },
-  { l:'Blend Mask', p:['blend mask'], c:'Animación', d:'Máscara de pesos por hueso para blends más finos que el Branch Filter.' },
-  { l:'Branch Filter', p:['branch filter'], c:'Animación', d:'Selección de rama por hueso base en un Layered Blend.' },
-  { l:'Inertialization', p:['inertialization','inertialize'], c:'Animación', d:'Blending que amortigua la pose actual en vez de mezclar dos clips.' },
-  { l:'Motion Matching', p:['motion matching'], c:'Animación', d:'Elige poses de una base de datos según trayectoria/entrada actual.' },
-  { l:'Motion Warping', p:['motion warping'], c:'Animación', d:'Ajusta el root motion en runtime para alinear la animación a un objetivo.' },
-  { l:'Root Motion', p:['root motion'], c:'Animación', d:'Movimiento extraído del hueso raíz de la animación.' },
-  { l:'Poseable Mesh', p:['poseable mesh'], c:'Animación', d:'Mesh cuyos huesos se posan manualmente por código (ej. after-images).' },
-  { l:'Skeletal Mesh', p:['skeletal mesh'], c:'Animación', d:'Malla deformada por un esqueleto animable.' },
-  { l:'Skeleton', p:['skeleton'], c:'Animación', d:'Jerarquía de huesos compartida por varias animaciones.' },
-  { l:'IK Retargeting', p:['retarget','retargeting','ik retargeter'], c:'Animación', d:'Adapta animaciones entre esqueletos distintos.' },
-  { l:'Control Rig', p:['control rig'], c:'Animación', d:'Sistema de rigging/animación procedural por grafo dentro de UE.' },
-  { l:'Inverse Kinematics', p:['inverse kinematics','two bone ik','foot placement','leg ik'], c:'Animación', d:'Calcula la rotación de huesos para alcanzar una posición objetivo.' },
-  { l:'Additive Animation', p:['additive animation'], c:'Animación', d:'Animación que se suma sobre una pose base.' },
-  { l:'Sync Group', p:['sync group'], c:'Animación', d:'Sincroniza la fase de varias animaciones (ej. ciclos de pisada).' },
+  // --- Animacion ---
+  { l:'Animation Blueprint', p:['animation blueprint','anim blueprint','animbp'], c:'Animacion', d:'Blueprint que controla la animacion de un Skeletal Mesh.' },
+  { l:'Anim Graph', p:['anim graph','animation graph'], c:'Animacion', d:'Grafo donde se mezclan poses para la salida final.' },
+  { l:'State Machine', p:['state machine'], c:'Animacion', d:'Maquina de estados de animacion con transiciones entre poses.', d2:'Grafo dentro del Animation Blueprint que evalua estados logicos (Idle, Caminar, Caer, Atacar) y gestiona transiciones suavizadas segun variables (velocidad, booleanos).' },
+  { l:'Anim Sequence', p:['anim sequence','animation sequence'], c:'Animacion', d:'Clip de animacion puro importado (FBX) con keyframes.', d2:'Archivo de datos importado (normalmente FBX) con los keyframes de rotacion y traslacion de los huesos a lo largo de una linea de tiempo lineal.' },
+  { l:'Montage', p:['montage','anim montage','animation montage'], c:'Animacion', d:'Animacion por secciones controlable desde codigo/BP.', d2:'Contenedor que envuelve secuencias y se activa por codigo con maxima prioridad, secuestrando el esqueleto de la State Machine. Para ataques, recargas, esquivas.' },
+  { l:'Blend Space', p:['blend space','blendspace'], c:'Animacion', d:'Mezcla animaciones segun uno o dos ejes continuos.', d2:'Mezcla clips segun variables continuas. Un Blend Space 2D combina Velocidad y Direccion para pasar entre caminar, trotar de lado y correr atras sin saltos.' },
+  { l:'Aim Offset', p:['aim offset'], c:'Animacion', d:'Aditivo que orienta la pose hacia una direccion (apuntar).' },
+  { l:'Anim Notify', p:['anim notify','animation notify','notifier'], c:'Animacion', d:'Evento en un punto de la animacion (sonido, VFX, hitbox).', d2:'Marcador incrustado en un Sequence o Montage. En el frame X lanza un evento: pisada, VFX de polvo, o habilitar la hitbox de dano de un arma.' },
+  { l:'Anim Notify State', p:['anim notify state','notify state'], c:'Animacion', d:'Notify con duracion (ventana de inicio/fin).' },
+  { l:'Layered Blend Per Bone', p:['layered blend per bone'], c:'Animacion', d:'Mezcla poses por rama del esqueleto (torso vs piernas).' },
+  { l:'Blend Mask', p:['blend mask'], c:'Animacion', d:'Mascara de pesos por hueso, mas fina que el Branch Filter.' },
+  { l:'Branch Filter', p:['branch filter'], c:'Animacion', d:'Seleccion de rama por hueso base en un Layered Blend.' },
+  { l:'Inertialization', p:['inertialization','inertialize'], c:'Animacion', d:'Blending que amortigua la pose actual sin mezclar dos clips.' },
+  { l:'Motion Matching', p:['motion matching'], c:'Animacion', d:'Elige poses de una base de datos segun trayectoria/entrada.', d2:'Sistema de UE5.4+ que busca en milisegundos dentro de una base de datos de animaciones, evaluando trayectoria futura y pose actual, sin State Machines rigidas.' },
+  { l:'Motion Warping', p:['motion warping'], c:'Animacion', d:'Ajusta el root motion en runtime para alinear a un objetivo.' },
+  { l:'Root Motion', p:['root motion'], c:'Animacion', d:'Movimiento extraido del hueso raiz de la animacion.', d2:'El hueso raiz lleva datos de desplazamiento real: la animacion mueve la capsula en vez de que las piernas resbalen. Vital para embestidas y ejecuciones sincronizadas.' },
+  { l:'Skeleton', p:['skeleton'], c:'Animacion', d:'Jerarquia de huesos y sockets compartida por animaciones.', d2:'Asset logico base: solo jerarquia de huesos y Sockets (anclajes como la mano). Varios Skeletal Mesh comparten un esqueleto para reciclar animaciones.' },
+  { l:'Socket', p:['socket','sockets'], c:'Animacion', d:'Punto de anclaje virtual en un hueso (ej. la mano para el arma).' },
+  { l:'Poseable Mesh', p:['poseable mesh'], c:'Animacion', d:'Mesh cuyos huesos se posan por codigo (ej. after-images).' },
+  { l:'Skeletal Mesh', p:['skeletal mesh'], c:'Animacion', d:'Malla deformable por un esqueleto animable.', d2:'Geometria deformable con pesos de vertices (skinning), jerarquia de huesos y Morph Targets (Blend Shapes).' },
+  { l:'IK Retargeting', p:['retarget','retargeting','ik retargeter'], c:'Animacion', d:'Adapta animaciones entre esqueletos distintos.', d2:'Asset de mapeo que transfiere las transformaciones de huesos de un esqueleto origen a uno destino de proporciones distintas (ej. maniqui a MetaHuman) con cadenas IK.' },
+  { l:'Control Rig', p:['control rig'], c:'Animacion', d:'Rigging/animacion procedural por grafo dentro de UE.' },
+  { l:'Inverse Kinematics', p:['inverse kinematics','two bone ik','foot placement','leg ik'], c:'Animacion', d:'Rota huesos para alcanzar una posicion objetivo.' },
+  { l:'Additive Animation', p:['additive animation'], c:'Animacion', d:'Animacion que se suma sobre una pose base.' },
+  { l:'Sync Group', p:['sync group','sync groups'], c:'Animacion', d:'Sincroniza la fase de varias animaciones.', d2:'Sincroniza las zancadas de mitad superior e inferior del cuerpo (ej. caminar y disparar) para que el torso no gire bruscamente.' },
+  { l:'Physical Animation Component', p:['physical animation component','physical animation'], c:'Animacion', d:'Mezcla animacion pregrabada con fisica en tiempo real.', d2:'Permite que el personaje mantenga su pose animada mientras fuerzas fisicas actuan sobre sus huesos. Para reacciones a impactos de balas o golpes dinamicos.' },
 
-  // --- State Tree / IA ---
-  { l:'State Tree', p:['state tree'], c:'IA / Lógica', d:'Máquina de estados jerárquica basada en selección, más flexible que el Behavior Tree.' },
-  { l:'Behavior Tree', p:['behavior tree','behaviour tree'], c:'IA / Lógica', d:'Árbol de decisión para IA con tareas, selectores y decoradores.' },
-  { l:'Blackboard', p:['blackboard'], c:'IA / Lógica', d:'Memoria de claves/valores que alimenta al Behavior Tree.' },
-  { l:'Nav Mesh', p:['nav mesh','navmesh','navigation mesh'], c:'IA / Lógica', d:'Malla que define dónde puede navegar la IA.' },
-  { l:'Environment Query', p:['environment query'], c:'IA / Lógica', d:'EQS: consulta el entorno para elegir posiciones/objetivos.' },
+  // --- IA / Logica ---
+  { l:'State Tree', p:['state tree'], c:'IA / Logica', d:'Maquina de estados jerarquica, mas flexible que el Behavior Tree.', d2:'IA moderna de UE5 que combina la previsibilidad de una State Machine con la flexibilidad de un Behavior Tree. Muy optimizado, con Sub-Trees reutilizables y agnostico (IA, animacion o UI).' },
+  { l:'Behavior Tree', p:['behavior tree','behaviour tree'], c:'IA / Logica', d:'Arbol de decision de IA con tareas, selectores y decoradores.', d2:'Asset logico que define el flujo de decisiones leyendo del Blackboard. No guarda datos: es un grafo de control evaluado de izquierda a derecha y de arriba a abajo.' },
+  { l:'Blackboard', p:['blackboard'], c:'IA / Logica', d:'Memoria de claves/valores que alimenta al Behavior Tree.', d2:'La RAM del NPC: base de datos de claves donde la IA guarda info temporal (a quien persigo, donde escuche un ruido, mi nivel de alerta). El BT lee y escribe aqui.' },
+  { l:'Selector', p:['selector'], c:'IA / Logica', d:'Nodo composite que corre hijos hasta que uno tiene exito (OR).', d2:'Ejecuta sus hijos de izquierda a derecha y se detiene cuando uno da Success. Logica OR: puedo atacar? (falla) puedo curarme? (falla) entonces huyo (exito).' },
+  { l:'Sequence Node', p:['sequence node'], c:'IA / Logica', d:'Nodo composite que corre hijos hasta que uno falla (AND).', d2:'Ejecuta hijos de izquierda a derecha y se detiene cuando uno falla. Logica AND: acercate Y apunta Y dispara; si fallas al acercarte no intentes disparar.' },
+  { l:'Task Node', p:['task node','behavior tree task'], c:'IA / Logica', d:'Hoja del arbol: la accion fisica que ejecuta la IA.', d2:'Nodos terminales programables en C++/BP (reproducir ataque, recargar, rotar al objetivo). Deben finalizar devolviendo Success o Fail.' },
+  { l:'Decorator', p:['decorator','decorators'], c:'IA / Logica', d:'Condicion (un If) que se acopla sobre un nodo del arbol.', d2:'Guardian condicional sobre un Composite o Task. Si la condicion no se cumple (ej. vida menor al 20%) el nodo no corre. Puede abortar ramas enteras (Observer aborts).' },
+  { l:'Service Node', p:['service node','behavior tree service'], c:'IA / Logica', d:'Nodo que corre en intervalos mientras su rama esta activa.', d2:'Se acopla a un Composite y corre repetidamente en Ticks controlados mientras su rama sigue activa. Ideal para actualizar el Blackboard (ej. distancia al jugador cada 0.5 s).' },
+  { l:'AI Perception', p:['ai perception','perception component'], c:'IA / Logica', d:'Sistema sensorial central del AI Controller.', d2:'Componente sensorial que dispara delegados (OnTargetPerceptionUpdated) solo cuando un estimulo cruza un umbral, evitando LineTraces constantes por Tick.' },
+  { l:'AI Senses', p:['sight sense','hearing sense'], c:'IA / Logica', d:'Sentidos de la percepcion: vista y oido.', d2:'Config dentro de la Percepcion. Sight evalua conos de vision, rango periferico y oclusion; Hearing reacciona a eventos de ruido (pasos, disparos via MakeNoise).' },
+  { l:'Environment Query System', p:['environment query','environment query system'], c:'IA / Logica', d:'EQS: consulta el entorno para elegir posiciones/objetivos.', d2:'Motor de busqueda espacial asincrono. En vez de dar una coordenada, haces una pregunta geometrica (genera una grilla, filtra lo visible, dame el punto mas seguro). Se evalua en varios frames.' },
+  { l:'Smart Objects', p:['smart object','smart objects'], c:'IA / Logica', d:'Traslada la logica de interaccion desde la IA al entorno.', d2:'El objeto del mapa (una silla, una cobertura) contiene las animaciones y la logica de uso. La IA solo solicita usarlo, ahorrando mucha programacion condicional en el Controller.' },
+  { l:'Nav Mesh', p:['nav mesh','navmesh','navigation mesh'], c:'IA / Logica', d:'Malla que define donde puede navegar la IA.', d2:'Malla poligonal sobre las superficies transitables. La IA usa A* para el camino mas corto. Puede ser dinamica para reconstruirse si algo bloquea el paso.' },
+  { l:'NavMesh Bounds Volume', p:['nav mesh bounds volume','nav mesh bounds'], c:'IA / Logica', d:'Volumen que define que areas generan navegacion.', d2:'Volumen invisible que delimita que zonas del mapa se analizan para generar el NavMesh. La geometria estatica que interseca se escanea.' },
+  { l:'Nav Modifier Volume', p:['nav modifier volume'], c:'IA / Logica', d:'Altera el coste de navegacion de una zona sin bloquearla.', d2:'No bloquea, pero cambia el coste del NavMesh en su area: obliga a evitar zonas peligrosas (fuego) o preferir caminos, alterando la ruta que A* considera mas rapida.' },
+  { l:'AI Move To', p:['ai move to'], c:'IA / Logica', d:'Ordena al AI Controller calcular y seguir una ruta.', d2:'Nodo asincrono (funcion latente en C++) que ordena al AI Controller ir a un vector o Actor, devolviendo exito, fallo o bloqueo.' },
 
-  // --- Render / Materiales ---
-  { l:'Material', p:['material'], c:'Render', d:'Define cómo se ve una superficie (color, rugosidad, etc.).' },
-  { l:'Material Instance', p:['material instance'], c:'Render', d:'Variante de un material con parámetros ajustables sin recompilar.' },
-  { l:'Material Function', p:['material function'], c:'Render', d:'Bloque reutilizable de nodos dentro de materiales.' },
-  { l:'Nanite', p:['nanite'], c:'Render', d:'Geometría virtualizada: mallas con muchísimos polígonos sin coste manual de LODs.' },
-  { l:'Lumen', p:['lumen'], c:'Render', d:'Iluminación global y reflexiones dinámicas en tiempo real.' },
-  { l:'Niagara', p:['niagara'], c:'Render', d:'Sistema de VFX y partículas de Unreal.' },
-  { l:'Post Process', p:['post process','post processing'], c:'Render', d:'Efectos de imagen aplicados tras el render (bloom, color grading…).' },
-  { l:'Groom', p:['groom'], c:'Render', d:'Sistema de pelo/fibras por strands (XGen, Alembic…).' },
-  { l:'MetaHuman', p:['metahuman','meta human'], c:'Render', d:'Framework de personajes humanos realistas de Epic.' },
-  { l:'Fresnel', p:['fresnel'], c:'Render', d:'Efecto según el ángulo de vista; útil para rims y bordes.' },
-  { l:'Emissive', p:['emissive'], c:'Render', d:'Canal de material que emite luz/color propio.' },
-  { l:'Roughness', p:['roughness'], c:'Render', d:'Controla cuán difusa o pulida se ve una superficie.' },
-  { l:'Dithering', p:['dithering','dither'], c:'Render', d:'Patrón de puntos para simular transparencia/disolución.' },
-  { l:'Shader', p:['shader'], c:'Render', d:'Programa que calcula el aspecto de píxeles/vértices.' },
-  { l:'Render Target', p:['render target'], c:'Render', d:'Textura donde se dibuja para reusar el resultado en runtime.' },
-  { l:'TSR', p:['temporal super resolution'], c:'Render', d:'Upscaling temporal antialiasing de Unreal.' },
+  // --- Render / Pipeline ---
+  { l:'Deferred Rendering', p:['deferred rendering','deferred shading'], c:'Render', d:'Render por defecto en dos pases (G-Buffer y luego luz).', d2:'Primero dibuja la geometria sin luz al G-Buffer (color, normales, profundidad) y luego calcula la iluminacion. Permite cientos de luces dinamicas sin multiplicar el coste.' },
+  { l:'Forward Rendering', p:['forward rendering','forward shading'], c:'Render', d:'Geometria e iluminacion en un solo paso; rapido y nitido.', d2:'Calcula geometria y luz a la vez. Menos flexible con muchas luces dinamicas, pero muy rapido y nitido. Se usa casi solo en VR y movil optimizado.' },
+  { l:'Path Tracer', p:['path tracer','path tracing'], c:'Render', d:'Render progresivo fisicamente preciso, para cinematicas.', d2:'Motor progresivo fotorrealista integrado. Dispara rayos desde la camara; no es para gameplay en tiempo real sino para cinematicas (Sequencer) o imagenes de referencia.' },
+  { l:'Ray Tracing', p:['ray tracing','hardware ray tracing'], c:'Render', d:'Nucleos dedicados calculan luz, reflejos y sombras exactos.', d2:'HWRT usa RT Cores de la GPU para rebotes de luz, reflejos exactos y sombras suaves. Lumen lo usa si esta disponible y cae a software (distance fields) si no.' },
+  { l:'Lumen', p:['lumen'], c:'Render', d:'Iluminacion global y reflexiones dinamicas en tiempo real.' },
+  { l:'Nanite', p:['nanite'], c:'Render', d:'Geometria virtualizada: mucho poligono sin LODs manuales.' },
+  { l:'TSR', p:['temporal super resolution','tsr'], c:'Render', d:'Upscaler temporal nativo de Epic (renderiza bajo, escala alto).', d2:'Escalador temporal nativo de Epic. Renderiza interno a menor resolucion y reconstruye la imagen final. Alternativas de terceros: DLSS (NVIDIA), FSR (AMD), XeSS (Intel).' },
+  { l:'DLSS', p:['dlss'], c:'Render', d:'Upscaler por IA de NVIDIA (plugin).' },
+  { l:'Post Process Volume', p:['post process volume','post process','post processing'], c:'Render', d:'Area que aplica filtros y correcciones al render final.', d2:'Volumen (o global) que aplica exposicion automatica, bloom, aberracion cromatica, color grading y balance de blancos sobre la imagen final.' },
+  { l:'Shader', p:['shader'], c:'Render', d:'Programa que calcula el aspecto de pixeles/vertices.' },
+  { l:'Render Target', p:['render target'], c:'Render', d:'Textura donde se dibuja en runtime para reusar el resultado.', d2:'Textura dinamica escribible en runtime. Para camaras de seguridad, espejos, minimapas dinamicos o huellas en la nieve.' },
 
-  // --- Cámara / Cine ---
-  { l:'Spring Arm', p:['spring arm'], c:'Cámara', d:'Brazo que sostiene la cámara y evita atravesar geometría.' },
-  { l:'Camera Modifier', p:['camera modifier'], c:'Cámara', d:'Modifica la cámara en runtime (shakes, offsets, blends).' },
-  { l:'Sequencer', p:['sequencer'], c:'Cámara', d:'Editor de cinemáticas y animaciones por pistas.' },
-  { l:'Movie Render Queue', p:['movie render queue'], c:'Cámara', d:'Render de alta calidad a imagen/video (MRQ).' },
-  { l:'Camera Animation Sequence', p:['camera animation sequence'], c:'Cámara', d:'Animación de cámara aditiva reutilizable (CAS).' },
-  { l:'Field of View', p:['field of view'], c:'Cámara', d:'Ángulo de visión de la cámara (FOV).' },
+  // --- Materiales (PBR) ---
+  { l:'Material', p:['material'], c:'Materiales', d:'Grafo de shading que define como se ve una superficie.', d2:'Grafo de shading que compila a HLSL: define matematicamente como la luz interactua con la superficie. En AAA suele usarse como Material Maestro, no directo en mallas.' },
+  { l:'Material Instance', p:['material instance'], c:'Materiales', d:'Variante de un material con parametros ajustables sin recompilar.', d2:'Version de bajo coste de un material: cambia parametros (colores, texturas, numeros) sin recompilar el shader. Mandatorio para optimizar memoria (Instancing).' },
+  { l:'Material Function', p:['material function'], c:'Materiales', d:'Bloque reutilizable de nodos dentro de materiales.' },
+  { l:'Material Parameter Collection', p:['material parameter collection'], c:'Materiales', d:'Variables globales de material actualizables desde codigo.', d2:'Asset con variables globales. Cambiar un valor (ej. Nivel de Lluvia) desde C++ actualiza a la vez todos los materiales del mundo que referencien ese MPC.' },
+  { l:'Base Color', p:['base color','albedo'], c:'Materiales', d:'Color puro de la superficie sin iluminacion (Albedo).' },
+  { l:'Roughness', p:['roughness'], c:'Materiales', d:'Cuan difusa o pulida se ve una superficie (0 a 1).', d2:'Micro-rugosidad de 0 a 1. En 0 la luz rebota en una direccion (espejo); en 1 se dispersa creando reflejos opacos (tiza, tela).' },
+  { l:'Metallic', p:['metallic'], c:'Materiales', d:'Define si el material es conductor (metal) o dielectrico.', d2:'Metal vs no metal; en PBR estricto es 0 o 1. En 1 el Base Color tine el color del reflejo (ej. una hoja afilada refleja plateado segun su albedo).' },
+  { l:'Normal Map', p:['normal map'], c:'Materiales', d:'Textura RGB que simula relieve sin poligonos reales.', d2:'Usa canales RGB para enganar al motor simulando detalles geometricos (relieves, rasgunos) que reaccionan a la luz dinamica sin anadir poligonos.' },
+  { l:'Emissive', p:['emissive'], c:'Materiales', d:'Canal de material que emite luz/color propio.' },
+  { l:'Fresnel', p:['fresnel'], c:'Materiales', d:'Efecto segun el angulo de vista; rims y bordes.', d2:'Calcula el angulo de vista relativo a la normal, dando un gradiente mas intenso en los bordes. Para escudos de energia, contornos de seleccion o terciopelo.' },
+  { l:'World Position Offset', p:['world position offset'], c:'Materiales', d:'Desplaza los vertices de la malla en la GPU (WPO).', d2:'Mueve los vertices reales en la GPU antes de renderizar. Base del follaje con viento o de ondular una capa a la distancia sin coste de fisica real.' },
+  { l:'Pixel Depth Offset', p:['pixel depth offset'], c:'Materiales', d:'Modifica el buffer de profundidad para fusionar mallas (PDO).', d2:'Hace creer al motor que el pixel esta mas atras, difuminando el corte duro donde una roca o raiz interseca el terreno.' },
+  { l:'Lerp', p:['lerp','linear interpolate'], c:'Materiales', d:'Interpolacion lineal entre dos valores segun un alpha 0-1.', d2:'Mezcla una entrada A y una B segun un alpha. Ej. A piel limpia, B textura de sangre, alpha el dano recibido.' },
+  { l:'Dithering', p:['dithering','dither'], c:'Materiales', d:'Patron de puntos para simular transparencia/disolucion.' },
+  { l:'Texture', p:['texture','texture 2d'], c:'Materiales', d:'Imagen 2D (albedo, normales, mascaras).', d2:'Imagen rasterizada 2D. UE5 soporta compresion BC y Virtual Texturing para cargar texturas enormes (8K+) por porciones sin saturar la VRAM.' },
 
-  // --- C++ / Engine ---
-  { l:'Garbage Collection', p:['garbage collection'], c:'C++', d:'Liberación automática de UObjects sin referencias.' },
-  { l:'Replication', p:['replication','replicated','replicate'], c:'C++', d:'Sincronización de estado servidor→clientes en multijugador.' },
-  { l:'RepNotify', p:['rep notify','repnotify'], c:'C++', d:'Callback que se dispara cuando una variable replicada cambia.' },
-  { l:'Multicast', p:['multicast'], c:'C++', d:'RPC que el servidor envía a todos los clientes.' },
-  { l:'Live Coding', p:['live coding'], c:'C++', d:'Recompila C++ sin cerrar el editor.' },
+  // --- VFX (Niagara) ---
+  { l:'Niagara', p:['niagara','niagara system'], c:'VFX', d:'Sistema de VFX y particulas de Unreal (reemplaza Cascade).', d2:'Sistema de particulas orientado a datos, procesado casi todo por GPU (millones de particulas). El System agrupa y sincroniza varios emisores en un efecto completo.' },
+  { l:'Niagara Emitter', p:['niagara emitter','emitter'], c:'VFX', d:'Reglas de un solo tipo de particula dentro de un System.', d2:'Cada emisor define como nace, vive y muere un tipo de particula. Se pueden guardar como assets aislados para reusarlos.' },
+  { l:'Ribbon Renderer', p:['ribbon renderer'], c:'VFX', d:'Conecta las posiciones de la particula en una malla continua.', d2:'En vez de sprites individuales, genera una malla continua entre posiciones secuenciales. Estandar para estelas de armas (el barrido tras un corte) o proyectiles.' },
+  { l:'Cascade', p:['cascade'], c:'VFX', d:'Sistema de particulas antiguo, reemplazado por Niagara.' },
+
+  // --- Camara / Cine ---
+  { l:'Spring Arm', p:['spring arm'], c:'Camara', d:'Brazo que sostiene la camara y evita atravesar geometria.', d2:'Brazo telescopico (camara en 3a persona) que evalua colisiones entre su origen y su final; si detecta un muro contrae la camara para evitar el clipping.' },
+  { l:'Camera Modifier', p:['camera modifier'], c:'Camara', d:'Modifica la camara en runtime (shakes, offsets, blends).' },
+  { l:'Sequencer', p:['sequencer'], c:'Camara', d:'Editor de cinematicas y animaciones por pistas.' },
+  { l:'Movie Render Queue', p:['movie render queue'], c:'Camara', d:'Render de alta calidad a imagen/video (MRQ).' },
+  { l:'Camera Animation Sequence', p:['camera animation sequence'], c:'Camara', d:'Animacion de camara aditiva reutilizable (CAS).' },
+  { l:'Field of View', p:['field of view'], c:'Camara', d:'Angulo de vision de la camara (FOV).' },
+
+  // --- UI ---
+  { l:'Slate', p:['slate'], c:'UI', d:'Framework de UI de bajo nivel en C++ con que se hizo el editor.', d2:'UI de bajo nivel escrita en C++ y macros, base de todo el editor de Unreal. Muy eficiente pero compleja de programar.' },
+  { l:'UMG', p:['umg','unreal motion graphics'], c:'UI', d:'UI visual por componentes construida sobre Slate.', d2:'Contenedor visual orientado a objetos sobre Slate. Permite crear interfaces con drag and drop y logica en Blueprints.' },
+  { l:'Widget', p:['widget','user widget','widget blueprint'], c:'UI', d:'Elemento de UI en UMG (pantalla completa o componente).', d2:'Clase base de un elemento UMG. Puede ser una pantalla entera (menu) o un componente reutilizable (un boton). Soporta animaciones internas y jerarquias.' },
+  { l:'Canvas Panel', p:['canvas panel'], c:'UI', d:'Contenedor de UMG con posicionamiento absoluto y Anchors.', d2:'Contenedor clasico de posicionamiento X/Y. Sus Anchors fijan los bordes de un elemento a una esquina para que no se deforme al cambiar la resolucion.' },
+  { l:'Property Binding', p:['property binding'], c:'UI', d:'Enlaza una propiedad de UI a una funcion cada frame.', d2:'Enlaza una propiedad visual (ej. la barra de vida) a una funcion. Comodo pero corre cada frame; en AAA se prefiere actualizar por eventos (delegados).' },
+  { l:'Common UI', p:['common ui'], c:'UI', d:'Plugin moderno de UI multiplataforma con foco para mando.', d2:'Estandar actual en AAA. Anade enrutamiento de input multiplataforma, resuelve el foco del boton con mando de PS5/Xbox y permite menus en pila (stack-based).' },
 
   // --- Input ---
   { l:'Enhanced Input', p:['enhanced input'], c:'Input', d:'Sistema moderno de input por acciones y contextos.' },
-  { l:'Input Action', p:['input action'], c:'Input', d:'Acción abstracta (ej. Saltar) desacoplada de la tecla física.' },
-  { l:'Input Mapping Context', p:['input mapping context','mapping context'], c:'Input', d:'Conjunto de mapeos tecla→acción activable por capas.' },
-  { l:'Common UI', p:['common ui'], c:'Input', d:'Framework de UI con foco/navegación para mando y multiplataforma.' },
+  { l:'Input Action', p:['input action'], c:'Input', d:'Accion abstracta (ej. Saltar) desacoplada de la tecla.' },
+  { l:'Input Mapping Context', p:['input mapping context','mapping context'], c:'Input', d:'Conjunto de mapeos tecla-accion activable por capas.' },
 
-  // --- Física ---
-  { l:'Line Trace', p:['line trace'], c:'Física', d:'Rayo que detecta lo primero que cruza (raycast).' },
-  { l:'Hit Result', p:['hit result'], c:'Física', d:'Struct con la info de una colisión/trace (impacto, normal…).' },
-  { l:'Overlap', p:['overlap'], c:'Física', d:'Solapamiento entre volúmenes sin bloquear el movimiento.' },
-  { l:'Collision', p:['collision'], c:'Física', d:'Configuración de cómo un objeto choca o solapa con otros.' },
-  { l:'Chaos Physics', p:['chaos physics'], c:'Física', d:'Motor de física y destrucción de Unreal.' },
-  { l:'Ragdoll', p:['ragdoll'], c:'Física', d:'Simulación física del esqueleto (cuerpo inerte).' },
-  { l:'Capsule Component', p:['capsule component'], c:'Física', d:'Cápsula de colisión estándar de un Character.' },
+  // --- Fisica ---
+  { l:'Line Trace', p:['line trace','raycast'], c:'Fisica', d:'Rayo que detecta lo primero que cruza (raycast).', d2:'Dispara un rayo de A a B y devuelve un HitResult (que actor toco, en que hueso, la normal). Crucial para saber si el barrido de un arma conecta.' },
+  { l:'Sweep', p:['sweep'], c:'Fisica', d:'Como un trace pero proyectando una forma volumetrica.', d2:'Proyecta una forma (esfera/capsula/caja) por el espacio en vez de una linea. Mas preciso e indulgente para impactos cuerpo a cuerpo rapidos.' },
+  { l:'Hit Result', p:['hit result'], c:'Fisica', d:'Struct con la info de una colision/trace (impacto, normal).' },
+  { l:'Collision', p:['collision'], c:'Fisica', d:'Config de como un objeto choca o solapa con otros.' },
+  { l:'Collision Channel', p:['collision channel','trace channel'], c:'Fisica', d:'Filtro de colisiones por canal personalizado.', d2:'Sistema de filtrado por canales propios. Un trace puede ignorar paredes y solo reaccionar en el canal WeaponHurtbox, evitando calculos innecesarios.' },
+  { l:'Overlap', p:['overlap'], c:'Fisica', d:'Solapamiento entre volumenes sin bloquear el movimiento.' },
+  { l:'Chaos Physics', p:['chaos physics','chaos'], c:'Fisica', d:'Motor de fisica y destruccion determinista de UE5.', d2:'Motor central determinista: colisiones complejas, friccion, inercias y destruccion. Los Physics Assets (capsulas, cajas, esferas) definen como colisiona la malla.' },
+  { l:'Chaos Cloth', p:['chaos cloth'], c:'Fisica', d:'Simulacion de tela/pelo por particulas sobre el esqueleto.', d2:'Subsistema de particulas sobre mallas esqueleticas para capas, tunicas y Grooms: colisiones, resistencia al viento e interaccion con los volumenes del personaje.' },
+  { l:'Ragdoll', p:['ragdoll'], c:'Fisica', d:'Simulacion fisica del esqueleto (cuerpo inerte).' },
+  { l:'Capsule Component', p:['capsule component'], c:'Fisica', d:'Capsula de colision estandar de un Character.', d2:'Primitiva de colision estandar para personajes: barata de calcular y permite deslizarse por escaleras y rampas sin atascarse en los bordes.' },
+
+  // --- Networking ---
+  { l:'Replication', p:['replication','replicated','replicate'], c:'Networking', d:'Sincronizacion de estado servidor a clientes.', d2:'El servidor comunica cambios de actores y variables a los clientes. Una variable se replica con UPROPERTY(Replicated) y GetLifetimeReplicatedProps.' },
+  { l:'Authority', p:['authority','has authority','role authority'], c:'Networking', d:'Quien tiene el control real y final de un Actor.', d2:'Normalmente el servidor. Los clientes ven un actor como SimulatedProxy (repiten lo del servidor) o AutonomousProxy (predicen local y el servidor corrige).' },
+  { l:'RPC', p:['rpc','remote procedure call','server rpc','client rpc'], c:'Networking', d:'Funciones que se ejecutan a traves de la red.', d2:'Server RPC: el cliente pide permiso al servidor (ej. disparar). Client RPC: el servidor ordena a un cliente (ej. UI de dano). Multicast: el servidor ordena a todos (ej. VFX de explosion).' },
+  { l:'RepNotify', p:['rep notify','repnotify','on rep'], c:'Networking', d:'Callback que se dispara cuando cambia una variable replicada.', d2:'Funcion (OnRep) que corre automaticamente en los clientes en el instante exacto en que reciben un nuevo valor replicado. Muy eficiente para reaccionar a cambios.' },
+
+  // --- Matematicas ---
+  { l:'FVector', p:['f vector','fvector','vector'], c:'Matematicas', d:'Estructura de tres floats (X, Y, Z): posicion o direccion.', d2:'Tres floats X/Y/Z. Representa una posicion en el mundo, una escala, o una direccion con magnitud (ej. un vector de fuerza de impacto).' },
+  { l:'FRotator', p:['f rotator','rotator'], c:'Matematicas', d:'Rotacion por angulos de Euler (Pitch, Yaw, Roll).', d2:'Rotacion en angulos de Euler: Pitch (Y), Yaw (Z), Roll (X). Facil de leer, pero sufre Gimbal Lock en rotaciones complejas en todos los ejes.' },
+  { l:'FQuat', p:['quaternion','f quat','quat'], c:'Matematicas', d:'Rotacion (X,Y,Z,W) sin Gimbal Lock; estandar para interpolar.', d2:'Estructura X/Y/Z/W que rota sin Gimbal Lock. Estandar para interpolar (SLERP) rotaciones suaves (ej. la hoja de un arma en un combo). El motor usa Quats internamente.' },
+  { l:'FTransform', p:['f transform','transform'], c:'Matematicas', d:'Traslacion + rotacion + escala de un objeto.', d2:'Combina un FVector (traslacion), un FQuat (rotacion) y un FVector (escala). Cada Actor y Componente tiene un Transform que dicta su existencia espacial.' },
+
+  // --- Entorno / Mundo ---
+  { l:'Landscape', p:['landscape'], c:'Entorno', d:'Sistema de terreno nativo basado en un mapa de altura.', d2:'Terreno como grilla optimizada sobre un Heightmap de 16 bits, con LOD dinamico por distancia. No es una malla estatica convencional.' },
+  { l:'Foliage Tool', p:['foliage','foliage tool'], c:'Entorno', d:'Herramienta para pintar miles de mallas (arboles, hierba).' },
+  { l:'Instanced Static Mesh', p:['instanced static mesh','hierarchical instanced static mesh'], c:'Entorno', d:'Agrupa miles de mallas iguales en una sola llamada a GPU.', d2:'HISMC: agrupa todas las mallas iguales (ej. 10.000 arboles) en una llamada a la GPU y descarta jerarquicamente las fuera de camara (Frustum Culling).' },
+  { l:'Runtime Virtual Texturing', p:['runtime virtual texturing','virtual texturing'], c:'Entorno', d:'Captura el material del terreno como textura barata de leer.', d2:'RVT captura grandes areas del material del Landscape en runtime. Permite, por ejemplo, que una capa se tina del color del barro al arrastrarse, o que rocas coincidan con la tierra.' },
+  { l:'Water System', p:['water system'], c:'Entorno', d:'Plugin de aguas (lagos, rios, oceanos) basado en splines.', d2:'Plugin de aguas basado en splines que deforma el Landscape proceduralmente. Incluye flotabilidad fisica (Buoyancy) para actores que caen al agua.' },
+
+  // --- Vehiculos ---
+  { l:'Chaos Vehicles', p:['chaos vehicle','chaos vehicles','wheeled vehicle'], c:'Vehiculos', d:'Subsistema de Chaos para simular vehiculos con ruedas.', d2:'El ChaosWheeledVehicleMovementComponent es el equivalente al CharacterMovement pero para coches: motor, transmision, aerodinamica y friccion de neumaticos.' },
+  { l:'Torque Curve', p:['torque curve'], c:'Vehiculos', d:'Curva de fuerza del motor segun las RPM.', d2:'Asset tipo Curve que define cuanto torque genera el motor en cada rango de RPM. Dicta si el vehiculo tiene buena aceleracion o alta velocidad maxima.' },
+
+  // --- Audio ---
+  { l:'MetaSounds', p:['metasounds','meta sounds','metasound'], c:'Audio', d:'Motor de sintesis de audio por nodos (reemplaza Sound Cues).', d2:'Motor DSP por nodos. Ademas de reproducir .wav, genera frecuencias e inyecta variables del juego en tiempo real (ej. cambiar el tono de un rugido segun la vida).' },
+  { l:'Sound Attenuation', p:['sound attenuation','attenuation'], c:'Audio', d:'Define como decae el volumen con la distancia (Falloff).', d2:'Controla el falloff por distancia y parametros espaciales: Air Absorption (los sonidos lejanos pierden agudos) y espacializacion 3D (binaural/surround).' },
+  { l:'Audio Concurrency', p:['audio concurrency','concurrency'], c:'Audio', d:'Limita cuantos sonidos simultaneos suenan y como se reemplazan.', d2:'Evita saturacion: pone un limite (ej. maximo 3 gritos a la vez) y reglas de reemplazo (detener el mas antiguo, ignorar el mas lejano).' },
+  { l:'Submix', p:['submix','sound submix'], c:'Audio', d:'Bus que agrupa sonidos para aplicar efectos globales.', d2:'Como un canal auxiliar de mezcla: rutea varios sonidos a un bus para efectos globales, como el Ducking (bajar el juego cuando alguien habla en una cinematica).' },
+  { l:'Audio Volume', p:['audio volume'], c:'Audio', d:'Caja invisible que cambia la acustica de una zona.', d2:'Volumen que cambia la reverberacion al entrar (ej. el eco de una catedral vs el sonido seco de un bosque nevado).' },
 
   // --- Editor / Proyecto ---
   { l:'Content Browser', p:['content browser'], c:'Editor', d:'Explorador de assets del proyecto.' },
   { l:'Details Panel', p:['details panel'], c:'Editor', d:'Panel de propiedades del objeto seleccionado.' },
-  { l:'World Outliner', p:['outliner','world outliner'], c:'Editor', d:'Lista jerárquica de los actores del nivel.' },
+  { l:'World Outliner', p:['outliner','world outliner'], c:'Editor', d:'Lista jerarquica de los actores del nivel.' },
   { l:'Play In Editor', p:['play in editor'], c:'Editor', d:'Ejecutar el juego dentro del editor (PIE).' },
-  { l:'Console Variable', p:['console variable','cvar'], c:'Editor', d:'Variable ajustable por consola (r.*, a.*…) para tuning/debug.' },
+  { l:'Console Variable', p:['console variable','cvar'], c:'Editor', d:'Variable ajustable por consola (r.*, a.*) para tuning/debug.' },
+
+  // --- Assets ---
+  { l:'Static Mesh', p:['static mesh'], c:'Assets', d:'Malla rigida: vertices, normales, UVs y materiales.' },
+  { l:'Groom', p:['groom','groom asset'], c:'Assets', d:'Sistema de pelo/fibras por strands (XGen, Alembic).', d2:'Recurso de cabello basado en hebras, importado desde DCC en Alembic. Evalua fisica por hebra interactuando con Chaos Cloth y colisiones.' },
+  { l:'MetaHuman', p:['metahuman','meta human'], c:'Assets', d:'Framework de personajes humanos realistas de Epic.' },
 ];
 
 /* --- motor de resaltado --- */
@@ -935,7 +1038,7 @@ function updateGlossaryPanel(){
       <span class="count">${items.length} término${items.length===1?'':'s'}</span>
     </div>
     <div class="gloss-grid">
-      ${items.map(e => `<div class="gterm"><span class="gt">${escapeHtml(e.l)}</span><span class="gc">${escapeHtml(e.c)}</span><div class="gd">${escapeHtml(e.d)}</div></div>`).join('')}
+      ${items.map(e => `<div class="gterm"><span class="gt">${escapeHtml(e.l)}</span><span class="gc">${escapeHtml(e.c)}</span><div class="gd">${escapeHtml(e.d2 || e.d)}</div></div>`).join('')}
     </div>`;
 }
 // re-dibuja segmentos + vista completa (tras cambiar el resaltado)
@@ -1039,7 +1142,7 @@ function asMarkdown(){
     let cat = '';
     for (const e of g){
       if (e.c !== cat){ cat = e.c; md += `\n### ${cat}\n\n`; }
-      md += `- **${e.l}** — ${e.d}\n`;
+      md += `- **${e.l}** — ${e.d2 || e.d}\n`;
     }
   }
   return md;
