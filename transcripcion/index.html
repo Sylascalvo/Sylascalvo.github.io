@@ -874,9 +874,31 @@ async function pump(){
 // una sola llamada a Whisper (sin chunking forzado: Whisper procesa <=30 s en una ventana)
 async function transcribe(audio16k){
   const langSel = $('lang').value;
-  const opts = { task:'transcribe' };
+  // repetition_penalty desalienta que el decodificador entre en bucles de repeticion
+  const opts = { task:'transcribe', repetition_penalty: 1.2 };
   if (langSel !== 'auto') opts.language = langSel;
   return S.transcriber(audio16k, opts);
+}
+
+// colapsa bucles de Whisper: un bloque de 1-8 palabras repetido 3+ veces seguidas -> 1 vez
+function deLoop(text){
+  if (!text) return text;
+  let words = text.trim().split(/\s+/);
+  let changed = true;
+  while (changed){
+    changed = false;
+    for (let block = 1; block <= 8 && !changed; block++){
+      for (let i = 0; i + block*3 <= words.length; i++){
+        const unit = words.slice(i, i+block).map(w => w.toLowerCase()).join(' ');
+        if (!/[a-z0-9]/i.test(unit)) continue;
+        let reps = 1;
+        while (i+(reps+1)*block <= words.length &&
+               words.slice(i+reps*block, i+(reps+1)*block).map(w => w.toLowerCase()).join(' ') === unit) reps++;
+        if (reps >= 3){ words.splice(i+block, (reps-1)*block); changed = true; break; }
+      }
+    }
+  }
+  return words.join(' ');
 }
 
 // alucinaciones típicas de Whisper sobre silencio ("you", "thank you"…)
@@ -892,9 +914,15 @@ async function commitSegment(samples, t){
   try {
     const audio = await to16k(samples, S.sampleRate);
     const out = await transcribe(audio);
-    const text = (out.text || '').trim();
-    if (isFiller(text)) { updateSegment(ph, '(silencio)', true); }
-    else { updateSegment(ph, text, false); if (S.autoTr) translateSegment(ph); }
+    const text = deLoop((out.text || '').trim());
+    if (isFiller(text)) { updateSegment(ph, '(silencio)', true); return; }
+    // descarta si es idéntico al último segmento real (alucinación repetida entre chunks)
+    const lastReal = [...S.segments].reverse().find(o => !o.silent && !o.pending && o.id !== ph.id);
+    if (lastReal && lastReal.text.toLowerCase() === text.toLowerCase()){
+      updateSegment(ph, '(repetido)', true); return;
+    }
+    updateSegment(ph, text, false);
+    if (S.autoTr) translateSegment(ph);
   } catch (e) {
     console.error(e);
     updateSegment(ph, '⚠ error al transcribir este segmento', false);
@@ -910,12 +938,13 @@ function liveSrcIso(){
   return 'en';
 }
 async function showLive(text){
+  text = deLoop(text);
   S.live = text;
   liveText.innerHTML = text ? highlightUE(escapeHtml(text)) : 'escuchando…';
   if (S.autoTr && text){
-    try { S.liveEs = await translateText(text, liveSrcIso()); }
+    try { S.liveEs = await translateKeepingUE(text, liveSrcIso()); }
     catch (e) { S.liveEs = ''; }
-    liveEs.textContent = S.liveEs;
+    liveEs.innerHTML = S.liveEs ? highlightUE(escapeHtml(S.liveEs)) : '';
   }
   if (S.view === 'full') renderFull();
 }
@@ -967,7 +996,7 @@ function renderSeg(o){
       <span class="seg-actions">${showBtn ? `<button data-act="tr">Traducir</button>` : ''}</span>
     </div>
     <div class="seg-text">${highlightUE(escapeHtml(o.text))}</div>
-    ${o.es ? `<div class="seg-es"><span class="tag">ES</span>${escapeHtml(o.es)}</div>` : ''}`;
+    ${o.es ? `<div class="seg-es"><span class="tag">ES</span>${highlightUE(escapeHtml(o.es))}</div>` : ''}`;
 }
 function wireSeg(el, o){
   const b = el.querySelector('[data-act="tr"]');
@@ -1004,8 +1033,8 @@ function renderFull(){
   }
   const paras = [];
   for (let i = 0; i < parts.length; i += 4) paras.push(parts.slice(i, i+4).join(' '));
-  let html = paras.map(p => useEs ? `<p>${escapeHtml(p)}</p>` : `<p>${highlightUE(escapeHtml(p))}</p>`).join('');
-  if (useEs && S.liveEs) html += `<p class="live-tail">${escapeHtml(S.liveEs)}…</p>`;
+  let html = paras.map(p => `<p>${highlightUE(escapeHtml(p))}</p>`).join('');
+  if (useEs && S.liveEs) html += `<p class="live-tail">${highlightUE(escapeHtml(S.liveEs))}…</p>`;
   else if (!useEs && S.live) html += `<p class="live-tail">${highlightUE(escapeHtml(S.live))}…</p>`;
   fullEl.innerHTML = html;
   updateGlossaryPanel();
@@ -1098,12 +1127,35 @@ async function translateText(text, src){
   }
   throw new Error('no-translator');
 }
+// parte el texto alternando texto normal / término UE (para no traducir los términos)
+function splitByUE(text){
+  const parts = []; let last = 0; let m;
+  const re = new RegExp(UE_RE.source, 'gi');
+  while ((m = re.exec(text))){
+    if (m.index > last) parts.push({ ue:false, s:text.slice(last, m.index) });
+    parts.push({ ue:true, s:m[0] });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push({ ue:false, s:text.slice(last) });
+  return parts.length ? parts : [{ ue:false, s:text }];
+}
+// traduce al español dejando los términos UE en inglés (UE se usa mayormente en inglés)
+async function translateKeepingUE(text, src){
+  if (src === 'es' || !text) return text;
+  const out = [];
+  for (const p of splitByUE(text)){
+    if (p.ue || !p.s.trim()){ out.push(p.s); continue; }   // término UE o solo espacios: intacto
+    const lead = p.s.match(/^\s*/)[0], trail = p.s.match(/\s*$/)[0];
+    out.push(lead + await translateText(p.s.trim(), src) + trail);
+  }
+  return out.join('');
+}
 async function translateSegment(o){
   const btn = document.querySelector(`#${o.id} [data-act="tr"]`);
   if (btn){ btn.disabled = true; btn.textContent = '…'; }
   try {
     const src = resolveSrcIso(o);
-    o.es = await translateText(o.text, src);
+    o.es = await translateKeepingUE(o.text, src);
     rerender(o);
   } catch (e) {
     banner('No hay traductor disponible para ese idioma. Activa la <b>API de traducción de Chrome</b> (Chrome/Edge recientes) o usa contenido en inglés para la traducción local.', 'err');
