@@ -168,6 +168,22 @@
   #fulltext .live-tail{color:var(--muted);font-style:italic}
   #fulltext .ph{color:var(--muted);font-style:italic}
 
+  /* --- biblioteca de transcripciones --- */
+  #library{margin:22px 0 10px}
+  .lib-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+  .lib-head h2{font-size:15px;margin:0;font-weight:700}
+  .lib-head .count{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  #libList{display:flex;flex-direction:column;gap:8px}
+  .lib-item{display:flex;align-items:center;gap:12px;background:var(--panel);
+    border:1px solid var(--line);border-radius:9px;padding:10px 13px}
+  .lib-item.active{border-color:var(--signal-dim)}
+  .lib-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .lib-title{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lib-meta{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .lib-actions{margin-left:auto;display:flex;gap:6px;flex:none}
+  .lib-actions button{padding:5px 11px;font-size:12px}
+  .lib-actions [data-act="del"]:hover{border-color:var(--danger);color:var(--danger)}
+
   footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
     font-size:12px;color:var(--muted);font-family:var(--mono)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -267,6 +283,15 @@
   <div id="loadFile"></div>
 </div>
 
+<!-- BIBLIOTECA -->
+<section id="library">
+  <div class="lib-head">
+    <h2>Transcripciones guardadas</h2>
+    <span class="count" id="libCount">0</span>
+  </div>
+  <div id="libList"></div>
+</section>
+
 <!-- TRANSCRIPCIÓN -->
 <div class="transcript-head">
   <h2>Transcripción</h2>
@@ -280,9 +305,10 @@
     <button id="autoTr" class="ghost">Traducir en vivo: off</button>
     <button id="translateAll" class="ghost" disabled>Traducir todo</button>
     <button id="copyBtn" class="ghost" disabled>Copiar</button>
+    <button id="saveSessionBtn" class="ghost" disabled>Guardar sesión</button>
     <button id="mdBtn" class="ghost" disabled>Guardar .md</button>
     <button id="jsonBtn" class="ghost" disabled>Guardar .json</button>
-    <button id="loadJsonBtn" class="ghost">Cargar nota</button>
+    <button id="loadJsonBtn" class="ghost">Importar .json</button>
     <button id="clearBtn" class="ghost" disabled>Limpiar</button>
   </div>
 </div>
@@ -618,6 +644,8 @@ const S = {
   liveEs: '',               // texto provisional en vivo (español)
   autoTr: false,            // traducir en vivo mientras transcribe
   hl: true,                 // resaltar términos de Unreal Engine
+  lib: [],                  // biblioteca de transcripciones guardadas
+  loadedId: null,           // id de la sesión cargada actualmente
   view: 'seg',              // 'seg' | 'full'
   fullLang: 'orig',         // 'orig' | 'es'
   pumpTimer: null,
@@ -638,6 +666,7 @@ const fullWrap = $('fulltextWrap'), fullEl = $('fulltext');
 const liveCard = $('liveCard'), liveText = $('liveText'), liveEs = $('liveEs');
 const viewSeg = $('viewSeg'), viewFull = $('viewFull'), fullOrig = $('fullOrig'), fullEs = $('fullEs');
 const glossaryEl = $('glossary'), hlBtn = $('hlBtn');
+const libList = $('libList'), libCount = $('libCount'), saveSessionBtn = $('saveSessionBtn');
 const translateAll = $('translateAll'), autoTrBtn = $('autoTr'), copyBtn = $('copyBtn'), mdBtn = $('mdBtn'),
       jsonBtn = $('jsonBtn'), clearBtn = $('clearBtn'), loadJsonBtn = $('loadJsonBtn'), jsonInput = $('jsonInput');
 
@@ -660,7 +689,7 @@ function setStatus(text, mode){ // mode: '', 'on', 'busy'
 }
 function refreshToolbar(){
   const has = S.segments.length > 0;
-  [translateAll, copyBtn, mdBtn, jsonBtn, clearBtn].forEach(b => b.disabled = !has);
+  [translateAll, copyBtn, mdBtn, jsonBtn, clearBtn, saveSessionBtn].forEach(b => b.disabled = !has);
   countEl.textContent = `${S.segments.length} segmento${S.segments.length===1?'':'s'}`;
 }
 
@@ -1089,6 +1118,72 @@ hlBtn.addEventListener('click', () => {
   if (S.live) liveText.innerHTML = highlightUE(escapeHtml(S.live));
 });
 
+/* ---------------- biblioteca de transcripciones ---------------- */
+function loadLib(){ try { S.lib = JSON.parse(localStorage.getItem('transcripcion-ue-lib') || '[]'); } catch { S.lib = []; } }
+function persistLib(){ try { localStorage.setItem('transcripcion-ue-lib', JSON.stringify(S.lib)); } catch {} }
+
+function renderLibrary(){
+  libCount.textContent = S.lib.length;
+  if (!S.lib.length){
+    libList.innerHTML = `<div class="empty" style="padding:18px">Aún no hay transcripciones guardadas. Pulsa <b>Guardar sesión</b> para guardar la actual.</div>`;
+    return;
+  }
+  libList.innerHTML = S.lib.slice().reverse().map(e => {
+    const n = e.segments.filter(o => !o.silent).length;
+    const d = new Date(e.date).toLocaleString('es-CL', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+    return `<div class="lib-item${e.id===S.loadedId?' active':''}" data-id="${e.id}">
+      <div class="lib-info">
+        <span class="lib-title">${escapeHtml(e.title)}</span>
+        <span class="lib-meta">${d} · ${n} segmento${n===1?'':'s'}</span>
+      </div>
+      <div class="lib-actions">
+        <button data-act="load">Cargar</button>
+        <button data-act="rename">Renombrar</button>
+        <button data-act="del">Borrar</button>
+      </div>
+    </div>`;
+  }).join('');
+  libList.querySelectorAll('.lib-item').forEach(el => {
+    const id = el.dataset.id;
+    el.querySelector('[data-act="load"]').addEventListener('click', () => loadSession(id));
+    el.querySelector('[data-act="rename"]').addEventListener('click', () => renameSession(id));
+    el.querySelector('[data-act="del"]').addEventListener('click', () => deleteSession(id));
+  });
+}
+function saveSession(){
+  const segs = S.segments.filter(o => !o.pending);
+  if (!segs.length) return;
+  const def = 'Sesión ' + new Date().toLocaleDateString('es-CL');
+  const title = (prompt('Título de la transcripción:', def) || '').trim();
+  if (!title) return;
+  const id = 'lib-' + Date.now();
+  S.lib.push({ id, title, date: Date.now(), segments: JSON.parse(JSON.stringify(segs)) });
+  S.loadedId = id;
+  persistLib(); renderLibrary();
+}
+function loadSession(id){
+  const e = S.lib.find(x => x.id === id); if (!e) return;
+  if (S.capturing && !confirm('Hay una captura en curso. ¿Cargar de todas formas?')) return;
+  S.segments = JSON.parse(JSON.stringify(e.segments));
+  S.live = ''; S.liveEs = ''; S.loadedId = id;
+  redraw(); refreshToolbar(); save(); renderLibrary();
+  document.querySelector('.transcript-head').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function renameSession(id){
+  const e = S.lib.find(x => x.id === id); if (!e) return;
+  const t = (prompt('Nuevo título:', e.title) || '').trim();
+  if (!t) return;
+  e.title = t; persistLib(); renderLibrary();
+}
+function deleteSession(id){
+  const e = S.lib.find(x => x.id === id); if (!e) return;
+  if (!confirm(`¿Borrar "${e.title}"?`)) return;
+  S.lib = S.lib.filter(x => x.id !== id);
+  if (S.loadedId === id) S.loadedId = null;
+  persistLib(); renderLibrary();
+}
+saveSessionBtn.addEventListener('click', saveSession);
+
 /* ---------------- traducción al español ---------------- */
 function resolveSrcIso(o){
   const forced = $('src').value;
@@ -1287,6 +1382,8 @@ if (!restore()) segEl.innerHTML = emptyHtml();
 refreshToolbar();
 renderFull();
 copyBtn.textContent = copyLabel();
+loadLib();
+renderLibrary();
 </script>
 </body>
 </html>
