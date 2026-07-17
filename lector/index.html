@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTS — Sylascalvo</title>
+<title>Lector de Audiolibros — BaldGames</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -62,8 +62,8 @@
 <body>
 
 <header>
-  <span class="kicker">Sylascalvo · Herramienta interna</span>
-  <h1>TTS</h1>
+  <span class="kicker">BaldGames · Herramienta interna</span>
+  <h1>Lector de Audiolibros</h1>
   <span class="sub">Texto a voz, todo en el navegador. Piper (español, neural, descargable) · Kokoro (inglés, descargable) · Voz del navegador (al instante).</span>
 </header>
 
@@ -94,6 +94,14 @@
     </select>
     <div class="hint">Se corta por oraciones.</div>
   </div>
+  <div class="field">
+    <label for="fmt">Formato de descarga</label>
+    <select id="fmt">
+      <option value="mp3" selected>MP3 — compacto</option>
+      <option value="wav">WAV — sin comprimir</option>
+    </select>
+    <div class="hint">MP3 pesa mucho menos; ideal para audiolibros largos.</div>
+  </div>
 </div>
 
 <div id="azureRow">
@@ -109,7 +117,7 @@
   <button id="genBtn" class="primary">Generar y reproducir</button>
   <button id="pauseBtn" disabled>Pausar</button>
   <button id="stopBtn" disabled>Detener</button>
-  <button id="dlBtn" class="ghost" disabled>Descargar WAV</button>
+  <button id="dlBtn" class="ghost" disabled>Descargar audio</button>
   <button id="editBtn" class="ghost" style="display:none">Volver a editar</button>
 </div>
 
@@ -133,12 +141,12 @@ document.getElementById('copyLog').addEventListener('click',()=>{ navigator.clip
 
 function withTimeout(p,ms,label){ return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout en '+label+' tras '+(ms/1000)+'s')),ms))]); }
 
-const S={ engine:'piper', tts:null, piper:null, piperReady:{}, KokoroTTS:null,
+const S={ engine:'piper', tts:null, piper:null, piperReady:{}, KokoroTTS:null, lame:null,
   chunks:[], buffers:[], pcms:[], wavBlobs:[], rate:24000, playIndex:0, curSource:null,
   audioCtx:null, running:false, paused:false, stopped:false, waiting:false };
 
 const $=id=>document.getElementById(id);
-const textEl=$('text'),engineSel=$('engine'),voiceSel=$('voice'),chunkSel=$('chunkLen');
+const textEl=$('text'),engineSel=$('engine'),voiceSel=$('voice'),chunkSel=$('chunkLen'),fmtSel=$('fmt');
 const azureRow=$('azureRow'), azKeyInput=$('azKey'), azRegionInput=$('azRegion');
 const loadBtn=$('loadBtn'),genBtn=$('genBtn'),pauseBtn=$('pauseBtn'),stopBtn=$('stopBtn'),dlBtn=$('dlBtn'),editBtn=$('editBtn');
 const dot=$('dot'),statusLabel=$('statusLabel'),progBar=$('progBar'),pctEl=$('pct'),
@@ -463,18 +471,68 @@ async function mergeWavBlobs(blobs){
   let p=44; for(const d of datas){ out.set(d,p); p+=d.length; }
   return new Blob([out],{type:'audio/wav'});
 }
+/* --- reúne el PCM final (Float32 + rate) sea cual sea el motor --- */
+async function pcmForDownload(){
+  if (S.engine==='kokoro'){
+    const present=S.pcms.filter(Boolean); const total=present.reduce((a,p)=>a+p.pcm.length,0);
+    const all=new Float32Array(total); let o=0; for(const p of present){ all.set(p.pcm,o); o+=p.pcm.length; }
+    return { samples:all, rate:S.rate };
+  }
+  return await wavBlobsToFloat32(S.wavBlobs);   // piper / azure
+}
+async function wavBlobsToFloat32(blobs){
+  const parts=[]; let rate=22050;
+  for(const b of blobs){ if(!b) continue;
+    const dv=new DataView(await b.arrayBuffer());
+    let off=12,dataOff=-1,dataLen=0;
+    while(off+8<=dv.byteLength){
+      const id=String.fromCharCode(dv.getUint8(off),dv.getUint8(off+1),dv.getUint8(off+2),dv.getUint8(off+3));
+      const sz=dv.getUint32(off+4,true);
+      if(id==='fmt ') rate=dv.getUint32(off+12,true);
+      else if(id==='data'){ dataOff=off+8; dataLen=sz; }
+      off+=8+sz+(sz%2);
+    }
+    if(dataOff<0) continue;
+    const n=(dataLen/2)|0, f=new Float32Array(n);
+    for(let i=0;i<n;i++) f[i]=dv.getInt16(dataOff+i*2,true)/32768;
+    parts.push(f);
+  }
+  const total=parts.reduce((a,p)=>a+p.length,0), all=new Float32Array(total); let o=0;
+  for(const p of parts){ all.set(p,o); o+=p.length; }
+  return { samples:all, rate };
+}
+/* --- codificador MP3 (lamejs, en el navegador) --- */
+async function ensureLame(){
+  if (S.lame) return S.lame;
+  log('Cargando codificador MP3…','k');
+  const m=await import('https://cdn.jsdelivr.net/npm/@breezystack/lamejs/+esm');
+  S.lame=(m.default&&m.default.Mp3Encoder)?m.default:m;
+  if(!S.lame.Mp3Encoder) throw new Error('lamejs sin Mp3Encoder');
+  log('MP3 listo ✓','k'); return S.lame;
+}
+async function floatToMp3(samples,rate){
+  const lame=await ensureLame();
+  const enc=new lame.Mp3Encoder(1, rate, 128);
+  const int16=new Int16Array(samples.length);
+  for(let i=0;i<samples.length;i++){ let s=Math.max(-1,Math.min(1,samples[i])); int16[i]=s<0?s*0x8000:s*0x7FFF; }
+  const chunks=[], block=1152*20;
+  for(let i=0;i<int16.length;i+=block){ const b=enc.encodeBuffer(int16.subarray(i,i+block)); if(b.length) chunks.push(new Uint8Array(b)); }
+  const end=enc.flush(); if(end.length) chunks.push(new Uint8Array(end));
+  return new Blob(chunks,{type:'audio/mpeg'});
+}
 dlBtn.addEventListener('click', async ()=>{
-  if(S.engine==='webspeech'){ banner('La voz del navegador no se puede descargar; usa Piper (español) o Kokoro (inglés).','warn'); return; }
-  dlBtn.disabled=true; dlBtn.textContent='Uniendo…';
+  if(S.engine==='webspeech'){ banner('La voz del navegador no se puede descargar; usa Piper, Azure o Kokoro.','warn'); return; }
+  const fmt=fmtSel.value; dlBtn.disabled=true; dlBtn.textContent=(fmt==='mp3')?'Codificando MP3…':'Uniendo…';
   try{
-    let blob;
-    if(S.engine==='kokoro'){ const present=S.pcms.filter(Boolean); const total=present.reduce((a,p)=>a+p.pcm.length,0);
-      const all=new Float32Array(total); let off=0; for(const p of present){ all.set(p.pcm,off); off+=p.pcm.length; } blob=encodeWav(all,S.rate); }
-    else { blob=await mergeWavBlobs(S.wavBlobs); }
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`audiolibro-${Date.now()}.wav`; a.click(); URL.revokeObjectURL(a.href);
-    log('WAV descargado ✓');
-  }catch(e){ log('Error al armar WAV: '+(e.message||e),'e'); banner('No pude generar el WAV.','err'); }
-  dlBtn.textContent='Descargar WAV'; dlBtn.disabled=false;
+    const {samples,rate}=await pcmForDownload();
+    if(!samples.length) throw new Error('no hay audio generado');
+    let blob, ext;
+    if(fmt==='mp3'){ blob=await floatToMp3(samples,rate); ext='mp3'; }
+    else { blob=encodeWav(samples,rate); ext='wav'; }
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`audiolibro-${Date.now()}.${ext}`; a.click(); URL.revokeObjectURL(a.href);
+    log(`Descargado ✓ · ${ext.toUpperCase()} · ${(blob.size/1048576).toFixed(1)} MB`);
+  }catch(e){ log('Error al descargar: '+(e.message||e),'e'); banner('No pude generar el archivo. Pulsa "Copiar registro" y pásamelo.','err'); }
+  dlBtn.textContent='Descargar audio'; dlBtn.disabled=false;
 });
 
 function escapeHtml(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
