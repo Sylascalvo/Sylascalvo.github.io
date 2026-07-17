@@ -26,6 +26,10 @@
   .field{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
   .field label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
   select{width:100%;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-family:var(--ui);font-size:14px;cursor:pointer}
+  input[type=text],input[type=password]{width:100%;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-family:var(--mono);font-size:13px}
+  #azureRow{display:none;margin:-4px 0 16px;gap:12px;grid-template-columns:1fr 220px}
+  #azureRow.on{display:grid}
+  #azureRow label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
   select:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
   .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
   textarea{width:100%;min-height:180px;resize:vertical;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-family:var(--ui);font-size:15px;line-height:1.7}
@@ -70,6 +74,7 @@
     <label for="engine">Motor de voz</label>
     <select id="engine">
       <option value="piper" selected>Piper — español neural, descargable</option>
+      <option value="azure">Azure — máxima calidad, voces chilenas (requiere clave)</option>
       <option value="kokoro">Kokoro — inglés neural, descargable</option>
       <option value="webspeech">Voz del navegador — al instante (solo escuchar)</option>
     </select>
@@ -89,6 +94,11 @@
     </select>
     <div class="hint">Se corta por oraciones.</div>
   </div>
+</div>
+
+<div id="azureRow">
+  <div><label for="azKey">Clave de Azure Speech</label><input id="azKey" type="password" placeholder="tu clave (Key 1)" spellcheck="false"></div>
+  <div><label for="azRegion">Región</label><input id="azRegion" type="text" placeholder="ej. brazilsouth, eastus" spellcheck="false"></div>
 </div>
 
 <textarea id="text" placeholder="Pega aquí tu texto (puede ser enorme, tipo audiolibro)…" spellcheck="false"></textarea>
@@ -129,6 +139,7 @@ const S={ engine:'piper', tts:null, piper:null, piperReady:{}, KokoroTTS:null,
 
 const $=id=>document.getElementById(id);
 const textEl=$('text'),engineSel=$('engine'),voiceSel=$('voice'),chunkSel=$('chunkLen');
+const azureRow=$('azureRow'), azKeyInput=$('azKey'), azRegionInput=$('azRegion');
 const loadBtn=$('loadBtn'),genBtn=$('genBtn'),pauseBtn=$('pauseBtn'),stopBtn=$('stopBtn'),dlBtn=$('dlBtn'),editBtn=$('editBtn');
 const dot=$('dot'),statusLabel=$('statusLabel'),progBar=$('progBar'),pctEl=$('pct'),
       reader=$('reader'),charCount=$('charCount'),wordCount=$('wordCount'),estBlocks=$('estBlocks'),
@@ -173,9 +184,27 @@ const KOKORO_OPTS=`
   <optgroup label="Inglés US (F)"><option value="af_heart">Heart</option><option value="af_bella">Bella</option><option value="af_nicole">Nicole</option><option value="af_sarah">Sarah</option></optgroup>
   <optgroup label="Inglés US (M)"><option value="am_michael">Michael</option><option value="am_fenrir">Fenrir</option><option value="am_puck">Puck</option></optgroup>
   <optgroup label="Inglés UK"><option value="bf_emma">Emma (f)</option><option value="bm_george">George (m)</option></optgroup>`;
+const AZURE_VOICES=`
+  <optgroup label="Chile">
+    <option value="es-CL-CatalinaNeural">Catalina — Chile (F)</option>
+    <option value="es-CL-LorenzoNeural">Lorenzo — Chile (M)</option>
+  </optgroup>
+  <optgroup label="México">
+    <option value="es-MX-DaliaNeural">Dalia — México (F)</option>
+    <option value="es-MX-JorgeNeural">Jorge — México (M)</option>
+  </optgroup>
+  <optgroup label="España">
+    <option value="es-ES-ElviraNeural">Elvira — España (F)</option>
+    <option value="es-ES-AlvaroNeural">Álvaro — España (M)</option>
+  </optgroup>
+  <optgroup label="Otros">
+    <option value="es-AR-ElenaNeural">Elena — Argentina (F)</option>
+    <option value="es-CO-SalomeNeural">Salomé — Colombia (F)</option>
+  </optgroup>`;
 
 async function populateVoices(){
   if (S.engine==='kokoro'){ voiceSel.innerHTML=KOKORO_OPTS; voiceHint.textContent='Solo inglés (Kokoro no trae español en el navegador).'; return; }
+  if (S.engine==='azure'){ voiceSel.innerHTML=AZURE_VOICES; voiceHint.textContent='Voces neurales de Microsoft. Catalina/Lorenzo son chilenas.'; return; }
   if (S.engine==='webspeech'){
     const vs=('speechSynthesis'in window)?speechSynthesis.getVoices():[];
     if(!vs.length){ voiceSel.innerHTML='<option>Cargando voces del sistema…</option>'; return; }
@@ -209,14 +238,16 @@ if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged=()=>{ if(S.engi
 
 function applyEngineUI(){
   const e=S.engine;
-  loadBtn.style.display = (e==='webspeech')?'none':'';
+  azureRow.classList.toggle('on', e==='azure');
+  loadBtn.style.display = (e==='webspeech'||e==='azure')?'none':'';
   loadBtn.textContent = (e==='kokoro')?'Cargar modelo':'Preparar voz';
   genBtn.disabled = (e==='kokoro') ? !S.tts : false;
   if (e==='piper'){ engineHint.textContent='Neural en español CON descarga de WAV. Descarga una voz la primera vez (verás %). Experimental: si falla, cópiame el registro.'; }
+  else if (e==='azure'){ engineHint.textContent='Máxima calidad (Microsoft neural, incl. voces chilenas). Escuchar + descargar. Nivel gratis: 500.000 caracteres/mes. Requiere clave + región de Azure Speech.'; }
   else if (e==='kokoro'){ engineHint.textContent='Neural en inglés con descarga de WAV. Descarga un modelo (~80–330 MB).'; }
   else { engineHint.textContent='Al instante, sin descargas. Español y más idiomas. Solo escuchar (no descargable).'; }
   dlBtn.title = (e==='webspeech')?'La voz del navegador no permite descargar el audio.':'';
-  setStatus(e==='webspeech'?'Listo para leer':(e==='kokoro'&&S.tts?'Modelo listo ✓':'Prepara la voz'), (e==='webspeech'||(e==='kokoro'&&S.tts))?'on':'');
+  setStatus(e==='webspeech'?'Listo para leer':(e==='azure'?'Listo (pega tu clave de Azure)':(e==='kokoro'&&S.tts?'Modelo listo ✓':'Prepara la voz')), (e==='webspeech'||e==='azure'||(e==='kokoro'&&S.tts))?'on':'');
   populateVoices();
 }
 engineSel.addEventListener('change',()=>{ S.engine=engineSel.value; applyEngineUI(); });
@@ -266,6 +297,34 @@ async function synthKokoro(text){
   if(!pcm) throw new Error('salida Kokoro sin audio');
   const buffer=S.audioCtx.createBuffer(1,pcm.length,rate); buffer.copyToChannel(pcm,0);
   return { buffer, pcm, rate };
+}
+
+/* ---------------- Azure (máxima calidad, clave del usuario) ---------------- */
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=()=>res(); s.onerror=()=>rej(new Error('no se pudo cargar '+src)); document.head.appendChild(s); }); }
+async function ensureAzureSDK(){
+  if (window.SpeechSDK) return window.SpeechSDK;
+  log('Cargando Azure Speech SDK…','k');
+  await withTimeout(loadScript('https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@latest/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js'),60000,'carga del SDK');
+  if (!window.SpeechSDK) throw new Error('SpeechSDK no quedó disponible');
+  log('Azure SDK ✓','k'); return window.SpeechSDK;
+}
+async function synthAzure(text){
+  const SDK=await ensureAzureSDK();
+  const key=(azKeyInput.value||'').trim(), region=(azRegionInput.value||'').trim();
+  if(!key||!region) throw new Error('falta clave o región de Azure');
+  const cfg=SDK.SpeechConfig.fromSubscription(key,region);
+  cfg.speechSynthesisVoiceName=voiceSel.value;
+  cfg.speechSynthesisOutputFormat=SDK.SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm;
+  const synth=new SDK.SpeechSynthesizer(cfg,null);   // null = no reproducir solo; devuelve los datos
+  const data=await withTimeout(new Promise((res,rej)=>{
+    synth.speakTextAsync(text, r=>{ synth.close();
+      if(r.reason===SDK.ResultReason.SynthesizingAudioCompleted) res(r.audioData);
+      else rej(new Error('Azure no sintetizó: '+(r.errorDetails||r.reason)));
+    }, err=>{ synth.close(); rej(new Error('Azure error: '+err)); });
+  }),60000,'síntesis Azure');
+  const blob=new Blob([data],{type:'audio/wav'});
+  const buffer=await S.audioCtx.decodeAudioData(data.slice(0));
+  return { buffer, blob };
 }
 
 /* ---------------- botón preparar/cargar ---------------- */
@@ -321,7 +380,7 @@ async function generateNeural(chunks, synthFn){
       const r=await synthFn(chunks[i]);
       S.buffers[i]=r.buffer; S.rate=r.rate||r.buffer.sampleRate;
       if(S.engine==='kokoro') S.pcms[i]={pcm:r.pcm,rate:r.rate};
-      if(S.engine==='piper') S.wavBlobs[i]=r.blob;
+      if(S.engine==='piper'||S.engine==='azure') S.wavBlobs[i]=r.blob;
       setPct((i+1)/chunks.length); setStatus(`Sintetizando bloque ${i+1}/${chunks.length}…`,'busy');
       log(`Bloque ${i+1}/${chunks.length} ✓ (${((performance.now()-t0)/1000).toFixed(1)}s)`);
       if(i===0&&!S.curSource) playFrom(); else if(S.waiting&&i===S.playIndex) playFrom();
@@ -341,6 +400,7 @@ genBtn.addEventListener('click', ()=>{
   reader.innerHTML=chunks.map((c,i)=>`<span class="ch" data-i="${i}">${escapeHtml(c)} </span>`).join('');
   genBtn.disabled=true; loadBtn.disabled=true; pauseBtn.disabled=false; stopBtn.disabled=false; voiceSel.disabled=true; chunkSel.disabled=true; engineSel.disabled=true;
   if(S.engine==='piper') generateNeural(chunks, synthPiper);
+  else if(S.engine==='azure') generateNeural(chunks, synthAzure);
   else if(S.engine==='kokoro') generateNeural(chunks, synthKokoro);
   else generateWebSpeech(chunks);
 });
@@ -420,6 +480,9 @@ dlBtn.addEventListener('click', async ()=>{
 function escapeHtml(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
 /* init */
+try { azKeyInput.value=localStorage.getItem('az-key')||''; azRegionInput.value=localStorage.getItem('az-region')||''; } catch {}
+azKeyInput.addEventListener('change',()=>{ try{localStorage.setItem('az-key',azKeyInput.value.trim());}catch{} });
+azRegionInput.addEventListener('change',()=>{ try{localStorage.setItem('az-region',azRegionInput.value.trim());}catch{} });
 applyEngineUI();
 log('Interfaz lista. Motor por defecto: Piper (español). Pulsa "Preparar voz" o directamente "Generar".','k');
 </script>
