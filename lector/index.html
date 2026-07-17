@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lector de Audiolibros — Sylascalvo</title>
+<title>Lector de Audiolibros — BaldGames</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -58,7 +58,7 @@
 <body>
 
 <header>
-  <span class="kicker">Sylascalvo · Herramienta interna</span>
+  <span class="kicker">BaldGames · Herramienta interna</span>
   <h1>Lector de Audiolibros</h1>
   <span class="sub">Texto a voz, todo en el navegador. Piper (español, neural, descargable) · Kokoro (inglés, descargable) · Voz del navegador (al instante).</span>
 </header>
@@ -200,9 +200,10 @@ async function populateVoices(){
     }
   }catch(e){ log('No pude leer catálogo Piper (uso lista fija): '+(e.message||e),'e'); }
   const opts=(list&&list.length)?list:PIPER_FALLBACK;
-  opts.sort((a,b)=>(b.id.includes('high')-a.id.includes('high'))||a.id.localeCompare(b.id));
+  const q = id => id.includes('high')?3 : id.includes('medium')?2 : id.includes('x_low')?0 : 1;
+  opts.sort((a,b)=> q(b.id)-q(a.id) || a.id.localeCompare(b.id));
   voiceSel.innerHTML=opts.map(o=>`<option value="${o.id}">${o.label||o.id}</option>`).join('');
-  voiceHint.textContent='Voces Piper en español. "high" = mayor calidad (pesa más).';
+  voiceHint.textContent='Voces Piper en español, ordenadas por calidad. "high" = mejor (pesa más).';
 }
 if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged=()=>{ if(S.engine==='webspeech') populateVoices(); };
 
@@ -224,7 +225,7 @@ engineSel.addEventListener('change',()=>{ S.engine=engineSel.value; applyEngineU
 async function ensurePiper(){
   if (S.piper) return S.piper;
   log('Importando vits-web (Piper)…','k');
-  S.piper = await import('https://esm.sh/@diffusionstudio/vits-web');
+  S.piper = await import('https://cdn.jsdelivr.net/npm/@diffusionstudio/vits-web/+esm');
   log('vits-web importado ✓ · exports: '+Object.keys(S.piper).join(', '),'k');
   return S.piper;
 }
