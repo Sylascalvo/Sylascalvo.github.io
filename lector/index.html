@@ -3,56 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lector de Audiolibros — Sylascalvo</title>
+<title>TTS — Sylascalvo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#0f1216; --panel:#171b22; --panel-2:#1d222b; --line:#272d38;
-    --txt:#e7ebf2; --muted:#8b93a7;
-    --signal:#3ee6c4; --signal-dim:#1c6f61; --live:#f2a65a; --danger:#e5646e;
-    --ui:'Space Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
-  }
+  :root{--bg:#0f1216;--panel:#171b22;--panel-2:#1d222b;--line:#272d38;--txt:#e7ebf2;--muted:#8b93a7;
+    --signal:#3ee6c4;--signal-dim:#1c6f61;--live:#f2a65a;--danger:#e5646e;
+    --ui:'Space Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;}
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--ui);
-    -webkit-font-smoothing:antialiased;line-height:1.5}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--ui);-webkit-font-smoothing:antialiased;line-height:1.5}
   body{max-width:940px;margin:0 auto;padding:24px 20px 64px}
   header{display:flex;flex-direction:column;gap:2px;padding-bottom:18px;border-bottom:1px solid var(--line)}
   .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--signal)}
   h1{font-size:26px;font-weight:700;margin:0;letter-spacing:-.01em}
-  .sub{color:var(--muted);font-size:13px;max-width:58ch}
-
-  .banner{border-radius:10px;padding:12px 14px;font-size:13px;margin:14px 0;
-    border:1px solid var(--line);background:var(--panel)}
+  .sub{color:var(--muted);font-size:13px;max-width:60ch}
+  .banner{border-radius:10px;padding:12px 14px;font-size:13px;margin:14px 0;border:1px solid var(--line);background:var(--panel)}
   .banner.warn{border-color:#7a5423;background:#241d13;color:#f4d3a8}
   .banner.err{border-color:#5a2a2f;background:#2a1518;color:#f3b8bd}
   b{font-weight:700}
-
-  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:18px 0}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
   .field{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
-  .field label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-  select{width:100%;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);
-    border-radius:7px;padding:8px 10px;font-family:var(--ui);font-size:14px;cursor:pointer}
+  .field label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+  select{width:100%;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-family:var(--ui);font-size:14px;cursor:pointer}
   select:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
   .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
-
-  textarea{width:100%;min-height:200px;resize:vertical;background:var(--panel);color:var(--txt);
-    border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-family:var(--ui);
-    font-size:15px;line-height:1.7}
+  textarea{width:100%;min-height:190px;resize:vertical;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-family:var(--ui);font-size:15px;line-height:1.7}
   .meta{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--muted);margin:8px 2px}
-
   .actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
-  button{font-family:var(--ui);font-size:14px;font-weight:500;border-radius:8px;padding:10px 16px;
-    border:1px solid var(--line);background:var(--panel-2);color:var(--txt);cursor:pointer;
-    transition:.15s border-color,.15s background,.15s opacity}
+  button{font-family:var(--ui);font-size:14px;font-weight:500;border-radius:8px;padding:10px 16px;border:1px solid var(--line);background:var(--panel-2);color:var(--txt);cursor:pointer;transition:.15s border-color,.15s background,.15s opacity}
   button:hover:not(:disabled){border-color:var(--signal)}
   button:disabled{opacity:.4;cursor:not-allowed}
   button.primary{background:var(--signal);color:#04231d;border-color:var(--signal);font-weight:700}
   button.primary:hover:not(:disabled){background:#5cf0d3}
   button.ghost{background:transparent}
-
   #status{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:12px;color:var(--muted);margin:6px 2px}
   .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
   .dot.on{background:var(--signal);box-shadow:0 0 10px var(--signal)}
@@ -60,20 +44,12 @@
   .bar{height:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:99px;overflow:hidden;margin:8px 0 2px}
   .bar>i{display:block;height:100%;width:0;background:var(--signal);transition:width .2s}
   #pct{font-family:var(--mono);font-size:12px;color:var(--signal)}
-
-  /* registro visible para diagnóstico */
-  #log{background:#0b0e12;border:1px solid var(--line);border-radius:10px;padding:12px 14px;
-    font-family:var(--mono);font-size:11.5px;line-height:1.6;color:var(--muted);
-    max-height:180px;overflow:auto;white-space:pre-wrap;margin-top:12px}
-  #log .e{color:var(--danger)}
-  #log .k{color:var(--signal)}
-
-  #reader{display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;
-    padding:18px 22px;max-height:48vh;overflow:auto;font-size:16px;line-height:1.85;margin-top:14px}
+  #log{background:#0b0e12;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-family:var(--mono);font-size:11.5px;line-height:1.6;color:var(--muted);max-height:170px;overflow:auto;white-space:pre-wrap;margin-top:12px}
+  #log .e{color:var(--danger)} #log .k{color:var(--signal)}
+  #reader{display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 22px;max-height:48vh;overflow:auto;font-size:16px;line-height:1.85;margin-top:14px}
   #reader .ch{color:var(--muted);transition:.2s}
   #reader .ch.done{color:var(--txt)}
   #reader .ch.active{color:var(--signal);background:rgba(62,230,196,.10);border-radius:4px;box-shadow:0 0 0 2px rgba(62,230,196,.10)}
-
   footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);font-family:var(--mono)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -82,38 +58,34 @@
 
 <header>
   <span class="kicker">Sylascalvo · Herramienta interna</span>
-  <h1>Lector de Audiolibros</h1>
-  <span class="sub">Convierte texto largo en voz neuronal natural, todo en el navegador (Kokoro). Escúchalo mientras se genera y descarga el audiolibro en WAV. Sin cuotas ni servidores.</span>
+  <h1>TTS</h1>
+  <span class="sub">Convierte texto en voz, todo en el navegador. Voz del navegador (español, al instante) o Kokoro neural (inglés, descargable). Sin cuotas ni servidores.</span>
 </header>
 
 <div id="compat"></div>
 
 <div class="row">
   <div class="field">
-    <label for="voice">Voz</label>
-    <select id="voice">
-      <optgroup label="Español">
-        <option value="ef_dora" selected>Dora — español (femenina)</option>
-        <option value="em_alex">Alex — español (masculina)</option>
-        <option value="em_santa">Santa — español (masculina)</option>
-      </optgroup>
-      <optgroup label="Inglés (respaldo / mayor calidad)">
-        <option value="af_heart">Heart — inglés US (femenina)</option>
-        <option value="af_bella">Bella — inglés US (femenina)</option>
-        <option value="am_michael">Michael — inglés US (masculina)</option>
-        <option value="bf_emma">Emma — inglés UK (femenina)</option>
-      </optgroup>
+    <label for="engine">Motor de voz</label>
+    <select id="engine">
+      <option value="webspeech" selected>Voz del navegador — español y más (solo escuchar)</option>
+      <option value="kokoro">Kokoro neural — inglés (descargable)</option>
     </select>
-    <div class="hint">El modelo se descarga una vez (queda en caché). El español es más reciente en Kokoro; si suena raro, prueba una voz en inglés para confirmar que todo funciona.</div>
+    <div class="hint" id="engineHint"></div>
+  </div>
+  <div class="field">
+    <label for="voice">Voz</label>
+    <select id="voice"><option>…</option></select>
+    <div class="hint" id="voiceHint"></div>
   </div>
   <div class="field">
     <label for="chunkLen">Tamaño de bloque</label>
     <select id="chunkLen">
-      <option value="160">Corto — arranca antes</option>
-      <option value="240" selected>Medio — equilibrado</option>
-      <option value="360">Largo — más fluido</option>
+      <option value="160">Corto</option>
+      <option value="240" selected>Medio</option>
+      <option value="360">Largo</option>
     </select>
-    <div class="hint">Se corta por oraciones; esto agrupa cuántas por bloque.</div>
+    <div class="hint">Se corta por oraciones.</div>
   </div>
 </div>
 
@@ -121,69 +93,53 @@
 <div class="meta"><span id="charCount">0 caracteres</span><span id="wordCount">0 palabras</span><span id="estBlocks"></span></div>
 
 <div class="actions">
-  <button id="loadBtn" class="primary">Cargar modelo de voz</button>
-  <button id="genBtn" disabled>Generar y reproducir</button>
+  <button id="loadBtn" class="primary" style="display:none">Cargar modelo de voz</button>
+  <button id="genBtn" class="primary">Generar y reproducir</button>
   <button id="pauseBtn" disabled>Pausar</button>
   <button id="stopBtn" disabled>Detener</button>
   <button id="dlBtn" class="ghost" disabled>Descargar WAV</button>
   <button id="editBtn" class="ghost" style="display:none">Volver a editar</button>
 </div>
 
-<div id="status"><span class="dot" id="dot"></span><span id="statusLabel">Primero: cargar el modelo de voz</span><span id="pct" style="margin-left:auto"></span></div>
+<div id="status"><span class="dot" id="dot"></span><span id="statusLabel">Listo</span><span id="pct" style="margin-left:auto"></span></div>
 <div class="bar"><i id="progBar"></i></div>
 
 <div id="log">Registro:</div>
 <div id="reader"></div>
 
-<footer>Kokoro-82M vía transformers.js · síntesis 100% local · v2</footer>
+<footer>Web Speech API + Kokoro-82M · síntesis 100% local · v3</footer>
 
 <script type="module">
-/* ---------------- registro visible (clave para diagnóstico) ---------------- */
 const logEl = document.getElementById('log');
-function log(msg, cls){
-  const line = document.createElement('div');
-  if (cls) line.className = cls;
-  line.textContent = new Date().toLocaleTimeString('es-CL') + '  ' + msg;
-  logEl.appendChild(line); logEl.scrollTop = logEl.scrollHeight;
-  (cls === 'e' ? console.error : console.log)(msg);
-}
-window.addEventListener('error', e => log('ERROR global: ' + e.message, 'e'));
-window.addEventListener('unhandledrejection', e => log('Promesa rechazada: ' + (e.reason?.message || e.reason), 'e'));
+function log(msg, cls){ const l=document.createElement('div'); if(cls)l.className=cls;
+  l.textContent=new Date().toLocaleTimeString('es-CL')+'  '+msg; logEl.appendChild(l); logEl.scrollTop=logEl.scrollHeight;
+  (cls==='e'?console.error:console.log)(msg); }
+window.addEventListener('unhandledrejection', e => log('Promesa rechazada: '+(e.reason?.message||e.reason),'e'));
 
-let KokoroTTS;
-try {
-  log('Importando kokoro-js…', 'k');
-  ({ KokoroTTS } = await import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm'));
-  log('kokoro-js importado ✓', 'k');
-} catch (e) {
-  log('No se pudo importar kokoro-js: ' + e.message, 'e');
-}
-
-/* ---------------- estado ---------------- */
-const S = { tts:null, chunks:[], pcms:[], rate:24000, playIndex:0, curSource:null,
-  audioCtx:null, running:false, paused:false, stopped:false, waiting:false };
+const S = { engine:'webspeech', tts:null, chunks:[], pcms:[], rate:24000, playIndex:0,
+  curSource:null, audioCtx:null, running:false, paused:false, stopped:false, waiting:false };
 
 const $ = id => document.getElementById(id);
-const textEl=$('text'), voiceSel=$('voice'), chunkSel=$('chunkLen');
+const textEl=$('text'), engineSel=$('engine'), voiceSel=$('voice'), chunkSel=$('chunkLen');
 const loadBtn=$('loadBtn'), genBtn=$('genBtn'), pauseBtn=$('pauseBtn'), stopBtn=$('stopBtn'), dlBtn=$('dlBtn'), editBtn=$('editBtn');
 const dot=$('dot'), statusLabel=$('statusLabel'), progBar=$('progBar'), pctEl=$('pct'),
-      reader=$('reader'), charCount=$('charCount'), wordCount=$('wordCount'), estBlocks=$('estBlocks');
+      reader=$('reader'), charCount=$('charCount'), wordCount=$('wordCount'), estBlocks=$('estBlocks'),
+      engineHint=$('engineHint'), voiceHint=$('voiceHint');
 
-function setStatus(t, mode){ statusLabel.textContent=t; dot.className='dot'+(mode?' '+mode:''); }
+function setStatus(t,mode){ statusLabel.textContent=t; dot.className='dot'+(mode?' '+mode:''); }
 function setPct(p){ progBar.style.width=(p*100).toFixed(0)+'%'; pctEl.textContent=(p>0&&p<1)?(p*100).toFixed(0)+'%':''; }
-function banner(html, kind){ const el=document.createElement('div'); el.className='banner '+kind; el.innerHTML=html; $('compat').after(el); }
+function banner(html,kind){ const el=document.createElement('div'); el.className='banner '+kind; el.innerHTML=html; $('compat').after(el); }
 
 /* compat */
 (function(){
-  const hasGPU = 'gpu' in navigator;
-  if (typeof WebAssembly === 'undefined') banner('Tu navegador no soporta WebAssembly; esto no funcionará.', 'err');
-  banner('Recomendado <b>Chrome/Edge</b> de escritorio.' + (hasGPU?' WebGPU detectado ✓':' Sin WebGPU: irá por CPU (más lento).'), hasGPU?'warn':'warn');
-  log('WebGPU: ' + (hasGPU ? 'sí' : 'no'));
+  if (typeof WebAssembly==='undefined') banner('Sin WebAssembly; Kokoro no funcionará (Web Speech sí).','warn');
+  if (!('speechSynthesis' in window)) banner('Tu navegador no soporta la voz del navegador (Web Speech).','warn');
+  banner('Recomendado <b>Chrome/Edge</b> de escritorio. En Edge, las voces en español "Natural/Online" suenan mucho mejor.','warn');
 })();
 
 /* autosave + contadores */
 try { const t=localStorage.getItem('lector-text'); if(t) textEl.value=t; } catch {}
-function splitIntoChunks(text, maxLen){
+function splitIntoChunks(text,maxLen){
   if(!text.trim()) return [];
   const s=text.replace(/\r/g,'').split(/(?<=[.!?…])\s+|\n+/).map(x=>x.trim()).filter(Boolean);
   const c=[]; let cur='';
@@ -194,114 +150,163 @@ function updateCounts(){
   const t=textEl.value;
   charCount.textContent=t.length.toLocaleString('es-CL')+' caracteres';
   wordCount.textContent=(t.trim().match(/\S+/g)||[]).length.toLocaleString('es-CL')+' palabras';
-  const n=splitIntoChunks(t, parseInt(chunkSel.value,10)).length;
+  const n=splitIntoChunks(t,parseInt(chunkSel.value,10)).length;
   estBlocks.textContent=n?`${n} bloque${n===1?'':'s'}`:'';
 }
 textEl.addEventListener('input',()=>{ try{localStorage.setItem('lector-text',textEl.value);}catch{} updateCounts(); });
 chunkSel.addEventListener('change',updateCounts); updateCounts();
 
-/* ---------------- cargar modelo ---------------- */
-loadBtn.addEventListener('click', async () => {
-  if (!KokoroTTS){ banner('kokoro-js no se importó. Revisa el registro de abajo y tu conexión.', 'err'); return; }
-  loadBtn.disabled = true;
-  const device = ('gpu' in navigator) ? 'webgpu' : 'wasm';
-  const dtype = device === 'webgpu' ? 'fp32' : 'q8';
-  setStatus(`Cargando modelo (${device.toUpperCase()})…`, 'busy');
-  log(`Cargando Kokoro-82M · device=${device} dtype=${dtype}`, 'k');
-  try {
-    S.tts = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
-      dtype, device,
-      progress_callback: (p) => {
-        if (p.status === 'progress' && p.total){ setPct(p.loaded/p.total); setStatus(`Descargando modelo… ${(p.loaded/p.total*100).toFixed(0)}%`, 'busy'); }
-      }
-    });
-    setPct(1); setStatus('Modelo listo ✓', 'on'); log('Modelo cargado ✓', 'k');
-    genBtn.disabled = false; loadBtn.textContent = 'Recargar modelo';
-  } catch (e) {
-    setStatus('Error al cargar el modelo', ''); log('Error cargando modelo: ' + (e.message||e), 'e');
-    banner('No pude cargar el modelo. Copia el registro de abajo y me lo pasas.', 'err');
-  } finally { loadBtn.disabled = false; }
-});
-
-/* ---------------- síntesis por bloque ---------------- */
-async function synth(text){
-  const audio = await S.tts.generate(text, { voice: voiceSel.value, speed: 1 });
-  const pcm = audio.audio || audio.samples || audio.data;   // Float32Array
-  const rate = audio.sampling_rate || audio.sampleRate || 24000;
-  if (!pcm) throw new Error('la salida no trae audio (revisa versión/propiedad)');
-  return { pcm, rate };
+/* ---------------- voces según motor ---------------- */
+const KOKORO_OPTS = `
+  <optgroup label="Inglés US (femenina)">
+    <option value="af_heart">Heart</option><option value="af_bella">Bella</option>
+    <option value="af_nicole">Nicole</option><option value="af_sarah">Sarah</option>
+  </optgroup>
+  <optgroup label="Inglés US (masculina)">
+    <option value="am_michael">Michael</option><option value="am_fenrir">Fenrir</option>
+    <option value="am_puck">Puck</option><option value="am_adam">Adam</option>
+  </optgroup>
+  <optgroup label="Inglés UK">
+    <option value="bf_emma">Emma (f)</option><option value="bf_isabella">Isabella (f)</option>
+    <option value="bm_george">George (m)</option><option value="bm_lewis">Lewis (m)</option>
+  </optgroup>`;
+function populateVoices(){
+  if (S.engine==='kokoro'){ voiceSel.innerHTML=KOKORO_OPTS; voiceHint.textContent='Voces en inglés (Kokoro no trae español en el navegador).'; return; }
+  const vs = ('speechSynthesis' in window) ? speechSynthesis.getVoices() : [];
+  if (!vs.length){ voiceSel.innerHTML='<option>Cargando voces del sistema…</option>'; voiceHint.textContent='Si no aparecen, recarga la página.'; return; }
+  const es = vs.filter(v=>/^es/i.test(v.lang));
+  const other = vs.filter(v=>!/^es/i.test(v.lang));
+  const opt = v => `<option value="${v.voiceURI}">${v.name} — ${v.lang}${v.localService?'':' · online'}</option>`;
+  let html='';
+  if (es.length)    html += `<optgroup label="Español">${es.map(opt).join('')}</optgroup>`;
+  if (other.length) html += `<optgroup label="Otros idiomas">${other.map(opt).join('')}</optgroup>`;
+  voiceSel.innerHTML = html || '<option>Sin voces</option>';
+  voiceHint.textContent = es.length ? 'Elige una voz en español. Las marcadas "online" (Edge) suenan mejor.' : 'No hay voces en español instaladas; en Edge suelen venir online.';
 }
+if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => { if (S.engine==='webspeech') populateVoices(); };
+
+function applyEngineUI(){
+  if (S.engine==='kokoro'){
+    loadBtn.style.display=''; loadBtn.disabled=false; genBtn.disabled=!S.tts;
+    dlBtn.title=''; engineHint.textContent='Sintetiza local y permite descargar el WAV. Solo voces en inglés. Descarga un modelo (~80–330 MB) la primera vez.';
+    setStatus(S.tts?'Modelo listo ✓':'Primero: cargar el modelo de voz', S.tts?'on':'');
+  } else {
+    loadBtn.style.display='none'; genBtn.disabled=false;
+    dlBtn.title='La voz del navegador no permite descargar el audio (solo escuchar).';
+    engineHint.textContent='Funciona al instante, sin descargas. Español y más idiomas. Solo escuchar (no descargable).';
+    setStatus('Listo para leer','on');
+  }
+  populateVoices();
+}
+engineSel.addEventListener('change', ()=>{ S.engine=engineSel.value; applyEngineUI(); });
+
+/* ---------------- Kokoro (inglés, descargable) ---------------- */
+loadBtn.addEventListener('click', async () => {
+  loadBtn.disabled=true;
+  try {
+    if (!S.KokoroTTS){ log('Importando kokoro-js…','k'); ({ KokoroTTS: S.KokoroTTS } = await import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm')); log('kokoro-js ✓','k'); }
+    const device = ('gpu' in navigator) ? 'webgpu':'wasm';
+    const dtype = device==='webgpu' ? 'fp32':'q8';
+    setStatus(`Cargando modelo (${device.toUpperCase()})…`,'busy'); log(`Cargando Kokoro · ${device}/${dtype}`,'k');
+    S.tts = await S.KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', { dtype, device,
+      progress_callback:p=>{ if(p.status==='progress'&&p.total){ setPct(p.loaded/p.total); setStatus(`Descargando modelo… ${(p.loaded/p.total*100).toFixed(0)}%`,'busy'); } } });
+    setPct(1); setStatus('Modelo listo ✓','on'); log('Modelo cargado ✓','k'); genBtn.disabled=false; loadBtn.textContent='Recargar modelo';
+  } catch(e){ setStatus('Error al cargar el modelo',''); log('Error modelo: '+(e.message||e),'e'); banner('No pude cargar Kokoro. Copia el registro y me lo pasas.','err'); }
+  finally { loadBtn.disabled=false; }
+});
+async function synthKokoro(text){
+  const a = await S.tts.generate(text, { voice: voiceSel.value, speed:1 });
+  const pcm = a.audio || a.samples || a.data; const rate = a.sampling_rate || a.sampleRate || 24000;
+  if (!pcm) throw new Error('salida sin audio'); return { pcm, rate };
+}
+function playFromKokoro(){
+  if (S.stopped) return;
+  if (S.playIndex>=S.chunks.length){ if(!S.running){ setStatus('Reproducción terminada','on'); pauseBtn.disabled=true; } return; }
+  if (!S.pcms[S.playIndex]){ S.waiting=true; return; }
+  S.waiting=false; highlightChunk(S.playIndex);
+  const {pcm,rate}=S.pcms[S.playIndex];
+  const buf=S.audioCtx.createBuffer(1,pcm.length,rate); buf.copyToChannel(pcm,0);
+  const src=S.audioCtx.createBufferSource(); src.buffer=buf; src.connect(S.audioCtx.destination);
+  src.onended=()=>{ if(S.stopped) return; S.playIndex++; playFromKokoro(); };
+  S.curSource=src; src.start();
+}
+async function generateKokoro(chunks){
+  S.pcms=new Array(chunks.length); S.audioCtx=new AudioContext();
+  dlBtn.disabled=true; log(`Generando ${chunks.length} bloque(s) · ${voiceSel.value}`,'k'); setStatus('Sintetizando…','busy');
+  try {
+    for(let i=0;i<chunks.length;i++){
+      if(S.stopped) break;
+      const t0=performance.now(); S.pcms[i]=await synthKokoro(chunks[i]); S.rate=S.pcms[i].rate;
+      setPct((i+1)/chunks.length); setStatus(`Sintetizando bloque ${i+1}/${chunks.length}…`,'busy');
+      log(`Bloque ${i+1}/${chunks.length} ✓ (${((performance.now()-t0)/1000).toFixed(1)}s)`);
+      if(i===0&&!S.curSource) playFromKokoro(); else if(S.waiting&&i===S.playIndex) playFromKokoro();
+    }
+  } catch(e){ log('Error al sintetizar: '+(e.message||e),'e'); banner('Error al sintetizar. Copia el registro y me lo pasas.','err'); }
+  S.running=false;
+  if(!S.stopped && S.pcms.some(Boolean)){ dlBtn.disabled=false; setStatus(S.playIndex>=chunks.length?'Listo':'Síntesis completa · reproduciendo','on'); }
+}
+
+/* ---------------- Web Speech (español, solo escuchar) ---------------- */
+let keepalive=null;
+function startKeepalive(){ stopKeepalive(); keepalive=setInterval(()=>{ if(!S.paused && speechSynthesis.speaking){ speechSynthesis.pause(); speechSynthesis.resume(); } },9000); }
+function stopKeepalive(){ if(keepalive) clearInterval(keepalive); keepalive=null; }
+function generateWebSpeech(chunks){
+  const vs=speechSynthesis.getVoices(); const voice=vs.find(v=>v.voiceURI===voiceSel.value)||null;
+  log(`Leyendo ${chunks.length} bloque(s) · voz: ${voice?voice.name:'por defecto'}`,'k');
+  speechSynthesis.cancel(); startKeepalive(); setStatus('Leyendo…','busy'); dlBtn.disabled=true;
+  chunks.forEach((c,i)=>{
+    const u=new SpeechSynthesisUtterance(c);
+    if(voice){ u.voice=voice; u.lang=voice.lang; }
+    u.rate=1; u.pitch=1;
+    u.onstart=()=>{ if(S.stopped) return; S.playIndex=i; highlightChunk(i); setPct((i+1)/chunks.length); setStatus(`Leyendo ${i+1}/${chunks.length}…`,'busy'); };
+    u.onend=()=>{ if(i===chunks.length-1 && !S.stopped){ stopKeepalive(); setStatus('Lectura terminada','on'); pauseBtn.disabled=true; } };
+    u.onerror=(e)=>{ if(e.error!=='canceled'&&e.error!=='interrupted') log('Web Speech error: '+e.error,'e'); };
+    speechSynthesis.speak(u);
+  });
+}
+
+/* ---------------- común ---------------- */
 function highlightChunk(i){
   reader.querySelectorAll('.ch').forEach((el,idx)=>{ el.classList.toggle('active',idx===i); el.classList.toggle('done',idx<i); });
   const a=reader.querySelector('.ch.active'); if(a) a.scrollIntoView({behavior:'smooth',block:'center'});
 }
-function playFrom(){
-  if (S.stopped) return;
-  if (S.playIndex >= S.chunks.length){ if(!S.running){ setStatus('Reproducción terminada','on'); pauseBtn.disabled=true; } return; }
-  if (!S.pcms[S.playIndex]){ S.waiting = true; return; }
-  S.waiting = false; highlightChunk(S.playIndex);
-  const {pcm, rate} = S.pcms[S.playIndex];
-  const buf = S.audioCtx.createBuffer(1, pcm.length, rate);
-  buf.copyToChannel(pcm, 0);
-  const src = S.audioCtx.createBufferSource(); src.buffer=buf; src.connect(S.audioCtx.destination);
-  src.onended = () => { if(S.stopped) return; S.playIndex++; playFrom(); };
-  S.curSource = src; src.start();
-}
-
-genBtn.addEventListener('click', async () => {
-  if (!S.tts){ banner('Carga el modelo primero.', 'warn'); return; }
-  const chunks = splitIntoChunks(textEl.value, parseInt(chunkSel.value,10));
-  if (!chunks.length){ banner('Pega algo de texto primero.', 'warn'); return; }
-  S.chunks=chunks; S.pcms=new Array(chunks.length); S.playIndex=0;
-  S.running=true; S.stopped=false; S.paused=false; S.waiting=false; S.curSource=null;
-  S.audioCtx = new AudioContext();
+genBtn.addEventListener('click', () => {
+  if (S.engine==='kokoro' && !S.tts){ banner('Carga el modelo primero.','warn'); return; }
+  const chunks=splitIntoChunks(textEl.value, parseInt(chunkSel.value,10));
+  if (!chunks.length){ banner('Pega algo de texto primero.','warn'); return; }
+  S.chunks=chunks; S.playIndex=0; S.running=(S.engine==='kokoro'); S.stopped=false; S.paused=false; S.waiting=false; S.curSource=null;
   reader.style.display='block'; textEl.style.display='none'; editBtn.style.display='';
-  reader.innerHTML = chunks.map((c,i)=>`<span class="ch" data-i="${i}">${escapeHtml(c)} </span>`).join('');
-  genBtn.disabled=true; loadBtn.disabled=true; pauseBtn.disabled=false; stopBtn.disabled=false; dlBtn.disabled=true;
-  voiceSel.disabled=true; chunkSel.disabled=true;
-  log(`Generando ${chunks.length} bloque(s) con voz ${voiceSel.value}`, 'k');
-  setStatus('Sintetizando…','busy');
-  try {
-    for (let i=0;i<chunks.length;i++){
-      if (S.stopped) break;
-      const t0 = performance.now();
-      S.pcms[i] = await synth(chunks[i]);
-      S.rate = S.pcms[i].rate;
-      setPct((i+1)/chunks.length);
-      setStatus(`Sintetizando bloque ${i+1}/${chunks.length}…`,'busy');
-      log(`Bloque ${i+1}/${chunks.length} ✓ (${((performance.now()-t0)/1000).toFixed(1)}s)`);
-      if (i===0 && !S.curSource) playFrom();
-      else if (S.waiting && i===S.playIndex) playFrom();
-    }
-  } catch (e) { log('Error al sintetizar: '+(e.message||e),'e'); banner('Error al sintetizar. Copia el registro y me lo pasas.', 'err'); }
-  S.running=false;
-  if (!S.stopped && S.pcms.some(Boolean)){ dlBtn.disabled=false; if(S.playIndex>=chunks.length) setStatus('Listo','on'); else setStatus('Síntesis completa · reproduciendo','on'); }
+  reader.innerHTML=chunks.map((c,i)=>`<span class="ch" data-i="${i}">${escapeHtml(c)} </span>`).join('');
+  genBtn.disabled=true; loadBtn.disabled=true; pauseBtn.disabled=false; stopBtn.disabled=false; voiceSel.disabled=true; chunkSel.disabled=true; engineSel.disabled=true;
+  if (S.engine==='kokoro') generateKokoro(chunks); else generateWebSpeech(chunks);
 });
-
 pauseBtn.addEventListener('click', async () => {
+  if (S.engine==='webspeech'){
+    if (S.paused){ speechSynthesis.resume(); S.paused=false; pauseBtn.textContent='Pausar'; }
+    else { speechSynthesis.pause(); S.paused=true; pauseBtn.textContent='Reanudar'; }
+    return;
+  }
   if (!S.audioCtx) return;
   if (S.paused){ await S.audioCtx.resume(); S.paused=false; pauseBtn.textContent='Pausar'; }
   else { await S.audioCtx.suspend(); S.paused=true; pauseBtn.textContent='Reanudar'; }
 });
-stopBtn.addEventListener('click', () => {
-  S.stopped=true; S.running=false;
-  try{ S.curSource&&S.curSource.stop(); }catch{}
-  try{ S.audioCtx&&S.audioCtx.close(); }catch{}
+function stopAll(){
+  S.stopped=true; S.running=false; stopKeepalive();
+  if (S.engine==='webspeech'){ try{speechSynthesis.cancel();}catch{} }
+  else { try{S.curSource&&S.curSource.stop();}catch{} try{S.audioCtx&&S.audioCtx.close();}catch{} }
   pauseBtn.disabled=true; stopBtn.disabled=true; pauseBtn.textContent='Pausar';
-  genBtn.disabled=false; loadBtn.disabled=false; voiceSel.disabled=false; chunkSel.disabled=false;
-  if (S.pcms.some(Boolean)) dlBtn.disabled=false;
-  setStatus('Detenido','on');
-});
-editBtn.addEventListener('click', () => {
+  genBtn.disabled=(S.engine==='kokoro'&&!S.tts); loadBtn.disabled=false; voiceSel.disabled=false; chunkSel.disabled=false; engineSel.disabled=false;
+  if (S.engine==='kokoro' && S.pcms.some(Boolean)) dlBtn.disabled=false;
+}
+stopBtn.addEventListener('click', ()=>{ stopAll(); setStatus('Detenido','on'); });
+editBtn.addEventListener('click', ()=>{
   if (S.running && !confirm('Se está generando audio. ¿Volver a editar y detener?')) return;
-  S.stopped=true; try{S.curSource&&S.curSource.stop();}catch{} try{S.audioCtx&&S.audioCtx.close();}catch{}
-  reader.style.display='none'; textEl.style.display=''; editBtn.style.display='none';
-  pauseBtn.disabled=true; stopBtn.disabled=true; genBtn.disabled=!S.tts; loadBtn.disabled=false;
-  voiceSel.disabled=false; chunkSel.disabled=false; setPct(0); setStatus(S.tts?'Modelo listo ✓':'Carga el modelo','');
+  stopAll(); reader.style.display='none'; textEl.style.display=''; editBtn.style.display='none'; setPct(0);
+  setStatus(S.engine==='kokoro'?(S.tts?'Modelo listo ✓':'Carga el modelo'):'Listo para leer', S.engine==='webspeech'||S.tts?'on':'');
 });
 
-/* ---------------- descarga WAV (une todos los bloques) ---------------- */
-function encodeWav(samples, rate){
+/* ---------------- descarga WAV (solo Kokoro) ---------------- */
+function encodeWav(samples,rate){
   const buf=new ArrayBuffer(44+samples.length*2), dv=new DataView(buf);
   const wr=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
   wr(0,'RIFF'); dv.setUint32(4,36+samples.length*2,true); wr(8,'WAVE'); wr(12,'fmt ');
@@ -311,22 +316,24 @@ function encodeWav(samples, rate){
   let o=44; for(let i=0;i<samples.length;i++){ let s=Math.max(-1,Math.min(1,samples[i])); dv.setInt16(o, s<0?s*0x8000:s*0x7FFF, true); o+=2; }
   return new Blob([dv],{type:'audio/wav'});
 }
-dlBtn.addEventListener('click', () => {
+dlBtn.addEventListener('click', ()=>{
+  if (S.engine!=='kokoro'){ banner('La voz del navegador no permite descargar el audio; usa el motor Kokoro (inglés) para bajar el WAV.','warn'); return; }
   dlBtn.disabled=true; dlBtn.textContent='Uniendo…';
   try {
-    const present=S.pcms.filter(Boolean);
-    const total=present.reduce((a,p)=>a+p.pcm.length,0);
-    const all=new Float32Array(total); let off=0;
-    for(const p of present){ all.set(p.pcm,off); off+=p.pcm.length; }
-    const blob=encodeWav(all, S.rate);
+    const present=S.pcms.filter(Boolean); const total=present.reduce((a,p)=>a+p.pcm.length,0);
+    const all=new Float32Array(total); let off=0; for(const p of present){ all.set(p.pcm,off); off+=p.pcm.length; }
+    const blob=encodeWav(all,S.rate);
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`audiolibro-${Date.now()}.wav`; a.click(); URL.revokeObjectURL(a.href);
     log('WAV descargado ✓');
-  } catch(e){ log('Error al armar WAV: '+(e.message||e),'e'); banner('No pude generar el WAV.', 'err'); }
+  } catch(e){ log('Error WAV: '+(e.message||e),'e'); banner('No pude generar el WAV.','err'); }
   dlBtn.textContent='Descargar WAV'; dlBtn.disabled=false;
 });
 
 function escapeHtml(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
-log('Interfaz lista. Pulsa "Cargar modelo de voz" para empezar.', 'k');
+
+/* init */
+applyEngineUI();
+log('Interfaz lista. Motor por defecto: voz del navegador (español).', 'k');
 </script>
 </body>
 </html>
