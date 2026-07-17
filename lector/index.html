@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lector de Audiolibros — Sylascalvo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1216; --panel:#171b22; --panel-2:#1d222b; --line:#272d38;
+    --txt:#e7ebf2; --muted:#8b93a7;
+    --signal:#3ee6c4; --signal-dim:#1c6f61; --live:#f2a65a; --danger:#e5646e;
+    --ui:'Space Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--ui);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  body{max-width:940px;margin:0 auto;padding:24px 20px 64px}
+  header{display:flex;flex-direction:column;gap:2px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--signal)}
+  h1{font-size:26px;font-weight:700;margin:0;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:13px;max-width:58ch}
+
+  .banner{border-radius:10px;padding:12px 14px;font-size:13px;margin:14px 0;
+    border:1px solid var(--line);background:var(--panel)}
+  .banner.warn{border-color:var(--live-dim,#7a5423);background:#241d13;color:#f4d3a8}
+  .banner.err{border-color:#5a2a2f;background:#2a1518;color:#f3b8bd}
+  b{font-weight:700}
+
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:18px 0}
+  .field{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .field label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+  select{width:100%;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);
+    border-radius:7px;padding:8px 10px;font-family:var(--ui);font-size:14px;cursor:pointer}
+  select:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+  .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+
+  textarea{width:100%;min-height:220px;resize:vertical;background:var(--panel);color:var(--txt);
+    border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-family:var(--ui);
+    font-size:15px;line-height:1.7}
+  .meta{display:flex;gap:14px;font-family:var(--mono);font-size:12px;color:var(--muted);margin:8px 2px}
+
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+  button{font-family:var(--ui);font-size:14px;font-weight:500;border-radius:8px;padding:10px 16px;
+    border:1px solid var(--line);background:var(--panel-2);color:var(--txt);cursor:pointer;
+    transition:.15s border-color,.15s background,.15s opacity}
+  button:hover:not(:disabled){border-color:var(--signal)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.primary{background:var(--signal);color:#04231d;border-color:var(--signal);font-weight:700}
+  button.primary:hover:not(:disabled){background:#5cf0d3}
+  button.ghost{background:transparent}
+
+  #status{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:12px;
+    color:var(--muted);margin:6px 2px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+  .dot.on{background:var(--signal);box-shadow:0 0 10px var(--signal)}
+  .dot.busy{background:var(--live);box-shadow:0 0 10px var(--live)}
+  .bar{height:6px;background:var(--panel-2);border:1px solid var(--line);border-radius:99px;
+    overflow:hidden;margin:8px 0 4px}
+  .bar>i{display:block;height:100%;width:0;background:var(--signal);transition:width .2s}
+
+  /* vista de lectura con resaltado de la oración activa */
+  #reader{display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:18px 22px;max-height:52vh;overflow:auto;font-size:16px;line-height:1.85}
+  #reader .ch{color:var(--muted);transition:.2s}
+  #reader .ch.done{color:var(--txt)}
+  #reader .ch.active{color:var(--signal);background:rgba(62,230,196,.10);border-radius:4px;
+    box-shadow:0 0 0 2px rgba(62,230,196,.10)}
+
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:12px;color:var(--muted);font-family:var(--mono)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">Sylascalvo · Herramienta interna</span>
+  <h1>Lector de Audiolibros</h1>
+  <span class="sub">Convierte texto largo en voz neuronal natural, todo en el navegador (Piper/VITS). Escúchalo mientras se genera y descarga el audiolibro en WAV. Sin cuotas ni servidores.</span>
+</header>
+
+<div id="compat"></div>
+
+<div class="row">
+  <div class="field">
+    <label for="voice">Voz</label>
+    <select id="voice"><option>Cargando voces…</option></select>
+    <div class="hint">Voces en español. La primera vez que uses una, se descarga (una sola vez, queda en caché).</div>
+  </div>
+  <div class="field">
+    <label for="chunkLen">Tamaño de bloque</label>
+    <select id="chunkLen">
+      <option value="160">Corto — arranca antes</option>
+      <option value="240" selected>Medio — equilibrado</option>
+      <option value="360">Largo — más fluido</option>
+    </select>
+    <div class="hint">Se corta por oraciones; esto agrupa cuántas por bloque.</div>
+  </div>
+</div>
+
+<textarea id="text" placeholder="Pega aquí tu texto (puede ser enorme, tipo audiolibro)…" spellcheck="false"></textarea>
+<div class="meta"><span id="charCount">0 caracteres</span><span id="wordCount">0 palabras</span><span id="estBlocks"></span></div>
+
+<div class="actions">
+  <button id="prepBtn" class="ghost">Preparar voz</button>
+  <button id="genBtn" class="primary">Generar y reproducir</button>
+  <button id="pauseBtn" disabled>Pausar</button>
+  <button id="stopBtn" disabled>Detener</button>
+  <button id="dlBtn" class="ghost" disabled>Descargar WAV</button>
+  <button id="editBtn" class="ghost" style="display:none">Volver a editar</button>
+</div>
+
+<div id="status"><span class="dot" id="dot"></span><span id="statusLabel">Listo para generar</span></div>
+<div class="bar"><i id="progBar"></i></div>
+
+<div id="reader"></div>
+
+<footer>Piper / VITS vía WebAssembly · síntesis 100% local · v1</footer>
+
+<script type="module">
+import * as tts from 'https://esm.sh/@diffusionstudio/vits-web@1.0.3';
+
+/* ---------------- estado ---------------- */
+const S = {
+  chunks: [],
+  wavBlobs: [],
+  playIndex: 0,
+  curSource: null,
+  audioCtx: null,
+  running: false,
+  paused: false,
+  stopped: false,
+  waiting: false,
+  voiceId: null,
+};
+
+const $ = id => document.getElementById(id);
+const textEl = $('text'), voiceSel = $('voice'), chunkSel = $('chunkLen');
+const prepBtn = $('prepBtn'), genBtn = $('genBtn'), pauseBtn = $('pauseBtn'),
+      stopBtn = $('stopBtn'), dlBtn = $('dlBtn'), editBtn = $('editBtn');
+const dot = $('dot'), statusLabel = $('statusLabel'), progBar = $('progBar'),
+      reader = $('reader'), charCount = $('charCount'), wordCount = $('wordCount'), estBlocks = $('estBlocks');
+
+/* ---------------- compat ---------------- */
+(function(){
+  const msgs = [];
+  if (typeof WebAssembly === 'undefined')
+    msgs.push('<div class="banner err">Tu navegador no soporta WebAssembly; este lector no funcionará.</div>');
+  msgs.push('<div class="banner warn">Recomendado <b>Chrome</b> o <b>Edge</b> de escritorio. La primera generación descarga el modelo de voz (~20–60 MB) y puede tardar; luego queda en caché.</div>');
+  $('compat').innerHTML = msgs.join('');
+})();
+
+/* ---------------- helpers UI ---------------- */
+function setStatus(text, mode){ statusLabel.textContent = text; dot.className = 'dot' + (mode ? ' '+mode : ''); }
+function setProgress(done, total){ progBar.style.width = total ? Math.round(done/total*100)+'%' : '0%'; }
+function banner(html, kind){
+  const el = document.createElement('div'); el.className = 'banner ' + kind; el.innerHTML = html;
+  $('compat').after(el); return el;
+}
+
+/* autosave del texto */
+try { const t = localStorage.getItem('lector-text'); if (t) textEl.value = t; } catch {}
+function updateCounts(){
+  const t = textEl.value;
+  charCount.textContent = t.length.toLocaleString('es-CL') + ' caracteres';
+  const w = (t.trim().match(/\S+/g) || []).length;
+  wordCount.textContent = w.toLocaleString('es-CL') + ' palabras';
+  const n = splitIntoChunks(t, parseInt(chunkSel.value,10)).length;
+  estBlocks.textContent = n ? `${n} bloque${n===1?'':'s'}` : '';
+}
+textEl.addEventListener('input', () => { try { localStorage.setItem('lector-text', textEl.value); } catch {} updateCounts(); });
+chunkSel.addEventListener('change', updateCounts);
+updateCounts();
+
+/* ---------------- voces ---------------- */
+const FALLBACK_VOICES = [
+  { id:'es_MX-claude-high',    label:'Claude — México (alta calidad)' },
+  { id:'es_ES-davefx-medium',  label:'Davefx — España (media)' },
+  { id:'es_ES-sharvard-medium',label:'Sharvard — España (media)' },
+  { id:'es_MX-ald-medium',     label:'Ald — México (media)' },
+];
+async function loadVoices(){
+  let opts = [];
+  try {
+    const all = await tts.voices();                    // catálogo completo
+    const arr = Array.isArray(all) ? all : Object.values(all || {});
+    for (const v of arr){
+      const id = v.key || v.id || v.voiceId || v.name;
+      const langCode = (v.language && (v.language.code || v.language)) || id || '';
+      if (typeof id === 'string' && /^es[_-]|(^|[^a-z])es([_-]|$)/i.test(id) || /^es/i.test(String(langCode))){
+        opts.push({ id, label: id });
+      }
+    }
+  } catch (e) { console.warn('No pude leer el catálogo de voces:', e); }
+  if (!opts.length) opts = FALLBACK_VOICES;
+  // ordena poniendo "high" primero
+  opts.sort((a,b) => (b.id.includes('high') - a.id.includes('high')) || a.id.localeCompare(b.id));
+  voiceSel.innerHTML = opts.map(o => `<option value="${o.id}">${o.label}</option>`).join('');
+  S.voiceId = voiceSel.value;
+}
+voiceSel.addEventListener('change', () => { S.voiceId = voiceSel.value; });
+loadVoices();
+
+/* ---------------- troceo del texto ---------------- */
+function splitIntoChunks(text, maxLen){
+  if (!text.trim()) return [];
+  const sentences = text.replace(/\r/g,'')
+    .split(/(?<=[.!?…])\s+|\n+/)
+    .map(s => s.trim()).filter(Boolean);
+  const chunks = []; let cur = '';
+  for (const s of sentences){
+    if (cur && (cur + ' ' + s).length > maxLen){ chunks.push(cur); cur = s; }
+    else cur = cur ? cur + ' ' + s : s;
+  }
+  if (cur) chunks.push(cur);
+  return chunks;
+}
+
+/* ---------------- preparar voz (descarga con progreso) ---------------- */
+prepBtn.addEventListener('click', async () => {
+  prepBtn.disabled = true; setStatus('Descargando modelo de voz…', 'busy');
+  try {
+    await tts.download(S.voiceId, (p) => { if (p && p.total) setProgress(p.loaded, p.total); });
+    setProgress(1,1); setStatus('Voz lista', 'on');
+  } catch (e) {
+    console.error(e); setStatus('Error al descargar la voz', '');
+    banner('No pude descargar la voz. Revisa tu conexión y que el navegador sea Chrome/Edge.', 'err');
+  } finally { prepBtn.disabled = false; }
+});
+
+/* ---------------- síntesis + reproducción en streaming ---------------- */
+async function synth(text){
+  const wav = await tts.predict({ text, voiceId: S.voiceId });   // Blob (audio/wav)
+  return wav;
+}
+async function decodeChunk(i){
+  const ab = await S.wavBlobs[i].arrayBuffer();
+  return await S.audioCtx.decodeAudioData(ab);
+}
+function highlightChunk(i){
+  reader.querySelectorAll('.ch').forEach((el, idx) => {
+    el.classList.toggle('active', idx === i);
+    el.classList.toggle('done', idx < i);
+  });
+  const active = reader.querySelector('.ch.active');
+  if (active) active.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+async function playFrom(){
+  if (S.stopped) return;
+  if (S.playIndex >= S.chunks.length){ if (!S.running) finishAll(); return; }
+  if (!S.wavBlobs[S.playIndex]){ S.waiting = true; return; }   // esperando a que se genere
+  S.waiting = false;
+  highlightChunk(S.playIndex);
+  try {
+    const buf = await decodeChunk(S.playIndex);
+    if (S.stopped) return;
+    const src = S.audioCtx.createBufferSource();
+    src.buffer = buf; src.connect(S.audioCtx.destination);
+    src.onended = () => { if (S.stopped) return; S.playIndex++; playFrom(); };
+    S.curSource = src; src.start();
+  } catch (e) { console.error(e); S.playIndex++; playFrom(); }
+}
+
+genBtn.addEventListener('click', async () => {
+  const chunks = splitIntoChunks(textEl.value, parseInt(chunkSel.value,10));
+  if (!chunks.length){ banner('Pega algo de texto primero.', 'warn'); return; }
+  // reset
+  S.chunks = chunks; S.wavBlobs = new Array(chunks.length); S.playIndex = 0;
+  S.running = true; S.stopped = false; S.paused = false; S.waiting = false; S.curSource = null;
+  S.audioCtx = new AudioContext();
+  // vista de lectura
+  reader.style.display = 'block'; textEl.style.display = 'none'; editBtn.style.display = '';
+  reader.innerHTML = chunks.map((c,i) => `<span class="ch" data-i="${i}">${escapeHtml(c)} </span>`).join('');
+  genBtn.disabled = true; prepBtn.disabled = true; pauseBtn.disabled = false; stopBtn.disabled = false;
+  dlBtn.disabled = true; voiceSel.disabled = true; chunkSel.disabled = true;
+  setStatus('Sintetizando…', 'busy');
+
+  try {
+    for (let i = 0; i < chunks.length; i++){
+      if (S.stopped) break;
+      S.wavBlobs[i] = await synth(chunks[i]);
+      setProgress(i+1, chunks.length);
+      setStatus(`Sintetizando bloque ${i+1}/${chunks.length}…`, 'busy');
+      if (i === 0 && !S.curSource) playFrom();               // arranca la reproducción
+      else if (S.waiting && i === S.playIndex) playFrom();    // reanuda si el player esperaba
+    }
+  } catch (e) {
+    console.error(e);
+    banner('Error al sintetizar. Si es la primera vez, prueba "Preparar voz" antes de generar.', 'err');
+  }
+  S.running = false;
+  if (!S.stopped){ dlBtn.disabled = false; setStatus('Síntesis completa · reproduciendo', 'on'); }
+});
+
+function finishAll(){ setStatus('Reproducción terminada', 'on'); pauseBtn.disabled = true; }
+
+/* pausa / reanuda / detiene */
+pauseBtn.addEventListener('click', async () => {
+  if (!S.audioCtx) return;
+  if (S.paused){ await S.audioCtx.resume(); S.paused = false; pauseBtn.textContent = 'Pausar'; }
+  else { await S.audioCtx.suspend(); S.paused = true; pauseBtn.textContent = 'Reanudar'; }
+});
+stopBtn.addEventListener('click', () => {
+  S.stopped = true; S.running = false;
+  try { S.curSource && S.curSource.stop(); } catch {}
+  try { S.audioCtx && S.audioCtx.close(); } catch {}
+  pauseBtn.disabled = true; stopBtn.disabled = true; pauseBtn.textContent = 'Pausar';
+  genBtn.disabled = false; prepBtn.disabled = false; voiceSel.disabled = false; chunkSel.disabled = false;
+  if (S.wavBlobs.some(Boolean)) dlBtn.disabled = false;      // permite bajar lo generado
+  setStatus('Detenido', 'on');
+});
+editBtn.addEventListener('click', () => {
+  if (S.running){ if (!confirm('Se está generando audio. ¿Volver a editar y detener?')) return; }
+  S.stopped = true; try { S.curSource && S.curSource.stop(); } catch {} try { S.audioCtx && S.audioCtx.close(); } catch {}
+  reader.style.display = 'none'; textEl.style.display = ''; editBtn.style.display = 'none';
+  pauseBtn.disabled = true; stopBtn.disabled = true; genBtn.disabled = false; prepBtn.disabled = false;
+  voiceSel.disabled = false; chunkSel.disabled = false; setProgress(0,1); setStatus('Listo para generar', '');
+});
+
+/* ---------------- descarga: une los WAV en uno solo ---------------- */
+async function mergeWavBlobs(blobs){
+  const datas = []; let fmt = null;
+  for (const b of blobs){
+    if (!b) continue;
+    const dv = new DataView(await b.arrayBuffer());
+    let off = 12, sampleRate, channels, bits, dataOff = -1, dataLen = 0;
+    while (off + 8 <= dv.byteLength){
+      const id = String.fromCharCode(dv.getUint8(off), dv.getUint8(off+1), dv.getUint8(off+2), dv.getUint8(off+3));
+      const sz = dv.getUint32(off+4, true);
+      if (id === 'fmt '){ channels = dv.getUint16(off+10, true); sampleRate = dv.getUint32(off+12, true); bits = dv.getUint16(off+22, true); }
+      else if (id === 'data'){ dataOff = off+8; dataLen = sz; }
+      off += 8 + sz + (sz % 2);
+    }
+    if (dataOff < 0) continue;
+    if (!fmt) fmt = { sampleRate, channels, bits };
+    datas.push(new Uint8Array(dv.buffer.slice(dataOff, dataOff + dataLen)));
+  }
+  if (!fmt) throw new Error('sin datos de audio');
+  const total = datas.reduce((a,d) => a + d.length, 0);
+  const out = new Uint8Array(44 + total);
+  const dv = new DataView(out.buffer);
+  const wr = (o,s) => { for (let i=0;i<s.length;i++) dv.setUint8(o+i, s.charCodeAt(i)); };
+  wr(0,'RIFF'); dv.setUint32(4, 36+total, true); wr(8,'WAVE'); wr(12,'fmt ');
+  dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,fmt.channels,true);
+  dv.setUint32(24,fmt.sampleRate,true); dv.setUint32(28,fmt.sampleRate*fmt.channels*fmt.bits/8,true);
+  dv.setUint16(32,fmt.channels*fmt.bits/8,true); dv.setUint16(34,fmt.bits,true);
+  wr(36,'data'); dv.setUint32(40,total,true);
+  let p = 44; for (const d of datas){ out.set(d, p); p += d.length; }
+  return new Blob([out], { type:'audio/wav' });
+}
+dlBtn.addEventListener('click', async () => {
+  dlBtn.disabled = true; dlBtn.textContent = 'Uniendo…';
+  try {
+    const blob = await mergeWavBlobs(S.wavBlobs);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `audiolibro-${Date.now()}.wav`; a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (e) { console.error(e); banner('No pude generar el WAV para descargar.', 'err'); }
+  dlBtn.textContent = 'Descargar WAV'; dlBtn.disabled = false;
+});
+
+function escapeHtml(s){ return (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+</script>
+</body>
+</html>
