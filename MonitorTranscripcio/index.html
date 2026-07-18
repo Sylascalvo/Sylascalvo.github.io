@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor de Transcripción — Sylascalvo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1216;
+    --panel:#171b22;
+    --panel-2:#1d222b;
+    --line:#272d38;
+    --txt:#e7ebf2;
+    --muted:#8b93a7;
+    --signal:#3ee6c4;      /* verde-señal: monitoreo / activo */
+    --signal-dim:#1c6f61;
+    --live:#f2a65a;        /* ámbar: grabando en vivo / procesando */
+    --live-dim:#7a5423;
+    --danger:#e5646e;
+    --ui:'Space Grotesk',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--ui);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  body{max-width:1080px;margin:0 auto;padding:24px 20px 64px}
+  a{color:var(--signal)}
+
+  /* --- cabecera --- */
+  header{display:flex;align-items:flex-end;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;flex-direction:column;gap:2px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--signal)}
+  h1{font-size:26px;font-weight:700;margin:0;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:13px;max-width:52ch}
+
+  /* --- monitor de señal (elemento firma) --- */
+  .monitor{margin:20px 0 8px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;overflow:hidden}
+  .monitor-top{display:flex;align-items:center;gap:12px;padding:10px 14px;
+    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+  .dot.on{background:var(--signal);box-shadow:0 0 10px var(--signal)}
+  .dot.busy{background:var(--live);box-shadow:0 0 10px var(--live)}
+  #statusLabel{color:var(--muted)}
+  .clock{margin-left:auto;color:var(--muted)}
+  #meter{display:block;width:100%;height:64px}
+
+  /* --- controles --- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:14px;margin:18px 0}
+  .field{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px}
+  .field label{display:block;font-family:var(--mono);font-size:10.5px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+  select{width:100%;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);
+    border-radius:7px;padding:8px 10px;font-family:var(--ui);font-size:14px;cursor:pointer}
+  select:focus-visible,button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+  .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 4px}
+  button{font-family:var(--ui);font-size:14px;font-weight:500;border-radius:8px;
+    padding:10px 16px;border:1px solid var(--line);background:var(--panel-2);
+    color:var(--txt);cursor:pointer;transition:.15s border-color,.15s background,.15s opacity}
+  button:hover:not(:disabled){border-color:var(--signal)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.primary{background:var(--signal);color:#04231d;border-color:var(--signal);font-weight:700}
+  button.primary:hover:not(:disabled){background:#5cf0d3}
+  button.live{background:var(--live);color:#2a1804;border-color:var(--live);font-weight:700}
+  button.ghost{background:transparent}
+  .spacer{flex:1}
+
+  /* --- barra de progreso de descarga de modelo --- */
+  #loadBox{display:none;margin:12px 0;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;font-family:var(--mono);font-size:12px}
+  .bar{height:6px;background:var(--panel-2);border-radius:99px;overflow:hidden;margin-top:8px}
+  .bar>i{display:block;height:100%;width:0;background:var(--signal);transition:width .2s}
+  #loadFile{color:var(--muted);margin-top:6px;font-size:11px;word-break:break-all}
+
+  /* --- transcripción --- */
+  .transcript-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    margin:26px 0 12px}
+  .transcript-head h2{font-size:15px;margin:0;font-weight:700;letter-spacing:.01em}
+  .count{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .toolbar button{padding:7px 12px;font-size:12.5px}
+
+  #segments{display:flex;flex-direction:column;gap:10px}
+  .seg{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px}
+  .seg-meta{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .stamp{font-family:var(--mono);font-size:12px;color:var(--signal)}
+  .lang{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+  .seg-actions{margin-left:auto}
+  .seg-actions button{padding:4px 10px;font-size:11.5px}
+  .seg-text{font-size:15px;white-space:pre-wrap}
+  .seg-es{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);
+    font-size:15px;color:var(--txt);white-space:pre-wrap}
+  .seg-es .tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--live);margin-right:8px}
+  .seg.pending .seg-text{color:var(--muted);font-style:italic}
+
+  .empty{background:var(--panel);border:1px dashed var(--line);border-radius:10px;
+    padding:28px;text-align:center;color:var(--muted);font-size:14px}
+  .empty b{color:var(--txt);font-weight:500}
+
+  .banner{border-radius:10px;padding:12px 14px;font-size:13px;margin:14px 0;
+    border:1px solid var(--line);background:var(--panel)}
+  .banner.warn{border-color:var(--live-dim);background:#241d13;color:#f4d3a8}
+  .banner.err{border-color:#5a2a2f;background:#2a1518;color:#f3b8bd}
+  code{font-family:var(--mono);background:var(--panel-2);padding:1px 5px;border-radius:4px;font-size:.9em}
+
+  /* --- interruptor de vista --- */
+  .viewswitch{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .viewswitch button{border:0;border-radius:0;padding:7px 14px;font-size:12.5px;background:var(--panel);color:var(--muted)}
+  .viewswitch button.active{background:var(--panel-2);color:var(--signal);font-weight:700}
+  .viewswitch button:hover:not(.active){color:var(--txt)}
+
+  /* --- segmento de silencio (alucinación filtrada) --- */
+  .seg.silent{opacity:.5}
+  .seg.silent .seg-text{font-style:italic;color:var(--muted)}
+
+  /* --- línea provisional en vivo --- */
+  #liveCard{background:var(--panel);border:1px dashed var(--signal-dim);border-radius:10px;
+    padding:12px 14px;margin-top:10px;display:none}
+  #liveCard.on{display:block}
+  .live-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-family:var(--mono);
+    font-size:11px;color:var(--signal)}
+  .live-meta .pulse{width:7px;height:7px;border-radius:50%;background:var(--signal);
+    animation:pulse 1.1s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+  #liveText{font-size:15px;color:var(--muted);font-style:italic;white-space:pre-wrap}
+  #liveEs{font-size:15px;color:var(--live);white-space:pre-wrap;margin-top:6px;display:none}
+  #liveEs:not(:empty){display:block}
+  button.ghost.active{border-color:var(--live);color:var(--live);font-weight:700}
+  button.ghost.hlon{border-color:var(--signal-dim);color:var(--signal)}
+
+  /* --- términos UE resaltados --- */
+  mark.ue{background:rgba(62,230,196,.13);color:var(--signal);border-bottom:1px solid var(--signal-dim);
+    border-radius:3px;padding:0 2px;cursor:help}
+  .seg-es mark.ue,#fulltext mark.ue{color:var(--signal)}
+
+  /* --- panel de glosario detectado --- */
+  #glossary{margin-top:26px}
+  #glossary.empty-hidden{display:none}
+  .gloss-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+  .gloss-head h2{font-size:15px;margin:0;font-weight:700}
+  .gloss-head .count{font-family:var(--mono)}
+  .gloss-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+  .gterm{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:11px 13px}
+  .gterm .gt{font-weight:700;font-size:14px}
+  .gterm .gc{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--signal);margin-left:8px}
+  .gterm .gd{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+
+  /* --- vista texto completo --- */
+  #fulltextWrap{display:none}
+  .fulltext-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  #fulltext{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:22px 26px;font-size:16px;line-height:1.75;max-width:72ch}
+  #fulltext p{margin:0 0 14px}
+  #fulltext p:last-child{margin-bottom:0}
+  #fulltext .live-tail{color:var(--muted);font-style:italic}
+  #fulltext .ph{color:var(--muted);font-style:italic}
+
+  /* --- biblioteca de transcripciones --- */
+  #library{margin:22px 0 10px}
+  .lib-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+  .lib-head h2{font-size:15px;margin:0;font-weight:700}
+  .lib-head .count{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  #libList{display:flex;flex-direction:column;gap:8px}
+  .lib-item{display:flex;align-items:center;gap:12px;background:var(--panel);
+    border:1px solid var(--line);border-radius:9px;padding:10px 13px}
+  .lib-item.active{border-color:var(--signal-dim)}
+  .lib-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .lib-title{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lib-meta{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .lib-actions{margin-left:auto;display:flex;gap:6px;flex:none}
+  .lib-actions button{padding:5px 11px;font-size:12px}
+  .lib-actions [data-act="del"]:hover{border-color:var(--danger);color:var(--danger)}
+
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:12px;color:var(--muted);font-family:var(--mono)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="kicker">Sylascalvo · Herramienta interna</span>
+    <h1>Monitor de Transcripción</h1>
+    <span class="sub">Captura el audio que suena en tu PC (una pestaña o toda la pantalla), lo transcribe con Whisper en el navegador y lo traduce al español. Todo local, sin servidor.</span>
+  </div>
+</header>
+
+<div id="compat"></div>
+
+<!-- MONITOR DE SEÑAL -->
+<section class="monitor" aria-label="Estado de captura">
+  <div class="monitor-top">
+    <span class="dot" id="dot"></span>
+    <span id="statusLabel">Modelo sin cargar</span>
+    <span class="clock" id="clock">00:00</span>
+  </div>
+  <canvas id="meter" width="1040" height="64" aria-hidden="true"></canvas>
+</section>
+
+<!-- CONTROLES -->
+<div class="grid">
+  <div class="field">
+    <label for="model">Modelo (precisión ↔ velocidad)</label>
+    <select id="model">
+      <option value="onnx-community/whisper-tiny">Tiny — rápido, menos preciso (~75 MB)</option>
+      <option value="onnx-community/whisper-base" selected>Base — equilibrado (~145 MB)</option>
+      <option value="onnx-community/whisper-small">Small — más preciso, más lento (~480 MB)</option>
+    </select>
+    <div class="hint">Se descarga una vez y queda en caché del navegador.</div>
+  </div>
+
+  <div class="field">
+    <label for="lang">Idioma del audio</label>
+    <select id="lang">
+      <option value="auto">Detectar automáticamente</option>
+      <option value="english" selected>Inglés</option>
+      <option value="spanish">Español</option>
+      <option value="portuguese">Portugués</option>
+      <option value="french">Francés</option>
+      <option value="german">Alemán</option>
+      <option value="italian">Italiano</option>
+      <option value="japanese">Japonés</option>
+      <option value="chinese">Chino</option>
+      <option value="korean">Coreano</option>
+      <option value="russian">Ruso</option>
+    </select>
+    <div class="hint">Fijar el idioma mejora la precisión frente a "auto".</div>
+  </div>
+
+  <div class="field">
+    <label for="seg">Longitud de segmento</label>
+    <select id="seg">
+      <option value="10">10 s — menor latencia</option>
+      <option value="15" selected>15 s — equilibrado</option>
+      <option value="20">20 s</option>
+      <option value="30">30 s — máxima precisión</option>
+    </select>
+    <div class="hint">Segmentos largos = frases más completas.</div>
+  </div>
+
+  <div class="field">
+    <label for="src">Origen de traducción</label>
+    <select id="src">
+      <option value="auto" selected>Igual que el audio</option>
+      <option value="en">Inglés → Español</option>
+      <option value="pt">Portugués → Español</option>
+      <option value="fr">Francés → Español</option>
+      <option value="de">Alemán → Español</option>
+      <option value="it">Italiano → Español</option>
+      <option value="ja">Japonés → Español</option>
+      <option value="zh">Chino → Español</option>
+      <option value="ko">Coreano → Español</option>
+      <option value="ru">Ruso → Español</option>
+    </select>
+    <div class="hint">Usa la API de traducción de Chrome (en-es también funciona sin conexión con un modelo local).</div>
+  </div>
+</div>
+
+<div class="actions">
+  <button id="loadBtn" class="primary">Cargar modelo</button>
+  <button id="startBtn" class="live" disabled>Iniciar captura</button>
+  <button id="stopBtn" disabled>Detener</button>
+  <span class="spacer"></span>
+</div>
+
+<div id="loadBox">
+  <span id="loadStatus">Descargando modelo…</span>
+  <div class="bar"><i id="loadBar"></i></div>
+  <div id="loadFile"></div>
+</div>
+
+<!-- BIBLIOTECA -->
+<section id="library">
+  <div class="lib-head">
+    <h2>Transcripciones guardadas</h2>
+    <span class="count" id="libCount">0</span>
+  </div>
+  <div id="libList"></div>
+</section>
+
+<!-- TRANSCRIPCIÓN -->
+<div class="transcript-head">
+  <h2>Transcripción</h2>
+  <span class="count" id="count">0 segmentos</span>
+  <div class="viewswitch" role="tablist">
+    <button id="viewSeg" class="active">Segmentos</button>
+    <button id="viewFull">Texto completo</button>
+  </div>
+  <div class="toolbar">
+    <button id="hlBtn" class="ghost hlon">Resaltar UE: on</button>
+    <button id="autoTr" class="ghost">Traducir en vivo: off</button>
+    <button id="translateAll" class="ghost" disabled>Traducir todo</button>
+    <button id="copyBtn" class="ghost" disabled>Copiar</button>
+    <button id="saveSessionBtn" class="ghost" disabled>Guardar sesión</button>
+    <button id="mdBtn" class="ghost" disabled>Guardar .md</button>
+    <button id="jsonBtn" class="ghost" disabled>Guardar .json</button>
+    <button id="loadJsonBtn" class="ghost">Importar .json</button>
+    <button id="clearBtn" class="ghost" disabled>Limpiar</button>
+  </div>
+</div>
+
+<!-- vista por segmentos -->
+<div id="segments"></div>
+
+<!-- vista texto completo -->
+<div id="fulltextWrap">
+  <div class="fulltext-bar">
+    <div class="viewswitch">
+      <button id="fullOrig" class="active">Original</button>
+      <button id="fullEs">Español</button>
+    </div>
+    <span class="hint" style="margin:0">La vista en español usa las traducciones ya hechas (pulsa "Traducir todo" primero).</span>
+  </div>
+  <div id="fulltext"></div>
+</div>
+
+<!-- línea provisional en vivo (compartida entre vistas) -->
+<div id="liveCard">
+  <div class="live-meta"><span class="pulse"></span> En vivo · provisional</div>
+  <div id="liveText"></div>
+  <div id="liveEs"></div>
+</div>
+
+<!-- glosario UE detectado -->
+<section id="glossary"></section>
+
+<input type="file" id="jsonInput" accept="application/json" hidden>
+
+<footer id="foot">Whisper vía transformers.js · Traducción on-device · v1</footer>
+
+<script type="module">
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
+env.allowLocalModels = false;
+
+/* =========================================================================
+   GLOSARIO UNREAL ENGINE
+   Edita/añade términos libremente. Campos:
+     l = etiqueta (nombre canónico que se muestra)
+     p = variantes habladas a detectar (minúsculas; se matchean sin mayúsc. y con plural)
+     c = categoría
+     d = definición corta (aparece en el tooltip y en el panel)
+   Nota: evita palabras sueltas muy comunes (state, level, tag, cast, gas…) para no
+   marcar falsos positivos; usa la frase completa cuando exista.
+   ========================================================================= */
+const GLOSSARY = [
+  // --- Gameplay Framework ---
+  { l:'Actor', p:['actor'], c:'Gameplay', d:'Objeto base que puede colocarse o spawnearse en un nivel.' },
+  { l:'Pawn', p:['pawn'], c:'Gameplay', d:'Actor que puede ser poseido y controlado por un Controller.', d2:'Actor que un Controller (jugador o IA) puede poseer y controlar. Base de todo lo que se maneja en el mundo.' },
+  { l:'Character', p:['character'], c:'Gameplay', d:'Pawn con capsula y CharacterMovementComponent, para bipedos.' },
+  { l:'Controller', p:['controller'], c:'Gameplay', d:'Clase que posee y dirige a un Pawn.' },
+  { l:'Player Controller', p:['player controller'], c:'Gameplay', d:'El cerebro del jugador humano: input, camara y UI.', d2:'Voluntad del jugador humano. Persiste aunque el Pawn muera; procesa inputs, gestiona camara y HUD/Widgets. En multijugador cada cliente solo tiene el suyo.' },
+  { l:'AI Controller', p:['ai controller'], c:'Gameplay', d:'Controller gobernado por IA que posee a los NPC.', d2:'Equivalente al Player Controller pero para IA. Ejecuta Behavior Trees, aloja la percepcion sensorial y es el puente entre el actor fisico y la logica.' },
+  { l:'Game Mode', p:['game mode','game mode base'], c:'Gameplay', d:'Define las reglas de la partida; existe solo en el servidor.', d2:'Define reglas, condiciones de victoria y que Pawn/PlayerController se instancian. Solo existe en la Autoridad (servidor). AGameMode agrega match states; Base es mas ligero.' },
+  { l:'Game State', p:['game state','game state base'], c:'Gameplay', d:'Estado global de la partida replicado a todos los clientes.', d2:'Contenedor de datos globales replicados: tiempo restante, puntajes de equipos, progreso de misiones. Lo que todos necesitan saber.' },
+  { l:'Player State', p:['player state'], c:'Gameplay', d:'Estado por jugador (nombre, ping, puntaje) replicado a todos.', d2:'Estado replicado de un jugador. A diferencia del Player Controller, el Player State de TODOS se replica a todos (util para tablas de puntajes).' },
+  { l:'Game Instance', p:['game instance'], c:'Gameplay', d:'Objeto persistente que sobrevive a la carga de niveles.', d2:'Objeto de alto nivel que vive desde que abre hasta que cierra el juego, sobreviviendo a los cambios de nivel. Ideal para datos globales, sesiones de red o audio persistente.' },
+  { l:'HUD', p:['a hud'], c:'Gameplay', d:'Clase clasica para dibujar en pantalla, hoy reemplazada por UMG.', d2:'Clase heredada de la vieja arquitectura, hoy sustituida por UMG. Aun util en C++ puro para dibujar debug o miras simples via DrawHUD sobre el canvas.' },
+  { l:'World', p:['uworld'], c:'Gameplay', d:'Objeto que representa el mapa/nivel cargado en memoria.', d2:'Objeto superior que representa el nivel actual: contiene los Actores, la fisica, el render de escena y el flujo de Tick.' },
+  { l:'Subsystem', p:['subsystem'], c:'Gameplay', d:'Singleton gestionado por el engine con ciclo de vida definido.' },
+  { l:'World Partition', p:['world partition'], c:'Gameplay', d:'Streaming de mundos grandes por grilla.' },
+  { l:'Level Instance', p:['level instance'], c:'Gameplay', d:'Nivel reutilizable e instanciable dentro de otro nivel.' },
+  { l:'Gameplay Tag', p:['gameplay tag'], c:'Gameplay', d:'Etiqueta jerarquica para clasificar estados sin usar strings.' },
+  { l:'Data Asset', p:['data asset'], c:'Gameplay', d:'Asset para almacenar datos configurables sin logica.' },
+  { l:'Primary Data Asset', p:['primary data asset'], c:'Gameplay', d:'Data Asset gestionable por el Asset Manager (carga bajo demanda).' },
+  { l:'Data Table', p:['data table'], c:'Gameplay', d:'Tabla de filas tipadas por un Struct; ideal para balance.' },
+
+  // --- Componentes ---
+  { l:'Actor Component', p:['actor component'], c:'Componentes', d:'Componente sin transform que anade logica reutilizable a un Actor.' },
+  { l:'Scene Component', p:['scene component'], c:'Componentes', d:'Componente con transform; se anida en jerarquia.', d2:'Componente fundacional para todo lo que existe en el espacio 3D: tiene FTransform y permite jerarquias padre-hijo. No tiene geometria ni colision propia.' },
+  { l:'Primitive Component', p:['primitive component'], c:'Componentes', d:'Base de los componentes con geometria y colision.', d2:'Hereda de Scene Component. Clase base de todo componente que renderiza geometria y puede generar eventos de fisica/colision (Overlap o Hit).' },
+  { l:'Static Mesh Component', p:['static mesh component'], c:'Componentes', d:'Renderiza geometria rigida (no deformable).', d2:'Primitive Component para geometria rigida sin huesos. Muy optimizado en UE5 con Nanite (millones de poligonos a bajo coste).' },
+  { l:'Skeletal Mesh Component', p:['skeletal mesh component'], c:'Componentes', d:'Renderiza malla deformable atada a un esqueleto.', d2:'Renderiza geometria deformable ligada a un Skeleton. Calcula el skinning por frame y procesa el Animation Blueprint. Base de personajes.' },
+  { l:'Camera Component', p:['camera component'], c:'Componentes', d:'Punto de vista desde el que se renderiza el mundo.', d2:'Define el punto de vista del jugador. Acepta FOV, relacion de aspecto y post-proceso local.' },
+  { l:'Child Actor Component', p:['child actor component'], c:'Componentes', d:'Instancia un Actor completo dentro de otro Actor.', d2:'Permite anidar un Actor entero dentro de otro. Util para sistemas modulares, aunque en C++ se prefiere componer con componentes estandar por rendimiento.' },
+
+  // --- Tipos y C++ (Compilacion y Memoria) ---
+  { l:'UCLASS / GENERATED_BODY', p:['u class','uclass','generated body'], c:'C++', d:'Expone una clase C++ al sistema de reflexion del motor.', d2:'UCLASS expone la clase C++ a reflexion (Blueprints y GC). GENERATED_BODY es la macro obligatoria que inyecta el codigo generado por Unreal Header Tool durante la compilacion.' },
+  { l:'UPROPERTY', p:['u property','uproperty'], c:'C++', d:'Macro que expone una variable a editor, Blueprint o red.', d2:'Macro de serializacion. Especificadores clave: EditAnywhere (editable en el panel de detalles), BlueprintReadWrite (accesible desde nodos) y Replicated (marca para red).' },
+  { l:'TObjectPtr', p:['object pointer','t object pointer'], c:'C++', d:'Puntero inteligente moderno de UE5 a UObjects.', d2:'Puntero UE5: en el editor rastrea dependencias y carga dinamica; en shipping se resuelve como puntero crudo T* sin coste. Reemplaza al puntero desnudo.' },
+  { l:'TWeakObjectPtr', p:['weak object pointer','weak pointer'], c:'C++', d:'Puntero que no impide que el GC destruya el objeto.', d2:'Apunta a un objeto sin incrementar su conteo de referencias. Si el GC lo destruye, es seguro de verificar (IsValid) en vez de causar un crash.' },
+  { l:'TSubclassOf', p:['subclass of','sub class of','t subclass of'], c:'C++', d:'Referencia type-safe a una clase (no a una instancia).', d2:'Plantilla que garantiza seguridad de tipos al referenciar una clase. En el editor eliges que clase spawnear (ej. la clase C++ del arma a instanciar en la mano).' },
+  { l:'FString', p:['f string','fstring'], c:'C++', d:'Cadena de texto dinamica y mutable, para uso interno.', d2:'Texto mutable para manipulacion en codigo (concatenar, parsear JSON, prints de debug). No usar en la UI del jugador final.' },
+  { l:'FName', p:['f name','fname'], c:'C++', d:'Cadena inmutable e indexada, rapidisima; case-insensitive.', d2:'Texto inmutable guardado en una tabla global por indice. No distingue mayusculas. Obligatorio para identificadores criticos (ej. nombre de un hueso o socket).' },
+  { l:'FText', p:['f text','ftext'], c:'C++', d:'Texto para el usuario final, con soporte de localizacion.', d2:'El tipo de texto mas pesado, con datos de cultura/localizacion. Todo lo que ve el jugador (UMG, subtitulos) debe ser FText para que el motor pueda traducirlo.' },
+  { l:'Garbage Collection', p:['garbage collection'], c:'C++', d:'Liberacion automatica de UObjects sin referencias.' },
+  { l:'Live Coding', p:['live coding'], c:'C++', d:'Recompila C++ sin cerrar el editor.' },
+
+  // --- Blueprints / Scripting ---
+  { l:'Blueprint', p:['blueprint'], c:'Blueprints', d:'Sistema de scripting visual por nodos de Unreal.' },
+  { l:'Blueprint Class', p:['blueprint class'], c:'Blueprints', d:'Asset que hereda de una clase base con componentes y logica.', d2:'Hereda de una clase base (C++ u otro BP) con su jerarquia de componentes, variables y grafos. Equivale a crear una clase instanciable de POO.' },
+  { l:'Level Blueprint', p:['level blueprint'], c:'Blueprints', d:'Grafo logico unico y exclusivo de cada nivel.', d2:'Logica exclusiva de un nivel (UWorld). Para eventos cinematicos cerrados o referencias a actores colocados a mano. No se reutiliza en otros niveles.' },
+  { l:'Event Graph', p:['event graph'], c:'Blueprints', d:'Lienzo principal de logica en runtime de un Blueprint.', d2:'Donde ocurre la logica en runtime, respondiendo a eventos (BeginPlay, Tick, personalizados) con nodos conectados por pines de ejecucion.' },
+  { l:'Construction Script', p:['construction script'], c:'Blueprints', d:'Se ejecuta al editar/colocar el Actor, antes de BeginPlay.', d2:'Grafo que corre antes del BeginPlay y se actualiza al editar el Actor en el viewport. Ideal para herramientas procedurales (ej. una valla que agrega postes al estirarla).' },
+  { l:'Cast To', p:['cast to','cast'], c:'Blueprints', d:'Convierte una referencia a una clase especifica.', d2:'Conversion dinamica de tipos. Verifica en runtime si un puntero base es de una clase derivada; si falla devuelve nullptr sin romper la memoria.' },
+  { l:'Event Tick', p:['event tick','tick'], c:'Blueprints', d:'Evento que se ejecuta cada frame; usar con criterio.' },
+  { l:'Timeline', p:['timeline'], c:'Blueprints', d:'Nodo que anima valores en el tiempo dentro de un Blueprint.' },
+  { l:'Enum', p:['enum','enumeration'], c:'Blueprints', d:'Tipo con un conjunto fijo de valores con nombre.' },
+  { l:'Struct', p:['struct','structure'], c:'Blueprints', d:'Tipo que agrupa varias variables en una sola.' },
+  { l:'Soft Reference', p:['soft reference','soft object reference'], c:'Blueprints', d:'Puntero que NO carga el asset hasta pedirlo; ahorra memoria.' },
+  { l:'Hard Reference', p:['hard reference'], c:'Blueprints', d:'Referencia directa que carga el asset junto al que la contiene.' },
+  { l:'Macro Library', p:['macro library'], c:'Blueprints', d:'Coleccion de macros reutilizables.', d2:'Contenedor de macros. Las macros no son codigo real: el motor copia y pega su contenido en cada uso. Permiten multiples pines de ejecucion (ej. un ForLoop propio).' },
+  { l:'Function Library', p:['function library'], c:'Blueprints', d:'Coleccion de funciones estaticas globales.', d2:'Funciones puramente estaticas que no dependen del estado de un Actor. Utiles para calculos genericos accesibles desde cualquier Blueprint.' },
+  { l:'Macro', p:['macro'], c:'Blueprints', d:'Nodo reutilizable que agrupa una red de nodos.' },
+  { l:'Blueprint Interface', p:['blueprint interface'], c:'Blueprints', d:'Contrato de funciones que varias clases implementan.', d2:'Coleccion de funciones vacias. Si un barril y un enemigo implementan IDamageable, envias Recibir Dano a ambos sin hacer Cast. Reduce el acoplamiento.' },
+
+  // --- Delegados / Comunicacion ---
+  { l:'Delegate', p:['delegate'], c:'Delegados', d:'Sistema de callbacks/eventos con binding.', d2:'Single-cast: puntero a funcion seguro que guarda un solo bind. Al ejecutarse (ExecuteIfBound) llama a esa funcion. Rapido, para callbacks directos.' },
+  { l:'Multicast Delegate', p:['multicast delegate','multicast'], c:'Delegados', d:'Delegado al que varios objetos se suscriben a la vez.', d2:'Multiples objetos se suscriben; al ocurrir el evento hace Broadcast y notifica a todos (UI de vida, audio, emisor de sangre) sin que el emisor los conozca.' },
+  { l:'Dynamic Delegate', p:['dynamic delegate'], c:'Delegados', d:'Delegado serializable, expuesto a reflexion y a Blueprints.', d2:'Variante serializable, algo mas lenta, pero la unica que se expone a reflexion (UPROPERTY) y se conecta desde los grafos de Blueprint.' },
+  { l:'Event Dispatcher', p:['event dispatcher'], c:'Delegados', d:'Nombre en el editor de los Dynamic Multicast Delegates.', d2:'Como se llaman los Dynamic Multicast Delegates en la UI de Blueprints. Permite arrastrar eventos propios y enlazar nodos a eventos asincronos.' },
+  { l:'BlueprintImplementableEvent', p:['blueprint implementable event','implementable event'], c:'Delegados', d:'Funcion declarada en C++ pero implementada solo en Blueprint.', d2:'Se declara en el .h sin cuerpo en el .cpp. Se invoca desde C++, pero su logica la programa el disenador en el Blueprint hijo.' },
+  { l:'BlueprintNativeEvent', p:['blueprint native event','native event'], c:'Delegados', d:'Funcion con implementacion base en C++ sobreescribible en BP.', d2:'Como la anterior pero con implementacion por defecto en C++ (_Implementation). Si el Blueprint la sobreescribe corre esa; si no, la base en C++.' },
+
+  // --- Gameplay Ability System ---
+  { l:'Gameplay Ability System', p:['gameplay ability system'], c:'GAS', d:'Framework de habilidades, efectos y atributos en red.' },
+  { l:'Gameplay Ability', p:['gameplay ability'], c:'GAS', d:'Accion activable con costos, cooldowns y tags.' },
+  { l:'Gameplay Effect', p:['gameplay effect'], c:'GAS', d:'Modifica atributos instantaneo, con duracion o infinito.' },
+  { l:'Gameplay Cue', p:['gameplay cue'], c:'GAS', d:'Feedback cosmetico (VFX/SFX) disparado por tags, replicable.' },
+  { l:'Ability System Component', p:['ability system component'], c:'GAS', d:'Componente que gestiona habilidades, atributos y efectos.' },
+  { l:'Attribute Set', p:['attribute set'], c:'GAS', d:'Conjunto de atributos (vida, stamina) manejados por GAS.' },
+
+  // --- Animacion ---
+  { l:'Animation Blueprint', p:['animation blueprint','anim blueprint','animbp'], c:'Animacion', d:'Blueprint que controla la animacion de un Skeletal Mesh.' },
+  { l:'Anim Graph', p:['anim graph','animation graph'], c:'Animacion', d:'Grafo donde se mezclan poses para la salida final.' },
+  { l:'State Machine', p:['state machine'], c:'Animacion', d:'Maquina de estados de animacion con transiciones entre poses.', d2:'Grafo dentro del Animation Blueprint que evalua estados logicos (Idle, Caminar, Caer, Atacar) y gestiona transiciones suavizadas segun variables (velocidad, booleanos).' },
+  { l:'Anim Sequence', p:['anim sequence','animation sequence'], c:'Animacion', d:'Clip de animacion puro importado (FBX) con keyframes.', d2:'Archivo de datos importado (normalmente FBX) con los keyframes de rotacion y traslacion de los huesos a lo largo de una linea de tiempo lineal.' },
+  { l:'Montage', p:['montage','anim montage','animation montage'], c:'Animacion', d:'Animacion por secciones controlable desde codigo/BP.', d2:'Contenedor que envuelve secuencias y se activa por codigo con maxima prioridad, secuestrando el esqueleto de la State Machine. Para ataques, recargas, esquivas.' },
+  { l:'Blend Space', p:['blend space','blendspace'], c:'Animacion', d:'Mezcla animaciones segun uno o dos ejes continuos.', d2:'Mezcla clips segun variables continuas. Un Blend Space 2D combina Velocidad y Direccion para pasar entre caminar, trotar de lado y correr atras sin saltos.' },
+  { l:'Aim Offset', p:['aim offset'], c:'Animacion', d:'Aditivo que orienta la pose hacia una direccion (apuntar).' },
+  { l:'Anim Notify', p:['anim notify','animation notify','notifier'], c:'Animacion', d:'Evento en un punto de la animacion (sonido, VFX, hitbox).', d2:'Marcador incrustado en un Sequence o Montage. En el frame X lanza un evento: pisada, VFX de polvo, o habilitar la hitbox de dano de un arma.' },
+  { l:'Anim Notify State', p:['anim notify state','notify state'], c:'Animacion', d:'Notify con duracion (ventana de inicio/fin).' },
+  { l:'Layered Blend Per Bone', p:['layered blend per bone'], c:'Animacion', d:'Mezcla poses por rama del esqueleto (torso vs piernas).' },
+  { l:'Blend Mask', p:['blend mask'], c:'Animacion', d:'Mascara de pesos por hueso, mas fina que el Branch Filter.' },
+  { l:'Branch Filter', p:['branch filter'], c:'Animacion', d:'Seleccion de rama por hueso base en un Layered Blend.' },
+  { l:'Inertialization', p:['inertialization','inertialize'], c:'Animacion', d:'Blending que amortigua la pose actual sin mezclar dos clips.' },
+  { l:'Motion Matching', p:['motion matching'], c:'Animacion', d:'Elige poses de una base de datos segun trayectoria/entrada.', d2:'Sistema de UE5.4+ que busca en milisegundos dentro de una base de datos de animaciones, evaluando trayectoria futura y pose actual, sin State Machines rigidas.' },
+  { l:'Motion Warping', p:['motion warping'], c:'Animacion', d:'Ajusta el root motion en runtime para alinear a un objetivo.' },
+  { l:'Root Motion', p:['root motion'], c:'Animacion', d:'Movimiento extraido del hueso raiz de la animacion.', d2:'El hueso raiz lleva datos de desplazamiento real: la animacion mueve la capsula en vez de que las piernas resbalen. Vital para embestidas y ejecuciones sincronizadas.' },
+  { l:'Skeleton', p:['skeleton'], c:'Animacion', d:'Jerarquia de huesos y sockets compartida por animaciones.', d2:'Asset logico base: solo jerarquia de huesos y Sockets (anclajes como la mano). Varios Skeletal Mesh comparten un esqueleto para reciclar animaciones.' },
+  { l:'Socket', p:['socket','sockets'], c:'Animacion', d:'Punto de anclaje virtual en un hueso (ej. la mano para el arma).' },
+  { l:'Poseable Mesh', p:['poseable mesh'], c:'Animacion', d:'Mesh cuyos huesos se posan por codigo (ej. after-images).' },
+  { l:'Skeletal Mesh', p:['skeletal mesh'], c:'Animacion', d:'Malla deformable por un esqueleto animable.', d2:'Geometria deformable con pesos de vertices (skinning), jerarquia de huesos y Morph Targets (Blend Shapes).' },
+  { l:'IK Retargeting', p:['retarget','retargeting','ik retargeter'], c:'Animacion', d:'Adapta animaciones entre esqueletos distintos.', d2:'Asset de mapeo que transfiere las transformaciones de huesos de un esqueleto origen a uno destino de proporciones distintas (ej. maniqui a MetaHuman) con cadenas IK.' },
+  { l:'Control Rig', p:['control rig'], c:'Animacion', d:'Rigging/animacion procedural por grafo dentro de UE.' },
+  { l:'Inverse Kinematics', p:['inverse kinematics','two bone ik','foot placement','leg ik'], c:'Animacion', d:'Rota huesos para alcanzar una posicion objetivo.' },
+  { l:'Additive Animation', p:['additive animation'], c:'Animacion', d:'Animacion que se suma sobre una pose base.' },
+  { l:'Sync Group', p:['sync group','sync groups'], c:'Animacion', d:'Sincroniza la fase de varias animaciones.', d2:'Sincroniza las zancadas de mitad superior e inferior del cuerpo (ej. caminar y disparar) para que el torso no gire bruscamente.' },
+  { l:'Physical Animation Component', p:['physical animation component','physical animation'], c:'Animacion', d:'Mezcla animacion pregrabada con fisica en tiempo real.', d2:'Permite que el personaje mantenga su pose animada mientras fuerzas fisicas actuan sobre sus huesos. Para reacciones a impactos de balas o golpes dinamicos.' },
+
+  // --- IA / Logica ---
+  { l:'State Tree', p:['state tree'], c:'IA / Logica', d:'Maquina de estados jerarquica, mas flexible que el Behavior Tree.', d2:'IA moderna de UE5 que combina la previsibilidad de una State Machine con la flexibilidad de un Behavior Tree. Muy optimizado, con Sub-Trees reutilizables y agnostico (IA, animacion o UI).' },
+  { l:'Behavior Tree', p:['behavior tree','behaviour tree'], c:'IA / Logica', d:'Arbol de decision de IA con tareas, selectores y decoradores.', d2:'Asset logico que define el flujo de decisiones leyendo del Blackboard. No guarda datos: es un grafo de control evaluado de izquierda a derecha y de arriba a abajo.' },
+  { l:'Blackboard', p:['blackboard'], c:'IA / Logica', d:'Memoria de claves/valores que alimenta al Behavior Tree.', d2:'La RAM del NPC: base de datos de claves donde la IA guarda info temporal (a quien persigo, donde escuche un ruido, mi nivel de alerta). El BT lee y escribe aqui.' },
+  { l:'Selector', p:['selector'], c:'IA / Logica', d:'Nodo composite que corre hijos hasta que uno tiene exito (OR).', d2:'Ejecuta sus hijos de izquierda a derecha y se detiene cuando uno da Success. Logica OR: puedo atacar? (falla) puedo curarme? (falla) entonces huyo (exito).' },
+  { l:'Sequence Node', p:['sequence node'], c:'IA / Logica', d:'Nodo composite que corre hijos hasta que uno falla (AND).', d2:'Ejecuta hijos de izquierda a derecha y se detiene cuando uno falla. Logica AND: acercate Y apunta Y dispara; si fallas al acercarte no intentes disparar.' },
+  { l:'Task Node', p:['task node','behavior tree task'], c:'IA / Logica', d:'Hoja del arbol: la accion fisica que ejecuta la IA.', d2:'Nodos terminales programables en C++/BP (reproducir ataque, recargar, rotar al objetivo). Deben finalizar devolviendo Success o Fail.' },
+  { l:'Decorator', p:['decorator','decorators'], c:'IA / Logica', d:'Condicion (un If) que se acopla sobre un nodo del arbol.', d2:'Guardian condicional sobre un Composite o Task. Si la condicion no se cumple (ej. vida menor al 20%) el nodo no corre. Puede abortar ramas enteras (Observer aborts).' },
+  { l:'Service Node', p:['service node','behavior tree service'], c:'IA / Logica', d:'Nodo que corre en intervalos mientras su rama esta activa.', d2:'Se acopla a un Composite y corre repetidamente en Ticks controlados mientras su rama sigue activa. Ideal para actualizar el Blackboard (ej. distancia al jugador cada 0.5 s).' },
+  { l:'AI Perception', p:['ai perception','perception component'], c:'IA / Logica', d:'Sistema sensorial central del AI Controller.', d2:'Componente sensorial que dispara delegados (OnTargetPerceptionUpdated) solo cuando un estimulo cruza un umbral, evitando LineTraces constantes por Tick.' },
+  { l:'AI Senses', p:['sight sense','hearing sense'], c:'IA / Logica', d:'Sentidos de la percepcion: vista y oido.', d2:'Config dentro de la Percepcion. Sight evalua conos de vision, rango periferico y oclusion; Hearing reacciona a eventos de ruido (pasos, disparos via MakeNoise).' },
+  { l:'Environment Query System', p:['environment query','environment query system'], c:'IA / Logica', d:'EQS: consulta el entorno para elegir posiciones/objetivos.', d2:'Motor de busqueda espacial asincrono. En vez de dar una coordenada, haces una pregunta geometrica (genera una grilla, filtra lo visible, dame el punto mas seguro). Se evalua en varios frames.' },
+  { l:'Smart Objects', p:['smart object','smart objects'], c:'IA / Logica', d:'Traslada la logica de interaccion desde la IA al entorno.', d2:'El objeto del mapa (una silla, una cobertura) contiene las animaciones y la logica de uso. La IA solo solicita usarlo, ahorrando mucha programacion condicional en el Controller.' },
+  { l:'Nav Mesh', p:['nav mesh','navmesh','navigation mesh'], c:'IA / Logica', d:'Malla que define donde puede navegar la IA.', d2:'Malla poligonal sobre las superficies transitables. La IA usa A* para el camino mas corto. Puede ser dinamica para reconstruirse si algo bloquea el paso.' },
+  { l:'NavMesh Bounds Volume', p:['nav mesh bounds volume','nav mesh bounds'], c:'IA / Logica', d:'Volumen que define que areas generan navegacion.', d2:'Volumen invisible que delimita que zonas del mapa se analizan para generar el NavMesh. La geometria estatica que interseca se escanea.' },
+  { l:'Nav Modifier Volume', p:['nav modifier volume'], c:'IA / Logica', d:'Altera el coste de navegacion de una zona sin bloquearla.', d2:'No bloquea, pero cambia el coste del NavMesh en su area: obliga a evitar zonas peligrosas (fuego) o preferir caminos, alterando la ruta que A* considera mas rapida.' },
+  { l:'AI Move To', p:['ai move to'], c:'IA / Logica', d:'Ordena al AI Controller calcular y seguir una ruta.', d2:'Nodo asincrono (funcion latente en C++) que ordena al AI Controller ir a un vector o Actor, devolviendo exito, fallo o bloqueo.' },
+
+  // --- Render / Pipeline ---
+  { l:'Deferred Rendering', p:['deferred rendering','deferred shading'], c:'Render', d:'Render por defecto en dos pases (G-Buffer y luego luz).', d2:'Primero dibuja la geometria sin luz al G-Buffer (color, normales, profundidad) y luego calcula la iluminacion. Permite cientos de luces dinamicas sin multiplicar el coste.' },
+  { l:'Forward Rendering', p:['forward rendering','forward shading'], c:'Render', d:'Geometria e iluminacion en un solo paso; rapido y nitido.', d2:'Calcula geometria y luz a la vez. Menos flexible con muchas luces dinamicas, pero muy rapido y nitido. Se usa casi solo en VR y movil optimizado.' },
+  { l:'Path Tracer', p:['path tracer','path tracing'], c:'Render', d:'Render progresivo fisicamente preciso, para cinematicas.', d2:'Motor progresivo fotorrealista integrado. Dispara rayos desde la camara; no es para gameplay en tiempo real sino para cinematicas (Sequencer) o imagenes de referencia.' },
+  { l:'Ray Tracing', p:['ray tracing','hardware ray tracing'], c:'Render', d:'Nucleos dedicados calculan luz, reflejos y sombras exactos.', d2:'HWRT usa RT Cores de la GPU para rebotes de luz, reflejos exactos y sombras suaves. Lumen lo usa si esta disponible y cae a software (distance fields) si no.' },
+  { l:'Lumen', p:['lumen'], c:'Render', d:'Iluminacion global y reflexiones dinamicas en tiempo real.' },
+  { l:'Nanite', p:['nanite'], c:'Render', d:'Geometria virtualizada: mucho poligono sin LODs manuales.' },
+  { l:'TSR', p:['temporal super resolution','tsr'], c:'Render', d:'Upscaler temporal nativo de Epic (renderiza bajo, escala alto).', d2:'Escalador temporal nativo de Epic. Renderiza interno a menor resolucion y reconstruye la imagen final. Alternativas de terceros: DLSS (NVIDIA), FSR (AMD), XeSS (Intel).' },
+  { l:'DLSS', p:['dlss'], c:'Render', d:'Upscaler por IA de NVIDIA (plugin).' },
+  { l:'Post Process Volume', p:['post process volume','post process','post processing'], c:'Render', d:'Area que aplica filtros y correcciones al render final.', d2:'Volumen (o global) que aplica exposicion automatica, bloom, aberracion cromatica, color grading y balance de blancos sobre la imagen final.' },
+  { l:'Shader', p:['shader'], c:'Render', d:'Programa que calcula el aspecto de pixeles/vertices.' },
+  { l:'Render Target', p:['render target'], c:'Render', d:'Textura donde se dibuja en runtime para reusar el resultado.', d2:'Textura dinamica escribible en runtime. Para camaras de seguridad, espejos, minimapas dinamicos o huellas en la nieve.' },
+
+  // --- Materiales (PBR) ---
+  { l:'Material', p:['material'], c:'Materiales', d:'Grafo de shading que define como se ve una superficie.', d2:'Grafo de shading que compila a HLSL: define matematicamente como la luz interactua con la superficie. En AAA suele usarse como Material Maestro, no directo en mallas.' },
+  { l:'Material Instance', p:['material instance'], c:'Materiales', d:'Variante de un material con parametros ajustables sin recompilar.', d2:'Version de bajo coste de un material: cambia parametros (colores, texturas, numeros) sin recompilar el shader. Mandatorio para optimizar memoria (Instancing).' },
+  { l:'Material Function', p:['material function'], c:'Materiales', d:'Bloque reutilizable de nodos dentro de materiales.' },
+  { l:'Material Parameter Collection', p:['material parameter collection'], c:'Materiales', d:'Variables globales de material actualizables desde codigo.', d2:'Asset con variables globales. Cambiar un valor (ej. Nivel de Lluvia) desde C++ actualiza a la vez todos los materiales del mundo que referencien ese MPC.' },
+  { l:'Base Color', p:['base color','albedo'], c:'Materiales', d:'Color puro de la superficie sin iluminacion (Albedo).' },
+  { l:'Roughness', p:['roughness'], c:'Materiales', d:'Cuan difusa o pulida se ve una superficie (0 a 1).', d2:'Micro-rugosidad de 0 a 1. En 0 la luz rebota en una direccion (espejo); en 1 se dispersa creando reflejos opacos (tiza, tela).' },
+  { l:'Metallic', p:['metallic'], c:'Materiales', d:'Define si el material es conductor (metal) o dielectrico.', d2:'Metal vs no metal; en PBR estricto es 0 o 1. En 1 el Base Color tine el color del reflejo (ej. una hoja afilada refleja plateado segun su albedo).' },
+  { l:'Normal Map', p:['normal map'], c:'Materiales', d:'Textura RGB que simula relieve sin poligonos reales.', d2:'Usa canales RGB para enganar al motor simulando detalles geometricos (relieves, rasgunos) que reaccionan a la luz dinamica sin anadir poligonos.' },
+  { l:'Emissive', p:['emissive'], c:'Materiales', d:'Canal de material que emite luz/color propio.' },
+  { l:'Fresnel', p:['fresnel'], c:'Materiales', d:'Efecto segun el angulo de vista; rims y bordes.', d2:'Calcula el angulo de vista relativo a la normal, dando un gradiente mas intenso en los bordes. Para escudos de energia, contornos de seleccion o terciopelo.' },
+  { l:'World Position Offset', p:['world position offset'], c:'Materiales', d:'Desplaza los vertices de la malla en la GPU (WPO).', d2:'Mueve los vertices reales en la GPU antes de renderizar. Base del follaje con viento o de ondular una capa a la distancia sin coste de fisica real.' },
+  { l:'Pixel Depth Offset', p:['pixel depth offset'], c:'Materiales', d:'Modifica el buffer de profundidad para fusionar mallas (PDO).', d2:'Hace creer al motor que el pixel esta mas atras, difuminando el corte duro donde una roca o raiz interseca el terreno.' },
+  { l:'Lerp', p:['lerp','linear interpolate'], c:'Materiales', d:'Interpolacion lineal entre dos valores segun un alpha 0-1.', d2:'Mezcla una entrada A y una B segun un alpha. Ej. A piel limpia, B textura de sangre, alpha el dano recibido.' },
+  { l:'Dithering', p:['dithering','dither'], c:'Materiales', d:'Patron de puntos para simular transparencia/disolucion.' },
+  { l:'Texture', p:['texture','texture 2d'], c:'Materiales', d:'Imagen 2D (albedo, normales, mascaras).', d2:'Imagen rasterizada 2D. UE5 soporta compresion BC y Virtual Texturing para cargar texturas enormes (8K+) por porciones sin saturar la VRAM.' },
+
+  // --- VFX (Niagara) ---
+  { l:'Niagara', p:['niagara','niagara system'], c:'VFX', d:'Sistema de VFX y particulas de Unreal (reemplaza Cascade).', d2:'Sistema de particulas orientado a datos, procesado casi todo por GPU (millones de particulas). El System agrupa y sincroniza varios emisores en un efecto completo.' },
+  { l:'Niagara Emitter', p:['niagara emitter','emitter'], c:'VFX', d:'Reglas de un solo tipo de particula dentro de un System.', d2:'Cada emisor define como nace, vive y muere un tipo de particula. Se pueden guardar como assets aislados para reusarlos.' },
+  { l:'Ribbon Renderer', p:['ribbon renderer'], c:'VFX', d:'Conecta las posiciones de la particula en una malla continua.', d2:'En vez de sprites individuales, genera una malla continua entre posiciones secuenciales. Estandar para estelas de armas (el barrido tras un corte) o proyectiles.' },
+  { l:'Cascade', p:['cascade'], c:'VFX', d:'Sistema de particulas antiguo, reemplazado por Niagara.' },
+
+  // --- Camara / Cine ---
+  { l:'Spring Arm', p:['spring arm'], c:'Camara', d:'Brazo que sostiene la camara y evita atravesar geometria.', d2:'Brazo telescopico (camara en 3a persona) que evalua colisiones entre su origen y su final; si detecta un muro contrae la camara para evitar el clipping.' },
+  { l:'Camera Modifier', p:['camera modifier'], c:'Camara', d:'Modifica la camara en runtime (shakes, offsets, blends).' },
+  { l:'Sequencer', p:['sequencer'], c:'Camara', d:'Editor de cinematicas y animaciones por pistas.' },
+  { l:'Movie Render Queue', p:['movie render queue'], c:'Camara', d:'Render de alta calidad a imagen/video (MRQ).' },
+  { l:'Camera Animation Sequence', p:['camera animation sequence'], c:'Camara', d:'Animacion de camara aditiva reutilizable (CAS).' },
+  { l:'Field of View', p:['field of view'], c:'Camara', d:'Angulo de vision de la camara (FOV).' },
+
+  // --- UI ---
+  { l:'Slate', p:['slate'], c:'UI', d:'Framework de UI de bajo nivel en C++ con que se hizo el editor.', d2:'UI de bajo nivel escrita en C++ y macros, base de todo el editor de Unreal. Muy eficiente pero compleja de programar.' },
+  { l:'UMG', p:['umg','unreal motion graphics'], c:'UI', d:'UI visual por componentes construida sobre Slate.', d2:'Contenedor visual orientado a objetos sobre Slate. Permite crear interfaces con drag and drop y logica en Blueprints.' },
+  { l:'Widget', p:['widget','user widget','widget blueprint'], c:'UI', d:'Elemento de UI en UMG (pantalla completa o componente).', d2:'Clase base de un elemento UMG. Puede ser una pantalla entera (menu) o un componente reutilizable (un boton). Soporta animaciones internas y jerarquias.' },
+  { l:'Canvas Panel', p:['canvas panel'], c:'UI', d:'Contenedor de UMG con posicionamiento absoluto y Anchors.', d2:'Contenedor clasico de posicionamiento X/Y. Sus Anchors fijan los bordes de un elemento a una esquina para que no se deforme al cambiar la resolucion.' },
+  { l:'Property Binding', p:['property binding'], c:'UI', d:'Enlaza una propiedad de UI a una funcion cada frame.', d2:'Enlaza una propiedad visual (ej. la barra de vida) a una funcion. Comodo pero corre cada frame; en AAA se prefiere actualizar por eventos (delegados).' },
+  { l:'Common UI', p:['common ui'], c:'UI', d:'Plugin moderno de UI multiplataforma con foco para mando.', d2:'Estandar actual en AAA. Anade enrutamiento de input multiplataforma, resuelve el foco del boton con mando de PS5/Xbox y permite menus en pila (stack-based).' },
+
+  // --- Input ---
+  { l:'Enhanced Input', p:['enhanced input'], c:'Input', d:'Sistema moderno de input por acciones y contextos.' },
+  { l:'Input Action', p:['input action'], c:'Input', d:'Accion abstracta (ej. Saltar) desacoplada de la tecla.' },
+  { l:'Input Mapping Context', p:['input mapping context','mapping context'], c:'Input', d:'Conjunto de mapeos tecla-accion activable por capas.' },
+
+  // --- Fisica ---
+  { l:'Line Trace', p:['line trace','raycast'], c:'Fisica', d:'Rayo que detecta lo primero que cruza (raycast).', d2:'Dispara un rayo de A a B y devuelve un HitResult (que actor toco, en que hueso, la normal). Crucial para saber si el barrido de un arma conecta.' },
+  { l:'Sweep', p:['sweep'], c:'Fisica', d:'Como un trace pero proyectando una forma volumetrica.', d2:'Proyecta una forma (esfera/capsula/caja) por el espacio en vez de una linea. Mas preciso e indulgente para impactos cuerpo a cuerpo rapidos.' },
+  { l:'Hit Result', p:['hit result'], c:'Fisica', d:'Struct con la info de una colision/trace (impacto, normal).' },
+  { l:'Collision', p:['collision'], c:'Fisica', d:'Config de como un objeto choca o solapa con otros.' },
+  { l:'Collision Channel', p:['collision channel','trace channel'], c:'Fisica', d:'Filtro de colisiones por canal personalizado.', d2:'Sistema de filtrado por canales propios. Un trace puede ignorar paredes y solo reaccionar en el canal WeaponHurtbox, evitando calculos innecesarios.' },
+  { l:'Overlap', p:['overlap'], c:'Fisica', d:'Solapamiento entre volumenes sin bloquear el movimiento.' },
+  { l:'Chaos Physics', p:['chaos physics','chaos'], c:'Fisica', d:'Motor de fisica y destruccion determinista de UE5.', d2:'Motor central determinista: colisiones complejas, friccion, inercias y destruccion. Los Physics Assets (capsulas, cajas, esferas) definen como colisiona la malla.' },
+  { l:'Chaos Cloth', p:['chaos cloth'], c:'Fisica', d:'Simulacion de tela/pelo por particulas sobre el esqueleto.', d2:'Subsistema de particulas sobre mallas esqueleticas para capas, tunicas y Grooms: colisiones, resistencia al viento e interaccion con los volumenes del personaje.' },
+  { l:'Ragdoll', p:['ragdoll'], c:'Fisica', d:'Simulacion fisica del esqueleto (cuerpo inerte).' },
+  { l:'Capsule Component', p:['capsule component'], c:'Fisica', d:'Capsula de colision estandar de un Character.', d2:'Primitiva de colision estandar para personajes: barata de calcular y permite deslizarse por escaleras y rampas sin atascarse en los bordes.' },
+
+  // --- Networking ---
+  { l:'Replication', p:['replication','replicated','replicate'], c:'Networking', d:'Sincronizacion de estado servidor a clientes.', d2:'El servidor comunica cambios de actores y variables a los clientes. Una variable se replica con UPROPERTY(Replicated) y GetLifetimeReplicatedProps.' },
+  { l:'Authority', p:['authority','has authority','role authority'], c:'Networking', d:'Quien tiene el control real y final de un Actor.', d2:'Normalmente el servidor. Los clientes ven un actor como SimulatedProxy (repiten lo del servidor) o AutonomousProxy (predicen local y el servidor corrige).' },
+  { l:'RPC', p:['rpc','remote procedure call','server rpc','client rpc'], c:'Networking', d:'Funciones que se ejecutan a traves de la red.', d2:'Server RPC: el cliente pide permiso al servidor (ej. disparar). Client RPC: el servidor ordena a un cliente (ej. UI de dano). Multicast: el servidor ordena a todos (ej. VFX de explosion).' },
+  { l:'RepNotify', p:['rep notify','repnotify','on rep'], c:'Networking', d:'Callback que se dispara cuando cambia una variable replicada.', d2:'Funcion (OnRep) que corre automaticamente en los clientes en el instante exacto en que reciben un nuevo valor replicado. Muy eficiente para reaccionar a cambios.' },
+
+  // --- Matematicas ---
+  { l:'FVector', p:['f vector','fvector','vector'], c:'Matematicas', d:'Estructura de tres floats (X, Y, Z): posicion o direccion.', d2:'Tres floats X/Y/Z. Representa una posicion en el mundo, una escala, o una direccion con magnitud (ej. un vector de fuerza de impacto).' },
+  { l:'FRotator', p:['f rotator','rotator'], c:'Matematicas', d:'Rotacion por angulos de Euler (Pitch, Yaw, Roll).', d2:'Rotacion en angulos de Euler: Pitch (Y), Yaw (Z), Roll (X). Facil de leer, pero sufre Gimbal Lock en rotaciones complejas en todos los ejes.' },
+  { l:'FQuat', p:['quaternion','f quat','quat'], c:'Matematicas', d:'Rotacion (X,Y,Z,W) sin Gimbal Lock; estandar para interpolar.', d2:'Estructura X/Y/Z/W que rota sin Gimbal Lock. Estandar para interpolar (SLERP) rotaciones suaves (ej. la hoja de un arma en un combo). El motor usa Quats internamente.' },
+  { l:'FTransform', p:['f transform','transform'], c:'Matematicas', d:'Traslacion + rotacion + escala de un objeto.', d2:'Combina un FVector (traslacion), un FQuat (rotacion) y un FVector (escala). Cada Actor y Componente tiene un Transform que dicta su existencia espacial.' },
+
+  // --- Entorno / Mundo ---
+  { l:'Landscape', p:['landscape'], c:'Entorno', d:'Sistema de terreno nativo basado en un mapa de altura.', d2:'Terreno como grilla optimizada sobre un Heightmap de 16 bits, con LOD dinamico por distancia. No es una malla estatica convencional.' },
+  { l:'Foliage Tool', p:['foliage','foliage tool'], c:'Entorno', d:'Herramienta para pintar miles de mallas (arboles, hierba).' },
+  { l:'Instanced Static Mesh', p:['instanced static mesh','hierarchical instanced static mesh'], c:'Entorno', d:'Agrupa miles de mallas iguales en una sola llamada a GPU.', d2:'HISMC: agrupa todas las mallas iguales (ej. 10.000 arboles) en una llamada a la GPU y descarta jerarquicamente las fuera de camara (Frustum Culling).' },
+  { l:'Runtime Virtual Texturing', p:['runtime virtual texturing','virtual texturing'], c:'Entorno', d:'Captura el material del terreno como textura barata de leer.', d2:'RVT captura grandes areas del material del Landscape en runtime. Permite, por ejemplo, que una capa se tina del color del barro al arrastrarse, o que rocas coincidan con la tierra.' },
+  { l:'Water System', p:['water system'], c:'Entorno', d:'Plugin de aguas (lagos, rios, oceanos) basado en splines.', d2:'Plugin de aguas basado en splines que deforma el Landscape proceduralmente. Incluye flotabilidad fisica (Buoyancy) para actores que caen al agua.' },
+
+  // --- Vehiculos ---
+  { l:'Chaos Vehicles', p:['chaos vehicle','chaos vehicles','wheeled vehicle'], c:'Vehiculos', d:'Subsistema de Chaos para simular vehiculos con ruedas.', d2:'El ChaosWheeledVehicleMovementComponent es el equivalente al CharacterMovement pero para coches: motor, transmision, aerodinamica y friccion de neumaticos.' },
+  { l:'Torque Curve', p:['torque curve'], c:'Vehiculos', d:'Curva de fuerza del motor segun las RPM.', d2:'Asset tipo Curve que define cuanto torque genera el motor en cada rango de RPM. Dicta si el vehiculo tiene buena aceleracion o alta velocidad maxima.' },
+
+  // --- Audio ---
+  { l:'MetaSounds', p:['metasounds','meta sounds','metasound'], c:'Audio', d:'Motor de sintesis de audio por nodos (reemplaza Sound Cues).', d2:'Motor DSP por nodos. Ademas de reproducir .wav, genera frecuencias e inyecta variables del juego en tiempo real (ej. cambiar el tono de un rugido segun la vida).' },
+  { l:'Sound Attenuation', p:['sound attenuation','attenuation'], c:'Audio', d:'Define como decae el volumen con la distancia (Falloff).', d2:'Controla el falloff por distancia y parametros espaciales: Air Absorption (los sonidos lejanos pierden agudos) y espacializacion 3D (binaural/surround).' },
+  { l:'Audio Concurrency', p:['audio concurrency','concurrency'], c:'Audio', d:'Limita cuantos sonidos simultaneos suenan y como se reemplazan.', d2:'Evita saturacion: pone un limite (ej. maximo 3 gritos a la vez) y reglas de reemplazo (detener el mas antiguo, ignorar el mas lejano).' },
+  { l:'Submix', p:['submix','sound submix'], c:'Audio', d:'Bus que agrupa sonidos para aplicar efectos globales.', d2:'Como un canal auxiliar de mezcla: rutea varios sonidos a un bus para efectos globales, como el Ducking (bajar el juego cuando alguien habla en una cinematica).' },
+  { l:'Audio Volume', p:['audio volume'], c:'Audio', d:'Caja invisible que cambia la acustica de una zona.', d2:'Volumen que cambia la reverberacion al entrar (ej. el eco de una catedral vs el sonido seco de un bosque nevado).' },
+
+  // --- Editor / Proyecto ---
+  { l:'Content Browser', p:['content browser'], c:'Editor', d:'Explorador de assets del proyecto.' },
+  { l:'Details Panel', p:['details panel'], c:'Editor', d:'Panel de propiedades del objeto seleccionado.' },
+  { l:'World Outliner', p:['outliner','world outliner'], c:'Editor', d:'Lista jerarquica de los actores del nivel.' },
+  { l:'Play In Editor', p:['play in editor'], c:'Editor', d:'Ejecutar el juego dentro del editor (PIE).' },
+  { l:'Console Variable', p:['console variable','cvar'], c:'Editor', d:'Variable ajustable por consola (r.*, a.*) para tuning/debug.' },
+
+  // --- Assets ---
+  { l:'Static Mesh', p:['static mesh'], c:'Assets', d:'Malla rigida: vertices, normales, UVs y materiales.' },
+  { l:'Groom', p:['groom','groom asset'], c:'Assets', d:'Sistema de pelo/fibras por strands (XGen, Alembic).', d2:'Recurso de cabello basado en hebras, importado desde DCC en Alembic. Evalua fisica por hebra interactuando con Chaos Cloth y colisiones.' },
+  { l:'MetaHuman', p:['metahuman','meta human'], c:'Assets', d:'Framework de personajes humanos realistas de Epic.' },
+];
+
+/* --- motor de resaltado --- */
+const UE_MAP = new Map();
+const _uePats = [];
+for (const e of GLOSSARY){ for (const p of e.p){ UE_MAP.set(p.toLowerCase(), e); _uePats.push(p.toLowerCase()); } }
+_uePats.sort((a,b) => b.length - a.length);            // frases largas primero (state machine > state)
+const _ueEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const UE_RE = new RegExp('\\b(?:' + _uePats.map(_ueEsc).join('|') + ')s?\\b', 'gi');
+
+function ueLookup(match){
+  const k = match.toLowerCase();
+  return UE_MAP.get(k) || (k.endsWith('s') ? UE_MAP.get(k.slice(0, -1)) : null);
+}
+function attrEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// resalta términos UE en un texto YA escapado (escapeHtml)
+function highlightUE(escaped){
+  if (!S.hl) return escaped;
+  return escaped.replace(UE_RE, (m) => {
+    const e = ueLookup(m);
+    if (!e) return m;
+    return `<mark class="ue" title="${attrEsc(e.l + ' · ' + e.c + ' — ' + e.d)}">${m}</mark>`;
+  });
+}
+// junta los términos únicos detectados en toda la nota (ordenados por categoría)
+function collectGlossary(){
+  const found = new Map();
+  const re = new RegExp(UE_RE.source, 'gi');
+  for (const o of S.segments){
+    if (o.silent || o.pending) continue;
+    let m; re.lastIndex = 0;
+    while ((m = re.exec(o.text))){ const e = ueLookup(m[0]); if (e) found.set(e.l, e); }
+  }
+  return [...found.values()].sort((a,b) => a.c.localeCompare(b.c) || a.l.localeCompare(b.l));
+}
+
+/* ---------------- estado ---------------- */
+const S = {
+  transcriber: null,
+  modelId: null,
+  translators: new Map(),   // cache por idioma origen (Chrome API)
+  opusEnEs: null,           // fallback local en->es
+  capturing: false,
+  audioCtx: null,
+  stream: null,
+  sampleRate: 48000,
+  win: [],                  // ventana de audio en curso (chunks)
+  winLen: 0,
+  segIndex: 0,
+  busy: false,              // cerrojo: solo una transcripción a la vez
+  lastPartial: 0,           // timestamp del último pase provisional
+  live: '',                 // texto provisional en vivo (original)
+  liveEs: '',               // texto provisional en vivo (español)
+  autoTr: false,            // traducir en vivo mientras transcribe
+  hl: true,                 // resaltar términos de Unreal Engine
+  lib: [],                  // biblioteca de transcripciones guardadas
+  loadedId: null,           // id de la sesión cargada actualmente
+  view: 'seg',              // 'seg' | 'full'
+  fullLang: 'orig',         // 'orig' | 'es'
+  pumpTimer: null,
+  startTime: 0,
+  clockTimer: null,
+  segments: [],             // {id, t, lang, iso, text, es, silent}
+  analyser: null,
+  rafId: null,
+};
+
+/* ---------------- refs ---------------- */
+const $ = id => document.getElementById(id);
+const dot = $('dot'), statusLabel = $('statusLabel'), clock = $('clock');
+const loadBtn = $('loadBtn'), startBtn = $('startBtn'), stopBtn = $('stopBtn');
+const loadBox = $('loadBox'), loadBar = $('loadBar'), loadStatus = $('loadStatus'), loadFile = $('loadFile');
+const segEl = $('segments'), countEl = $('count');
+const fullWrap = $('fulltextWrap'), fullEl = $('fulltext');
+const liveCard = $('liveCard'), liveText = $('liveText'), liveEs = $('liveEs');
+const viewSeg = $('viewSeg'), viewFull = $('viewFull'), fullOrig = $('fullOrig'), fullEs = $('fullEs');
+const glossaryEl = $('glossary'), hlBtn = $('hlBtn');
+const libList = $('libList'), libCount = $('libCount'), saveSessionBtn = $('saveSessionBtn');
+const translateAll = $('translateAll'), autoTrBtn = $('autoTr'), copyBtn = $('copyBtn'), mdBtn = $('mdBtn'),
+      jsonBtn = $('jsonBtn'), clearBtn = $('clearBtn'), loadJsonBtn = $('loadJsonBtn'), jsonInput = $('jsonInput');
+
+/* ---------------- compat ---------------- */
+(function compat(){
+  const box = $('compat'); const msgs = [];
+  const hasWebGPU = 'gpu' in navigator;
+  if (!navigator.mediaDevices?.getDisplayMedia)
+    msgs.push('<div class="banner err">Tu navegador no soporta captura de audio del sistema. Usa <b>Chrome</b> o <b>Edge</b> de escritorio.</div>');
+  if (!hasWebGPU)
+    msgs.push('<div class="banner warn">No detecto WebGPU: la transcripción funcionará por CPU (WASM), bastante más lenta. En Chrome/Edge reciente debería estar disponible.</div>');
+  box.innerHTML = msgs.join('');
+})();
+
+/* ---------------- helpers UI ---------------- */
+const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+function setStatus(text, mode){ // mode: '', 'on', 'busy'
+  statusLabel.textContent = text;
+  dot.className = 'dot' + (mode ? ' '+mode : '');
+}
+function refreshToolbar(){
+  const has = S.segments.length > 0;
+  [translateAll, copyBtn, mdBtn, jsonBtn, clearBtn, saveSessionBtn].forEach(b => b.disabled = !has);
+  countEl.textContent = `${S.segments.length} segmento${S.segments.length===1?'':'s'}`;
+}
+
+/* ---------------- cargar modelo ---------------- */
+loadBtn.addEventListener('click', async () => {
+  const modelId = $('model').value;
+  if (S.transcriber && S.modelId === modelId) return;
+  loadBtn.disabled = true; startBtn.disabled = true;
+  loadBox.style.display = 'block';
+  const device = ('gpu' in navigator) ? 'webgpu' : 'wasm';
+  const dtype = device === 'webgpu' ? 'fp32' : 'q8';
+  setStatus('Cargando modelo…', 'busy');
+  try {
+    S.transcriber = await pipeline('automatic-speech-recognition', modelId, {
+      device, dtype,
+      progress_callback: p => {
+        if (p.status === 'progress' && p.total) {
+          const pct = Math.round(p.loaded / p.total * 100);
+          loadBar.style.width = pct + '%';
+          loadStatus.textContent = `Descargando modelo… ${pct}%`;
+          loadFile.textContent = p.file || '';
+        } else if (p.status === 'ready' || p.status === 'done') {
+          loadFile.textContent = p.file || '';
+        }
+      }
+    });
+    S.modelId = modelId;
+    loadBox.style.display = 'none';
+    setStatus(`Modelo listo · ${device.toUpperCase()}`, 'on');
+    startBtn.disabled = false;
+    loadBtn.textContent = 'Recargar modelo';
+  } catch (e) {
+    console.error(e);
+    loadStatus.textContent = 'Error al cargar el modelo. Revisa tu conexión y recarga la página.';
+    setStatus('Error al cargar', '');
+  } finally {
+    loadBtn.disabled = false;
+  }
+});
+
+/* ---------------- worklet (recolector de audio) ---------------- */
+const WORKLET = `
+class Collector extends AudioWorkletProcessor {
+  constructor(){ super(); this._buf=[]; this._size=0; this._target=4096; }
+  process(inputs){
+    const ch = inputs[0] && inputs[0][0];
+    if (ch && ch.length){
+      this._buf.push(ch.slice()); this._size += ch.length;
+      while (this._size >= this._target){
+        const out = new Float32Array(this._target); let filled = 0;
+        while (filled < this._target){
+          const head = this._buf[0]; const need = this._target - filled;
+          if (head.length <= need){ out.set(head, filled); filled += head.length; this._buf.shift(); this._size -= head.length; }
+          else { out.set(head.subarray(0, need), filled); this._buf[0] = head.subarray(need); this._size -= need; filled += need; }
+        }
+        this.port.postMessage(out, [out.buffer]);
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('collector', Collector);
+`;
+
+/* ---------------- captura ---------------- */
+startBtn.addEventListener('click', async () => {
+  if (!S.transcriber) return;
+  try {
+    S.stream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:false }
+    });
+  } catch (e) {
+    return; // el usuario canceló
+  }
+  if (!S.stream.getAudioTracks().length){
+    S.stream.getTracks().forEach(t => t.stop());
+    setStatus('Sin pista de audio: marca "Compartir audio de la pestaña"', '');
+    banner('No compartiste audio. Al elegir la pestaña o pantalla, activa la casilla <b>"Compartir audio de la pestaña / del sistema"</b> abajo a la izquierda del diálogo.', 'warn');
+    return;
+  }
+  clearBanner();
+  // no necesitamos el video: lo apagamos, dejamos vivo solo el audio
+  S.stream.getVideoTracks().forEach(t => t.stop());
+  S.stream.getAudioTracks()[0].addEventListener('ended', stopCapture);
+
+  S.audioCtx = new AudioContext();
+  S.sampleRate = S.audioCtx.sampleRate;
+  await S.audioCtx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], {type:'application/javascript'})));
+
+  const source = S.audioCtx.createMediaStreamSource(S.stream);
+  const node = new AudioWorkletNode(S.audioCtx, 'collector');
+  S.analyser = S.audioCtx.createAnalyser();
+  S.analyser.fftSize = 512;
+  const zero = S.audioCtx.createGain(); zero.gain.value = 0; // evita eco por los parlantes
+
+  source.connect(S.analyser);
+  source.connect(node);
+  node.connect(zero); S.analyser.connect(zero); zero.connect(S.audioCtx.destination);
+
+  node.port.onmessage = e => onSamples(e.data);
+
+  S.capturing = true;
+  S.win = []; S.winLen = 0; S.segIndex = 0; S.live = ''; S.lastPartial = 0;
+  updateLive();
+  S.pumpTimer = setInterval(pump, 700);    // reintenta pases provisionales
+  S.startTime = performance.now();
+  startBtn.disabled = true; stopBtn.disabled = false; loadBtn.disabled = true;
+  ['model','lang','seg'].forEach(id => $(id).disabled = true);
+  setStatus('Escuchando el audio del PC…', 'on');
+  drawMeter();
+  S.clockTimer = setInterval(() => { clock.textContent = fmt((performance.now()-S.startTime)/1000); }, 500);
+});
+
+stopBtn.addEventListener('click', stopCapture);
+
+function stopCapture(){
+  if (!S.capturing) return;
+  S.capturing = false;
+  clearInterval(S.pumpTimer);
+  S.stream?.getTracks().forEach(t => t.stop());
+  cancelAnimationFrame(S.rafId);
+  clearInterval(S.clockTimer);
+  if (S.audioCtx) S.audioCtx.close();
+  stopBtn.disabled = true; startBtn.disabled = false; loadBtn.disabled = false;
+  ['model','lang','seg'].forEach(id => $(id).disabled = false);
+  finalizeRemaining();   // vuelca lo que quede en la ventana como último segmento
+  const ctx = $('meter').getContext('2d');
+  ctx.clearRect(0,0,$('meter').width,$('meter').height);
+}
+async function finalizeRemaining(){
+  clearLive(); updateLive();
+  if (S.winLen > S.sampleRate){          // al menos ~1 s útil
+    const seg = takeWindow(S.winLen);
+    const t = S.segIndex * segSec(); S.segIndex++;
+    setStatus('Terminando de transcribir…', 'busy');
+    await commitSegment(seg, t);
+  }
+  setStatus('Detenido', 'on');
+}
+
+/* ---------------- acumulación + pump ---------------- */
+const segSec = () => parseInt($('seg').value, 10);
+
+function onSamples(chunk){
+  S.win.push(chunk); S.winLen += chunk.length;
+  pump();
+}
+// copia la ventana actual SIN consumirla (para el pase provisional en vivo)
+function concatWindow(){
+  const out = new Float32Array(S.winLen); let f = 0;
+  for (const c of S.win){ out.set(c, f); f += c.length; }
+  return out;
+}
+// copia SOLO los últimos `sec` segundos de la ventana (preview rápido y de tiempo casi constante)
+function tailWindow(sec){
+  const want = Math.round(sec * S.sampleRate);
+  if (S.winLen <= want) return concatWindow();
+  const out = new Float32Array(want);
+  let need = want, pos = want;
+  for (let i = S.win.length - 1; i >= 0 && need > 0; i--){
+    const c = S.win[i];
+    const take = Math.min(c.length, need);
+    out.set(c.subarray(c.length - take), pos - take);
+    pos -= take; need -= take;
+  }
+  return out;
+}
+// extrae y CONSUME n muestras del inicio de la ventana
+function takeWindow(n){
+  const size = Math.min(n, S.winLen);
+  const out = new Float32Array(size); let filled = 0;
+  while (filled < size && S.win.length){
+    const head = S.win[0]; const room = size - filled;
+    if (head.length <= room){ out.set(head, filled); filled += head.length; S.win.shift(); S.winLen -= head.length; }
+    else { out.set(head.subarray(0, room), filled); S.win[0] = head.subarray(room); S.winLen -= room; filled += room; }
+  }
+  return out;
+}
+
+// bucle único: primero fija segmentos completos; si no, refresca el pase provisional
+async function pump(){
+  if (S.busy || !S.transcriber) return;
+  const need = segSec() * S.sampleRate;
+
+  // 1) ventana completa -> fijar como segmento definitivo
+  if (S.winLen >= need){
+    S.busy = true;
+    const seg = takeWindow(need);
+    const t = S.segIndex * segSec(); S.segIndex++;
+    clearLive();
+    await commitSegment(seg, t);
+    S.busy = false;
+    pump();                       // encadena si ya hay otra ventana lista
+    return;
+  }
+
+  // 2) pase provisional en vivo (ventana deslizante de ~8 s, refresco ~1 s)
+  if (S.capturing && S.winLen > S.sampleRate * 0.8 && (performance.now() - S.lastPartial) > 900){
+    S.busy = true;
+    S.lastPartial = performance.now();
+    try {
+      const audio = await to16k(tailWindow(8), S.sampleRate);
+      const out = await transcribe(audio);
+      await showLive((out.text || '').trim());
+    } catch (e) { /* silencioso: es solo una vista previa */ }
+    S.busy = false;
+  }
+}
+
+// una sola llamada a Whisper (sin chunking forzado: Whisper procesa <=30 s en una ventana)
+async function transcribe(audio16k){
+  const langSel = $('lang').value;
+  // repetition_penalty desalienta que el decodificador entre en bucles de repeticion
+  const opts = { task:'transcribe', repetition_penalty: 1.2 };
+  if (langSel !== 'auto') opts.language = langSel;
+  return S.transcriber(audio16k, opts);
+}
+
+// colapsa bucles de Whisper: un bloque de 1-8 palabras repetido 3+ veces seguidas -> 1 vez
+function deLoop(text){
+  if (!text) return text;
+  let words = text.trim().split(/\s+/);
+  let changed = true;
+  while (changed){
+    changed = false;
+    for (let block = 1; block <= 8 && !changed; block++){
+      for (let i = 0; i + block*3 <= words.length; i++){
+        const unit = words.slice(i, i+block).map(w => w.toLowerCase()).join(' ');
+        if (!/[a-z0-9]/i.test(unit)) continue;
+        let reps = 1;
+        while (i+(reps+1)*block <= words.length &&
+               words.slice(i+reps*block, i+(reps+1)*block).map(w => w.toLowerCase()).join(' ') === unit) reps++;
+        if (reps >= 3){ words.splice(i+block, (reps-1)*block); changed = true; break; }
+      }
+    }
+  }
+  return words.join(' ');
+}
+
+// alucinaciones típicas de Whisper sobre silencio ("you", "thank you"…)
+function isFiller(text){
+  const t = text.toLowerCase().replace(/[.!?¿¡\s]/g,'');
+  return t === '' || ['you','thankyou','thanksforwatching','thanks','bye','uh','um'].includes(t);
+}
+
+// transcribe un segmento definitivo y lo añade a la nota
+async function commitSegment(samples, t){
+  const langSel = $('lang').value;
+  const ph = addSegment({ t, lang: langSel, text: '…', pending: true });
+  try {
+    const audio = await to16k(samples, S.sampleRate);
+    const out = await transcribe(audio);
+    const text = deLoop((out.text || '').trim());
+    if (isFiller(text)) { updateSegment(ph, '(silencio)', true); return; }
+    // descarta si es idéntico al último segmento real (alucinación repetida entre chunks)
+    const lastReal = [...S.segments].reverse().find(o => !o.silent && !o.pending && o.id !== ph.id);
+    if (lastReal && lastReal.text.toLowerCase() === text.toLowerCase()){
+      updateSegment(ph, '(repetido)', true); return;
+    }
+    updateSegment(ph, text, false);
+    if (S.autoTr) translateSegment(ph);
+  } catch (e) {
+    console.error(e);
+    updateSegment(ph, '⚠ error al transcribir este segmento', false);
+  }
+}
+
+/* ---------------- línea provisional en vivo ---------------- */
+function liveSrcIso(){
+  const forced = $('src').value;
+  if (forced !== 'auto') return forced;
+  const iso = LANG_ISO[$('lang').value];
+  if (iso && iso !== 'auto' && iso !== 'es') return iso;
+  return 'en';
+}
+async function showLive(text){
+  text = deLoop(text);
+  S.live = text;
+  liveText.innerHTML = text ? highlightUE(escapeHtml(text)) : 'escuchando…';
+  if (S.autoTr && text){
+    try { S.liveEs = await translateKeepingUE(text, liveSrcIso()); }
+    catch (e) { S.liveEs = ''; }
+    liveEs.innerHTML = S.liveEs ? highlightUE(escapeHtml(S.liveEs)) : '';
+  }
+  if (S.view === 'full') renderFull();
+}
+function clearLive(){
+  S.live = ''; S.liveEs = '';
+  liveText.textContent = ''; liveEs.textContent = '';
+  if (S.view === 'full') renderFull();
+}
+
+/* ---------------- resample a 16 kHz ---------------- */
+async function to16k(float32, srcRate){
+  if (srcRate === 16000) return float32;
+  const len = Math.round(float32.length * 16000 / srcRate);
+  const off = new OfflineAudioContext(1, len, 16000);
+  const buf = off.createBuffer(1, float32.length, srcRate);
+  buf.copyToChannel(float32, 0);
+  const src = off.createBufferSource(); src.buffer = buf; src.connect(off.destination); src.start();
+  return (await off.startRendering()).getChannelData(0).slice();
+}
+
+/* ---------------- render de segmentos ---------------- */
+const LANG_ISO = { auto:'auto', english:'en', spanish:'es', portuguese:'pt', french:'fr',
+  german:'de', italian:'it', japanese:'ja', chinese:'zh', korean:'ko', russian:'ru' };
+
+function addSegment(data){
+  const id = 'seg-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+  const iso = LANG_ISO[data.lang] || data.lang || 'auto';
+  const obj = { id, t: data.t, lang: data.lang, iso, text: data.text, es: data.es || null,
+                pending: !!data.pending, silent: !!data.silent };
+  S.segments.push(obj);
+  if (segEl.querySelector('.empty')) segEl.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'seg' + (obj.pending ? ' pending' : '') + (obj.silent ? ' silent' : '');
+  el.id = id;
+  el.innerHTML = renderSeg(obj);
+  segEl.appendChild(el);
+  if (S.view === 'seg') el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  wireSeg(el, obj);
+  refreshToolbar(); renderFull(); save();
+  return obj;
+}
+function renderSeg(o){
+  const badge = o.iso === 'auto' ? 'auto' : o.iso;
+  const showBtn = !o.pending && !o.silent;
+  return `
+    <div class="seg-meta">
+      <span class="stamp">${fmt(o.t)}</span>
+      <span class="lang">${badge}</span>
+      <span class="seg-actions">${showBtn ? `<button data-act="tr">Traducir</button>` : ''}</span>
+    </div>
+    <div class="seg-text">${highlightUE(escapeHtml(o.text))}</div>
+    ${o.es ? `<div class="seg-es"><span class="tag">ES</span>${highlightUE(escapeHtml(o.es))}</div>` : ''}`;
+}
+function wireSeg(el, o){
+  const b = el.querySelector('[data-act="tr"]');
+  if (b) b.addEventListener('click', () => translateSegment(o));
+}
+function updateSegment(o, text, silent){
+  o.text = text; o.pending = false; o.silent = !!silent;
+  const el = document.getElementById(o.id);
+  el.classList.remove('pending');
+  el.classList.toggle('silent', o.silent);
+  el.innerHTML = renderSeg(o);
+  wireSeg(el, o);
+  renderFull(); save();
+}
+function rerender(o){
+  const el = document.getElementById(o.id);
+  el.innerHTML = renderSeg(o);
+  wireSeg(el, o);
+  renderFull(); save();
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ---------------- vista de texto completo + cambio de vista ---------------- */
+function renderFull(){
+  const useEs = S.fullLang === 'es';
+  const parts = S.segments
+    .filter(o => !o.silent && !o.pending)
+    .map(o => useEs ? (o.es || o.text) : o.text)
+    .filter(Boolean);
+  if (!parts.length && !S.live){
+    fullEl.innerHTML = `<p class="ph">Aún no hay texto. Inicia la captura y aparecerá aquí de corrido.</p>`;
+    updateGlossaryPanel();
+    return;
+  }
+  const paras = [];
+  for (let i = 0; i < parts.length; i += 4) paras.push(parts.slice(i, i+4).join(' '));
+  let html = paras.map(p => `<p>${highlightUE(escapeHtml(p))}</p>`).join('');
+  if (useEs && S.liveEs) html += `<p class="live-tail">${highlightUE(escapeHtml(S.liveEs))}…</p>`;
+  else if (!useEs && S.live) html += `<p class="live-tail">${highlightUE(escapeHtml(S.live))}…</p>`;
+  fullEl.innerHTML = html;
+  updateGlossaryPanel();
+}
+function updateLive(){
+  liveCard.style.display = (S.capturing && S.view === 'seg') ? 'block' : 'none';
+}
+function setView(v){
+  S.view = v;
+  viewSeg.classList.toggle('active', v === 'seg');
+  viewFull.classList.toggle('active', v === 'full');
+  segEl.style.display = v === 'seg' ? '' : 'none';
+  fullWrap.style.display = v === 'full' ? 'block' : 'none';
+  updateLive();
+  copyBtn.textContent = copyLabel();
+  if (v === 'full') renderFull();
+}
+viewSeg.addEventListener('click', () => setView('seg'));
+viewFull.addEventListener('click', () => setView('full'));
+fullOrig.addEventListener('click', () => { S.fullLang='orig'; fullOrig.classList.add('active'); fullEs.classList.remove('active'); renderFull(); });
+fullEs.addEventListener('click', () => { S.fullLang='es'; fullEs.classList.add('active'); fullOrig.classList.remove('active'); renderFull(); });
+
+/* ---------------- glosario detectado + resaltado ---------------- */
+function updateGlossaryPanel(){
+  const items = collectGlossary();
+  if (!items.length){ glossaryEl.classList.add('empty-hidden'); glossaryEl.innerHTML = ''; return; }
+  glossaryEl.classList.remove('empty-hidden');
+  glossaryEl.innerHTML = `
+    <div class="gloss-head">
+      <h2>Glosario UE detectado</h2>
+      <span class="count">${items.length} término${items.length===1?'':'s'}</span>
+    </div>
+    <div class="gloss-grid">
+      ${items.map(e => `<div class="gterm"><span class="gt">${escapeHtml(e.l)}</span><span class="gc">${escapeHtml(e.c)}</span><div class="gd">${escapeHtml(e.d2 || e.d)}</div></div>`).join('')}
+    </div>`;
+}
+// re-dibuja segmentos + vista completa (tras cambiar el resaltado)
+function redraw(){
+  segEl.innerHTML = S.segments.length ? '' : emptyHtml();
+  for (const o of S.segments){
+    const el = document.createElement('div');
+    el.className = 'seg' + (o.pending ? ' pending' : '') + (o.silent ? ' silent' : '');
+    el.id = o.id; el.innerHTML = renderSeg(o); segEl.appendChild(el); wireSeg(el, o);
+  }
+  renderFull();
+}
+hlBtn.addEventListener('click', () => {
+  S.hl = !S.hl;
+  hlBtn.classList.toggle('hlon', S.hl);
+  hlBtn.textContent = 'Resaltar UE: ' + (S.hl ? 'on' : 'off');
+  redraw();
+  if (S.live) liveText.innerHTML = highlightUE(escapeHtml(S.live));
+});
+
+/* ---------------- biblioteca de transcripciones ---------------- */
+function loadLib(){ try { S.lib = JSON.parse(localStorage.getItem('transcripcion-ue-lib') || '[]'); } catch { S.lib = []; } }
+function persistLib(){ try { localStorage.setItem('transcripcion-ue-lib', JSON.stringify(S.lib)); } catch {} }
+
+function renderLibrary(){
+  libCount.textContent = S.lib.length;
+  if (!S.lib.length){
+    libList.innerHTML = `<div class="empty" style="padding:18px">Aún no hay transcripciones guardadas. Pulsa <b>Guardar sesión</b> para guardar la actual.</div>`;
+    return;
+  }
+  libList.innerHTML = S.lib.slice().reverse().map(e => {
+    const n = e.segments.filter(o => !o.silent).length;
+    const d = new Date(e.date).toLocaleString('es-CL', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+    return `<div class="lib-item${e.id===S.loadedId?' active':''}" data-id="${e.id}">
+      <div class="lib-info">
+        <span class="lib-title">${escapeHtml(e.title)}</span>
+        <span class="lib-meta">${d} · ${n} segmento${n===1?'':'s'}</span>
+      </div>
+      <div class="lib-actions">
+        <button data-act="load">Cargar</button>
+        <button data-act="rename">Renombrar</button>
+        <button data-act="del">Borrar</button>
+      </div>
+    </div>`;
+  }).join('');
+  libList.querySelectorAll('.lib-item').forEach(el => {
+    const id = el.dataset.id;
+    el.querySelector('[data-act="load"]').addEventListener('click', () => loadSession(id));
+    el.querySelector('[data-act="rename"]').addEventListener('click', () => renameSession(id));
+    el.querySelector('[data-act="del"]').addEventListener('click', () => deleteSession(id));
+  });
+}
+function saveSession(){
+  const segs = S.segments.filter(o => !o.pending);
+  if (!segs.length) return;
+  const def = 'Sesión ' + new Date().toLocaleDateString('es-CL');
+  const title = (prompt('Título de la transcripción:', def) || '').trim();
+  if (!title) return;
+  const id = 'lib-' + Date.now();
+  S.lib.push({ id, title, date: Date.now(), segments: JSON.parse(JSON.stringify(segs)) });
+  S.loadedId = id;
+  persistLib(); renderLibrary();
+}
+function loadSession(id){
+  const e = S.lib.find(x => x.id === id); if (!e) return;
+  if (S.capturing && !confirm('Hay una captura en curso. ¿Cargar de todas formas?')) return;
+  S.segments = JSON.parse(JSON.stringify(e.segments));
+  S.live = ''; S.liveEs = ''; S.loadedId = id;
+  redraw(); refreshToolbar(); save(); renderLibrary();
+  document.querySelector('.transcript-head').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function renameSession(id){
+  const e = S.lib.find(x => x.id === id); if (!e) return;
+  const t = (prompt('Nuevo título:', e.title) || '').trim();
+  if (!t) return;
+  e.title = t; persistLib(); renderLibrary();
+}
+function deleteSession(id){
+  const e = S.lib.find(x => x.id === id); if (!e) return;
+  if (!confirm(`¿Borrar "${e.title}"?`)) return;
+  S.lib = S.lib.filter(x => x.id !== id);
+  if (S.loadedId === id) S.loadedId = null;
+  persistLib(); renderLibrary();
+}
+saveSessionBtn.addEventListener('click', saveSession);
+
+/* ---------------- traducción al español ---------------- */
+function resolveSrcIso(o){
+  const forced = $('src').value;
+  if (forced !== 'auto') return forced;
+  if (o.iso && o.iso !== 'auto' && o.iso !== 'es') return o.iso;
+  return 'en'; // por defecto asumimos inglés (contenido técnico de UE)
+}
+async function getChromeTranslator(src){
+  if (S.translators.has(src)) return S.translators.get(src);
+  const API = self.Translator || null;
+  if (!API) return null;
+  try {
+    const avail = await API.availability({ sourceLanguage: src, targetLanguage: 'es' });
+    if (avail === 'unavailable') return null;
+    const t = await API.create({ sourceLanguage: src, targetLanguage: 'es' });
+    S.translators.set(src, t);
+    return t;
+  } catch (e) { console.warn('Chrome Translator no disponible:', e); return null; }
+}
+async function getOpusEnEs(){
+  if (S.opusEnEs) return S.opusEnEs;
+  banner('Descargando modelo de traducción local en→es (~80 MB, una sola vez)…', 'warn');
+  S.opusEnEs = await pipeline('translation', 'Xenova/opus-mt-en-es',
+    { device: ('gpu' in navigator) ? 'webgpu' : 'wasm' });
+  clearBanner();
+  return S.opusEnEs;
+}
+async function translateText(text, src){
+  if (src === 'es') return text;
+  const chrome = await getChromeTranslator(src);
+  if (chrome) return (await chrome.translate(text)).trim();
+  if (src === 'en'){ // fallback local solo en->es
+    const t = await getOpusEnEs();
+    const r = await t(text);
+    return (Array.isArray(r) ? r[0]?.translation_text : r.translation_text || '').trim();
+  }
+  throw new Error('no-translator');
+}
+// parte el texto alternando texto normal / término UE (para no traducir los términos)
+function splitByUE(text){
+  const parts = []; let last = 0; let m;
+  const re = new RegExp(UE_RE.source, 'gi');
+  while ((m = re.exec(text))){
+    if (m.index > last) parts.push({ ue:false, s:text.slice(last, m.index) });
+    parts.push({ ue:true, s:m[0] });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push({ ue:false, s:text.slice(last) });
+  return parts.length ? parts : [{ ue:false, s:text }];
+}
+// traduce al español dejando los términos UE en inglés (UE se usa mayormente en inglés)
+async function translateKeepingUE(text, src){
+  if (src === 'es' || !text) return text;
+  const out = [];
+  for (const p of splitByUE(text)){
+    if (p.ue || !p.s.trim()){ out.push(p.s); continue; }   // término UE o solo espacios: intacto
+    const lead = p.s.match(/^\s*/)[0], trail = p.s.match(/\s*$/)[0];
+    out.push(lead + await translateText(p.s.trim(), src) + trail);
+  }
+  return out.join('');
+}
+async function translateSegment(o){
+  const btn = document.querySelector(`#${o.id} [data-act="tr"]`);
+  if (btn){ btn.disabled = true; btn.textContent = '…'; }
+  try {
+    const src = resolveSrcIso(o);
+    o.es = await translateKeepingUE(o.text, src);
+    rerender(o);
+  } catch (e) {
+    banner('No hay traductor disponible para ese idioma. Activa la <b>API de traducción de Chrome</b> (Chrome/Edge recientes) o usa contenido en inglés para la traducción local.', 'err');
+    if (btn){ btn.disabled = false; btn.textContent = 'Traducir'; }
+    if (S.autoTr){ S.autoTr = false; autoTrBtn.classList.remove('active'); autoTrBtn.textContent = 'Traducir en vivo: off'; }
+  }
+}
+autoTrBtn.addEventListener('click', () => {
+  S.autoTr = !S.autoTr;
+  autoTrBtn.classList.toggle('active', S.autoTr);
+  autoTrBtn.textContent = 'Traducir en vivo: ' + (S.autoTr ? 'on' : 'off');
+  if (!S.autoTr){ S.liveEs = ''; liveEs.textContent = ''; if (S.view==='full') renderFull(); }
+});
+translateAll.addEventListener('click', async () => {
+  translateAll.disabled = true; translateAll.textContent = 'Traduciendo…';
+  for (const o of S.segments){ if (!o.es && !o.pending && !o.silent){ await translateSegment(o); } }
+  translateAll.textContent = 'Traducir todo'; refreshToolbar();
+});
+
+/* ---------------- exportar / notas ---------------- */
+function download(name, content, type){
+  const blob = new Blob([content], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  URL.revokeObjectURL(a.href);
+}
+function asMarkdown(){
+  let md = `# Transcripción — ${new Date().toLocaleString('es-CL')}\n\n`;
+  for (const o of S.segments){
+    if (o.silent || o.pending) continue;
+    md += `**[${fmt(o.t)}] (${o.iso})** ${o.text}\n\n`;
+    if (o.es) md += `> 🇪🇸 ${o.es}\n\n`;
+  }
+  const g = collectGlossary();
+  if (g.length){
+    md += `\n---\n\n## Glosario UE detectado\n\n`;
+    let cat = '';
+    for (const e of g){
+      if (e.c !== cat){ cat = e.c; md += `\n### ${cat}\n\n`; }
+      md += `- **${e.l}** — ${e.d2 || e.d}\n`;
+    }
+  }
+  return md;
+}
+// texto continuo en plano, igual que la vista de texto completo (respeta Original/Español)
+function fullPlainText(){
+  const useEs = S.fullLang === 'es';
+  const parts = S.segments.filter(o => !o.silent && !o.pending)
+    .map(o => useEs ? (o.es || o.text) : o.text).filter(Boolean);
+  const paras = [];
+  for (let i = 0; i < parts.length; i += 4) paras.push(parts.slice(i, i+4).join(' '));
+  return paras.join('\n\n');
+}
+// texto por segmentos con marca de tiempo (y traduccion si existe)
+function segmentsPlainText(){
+  return S.segments.filter(o => !o.silent && !o.pending)
+    .map(o => `[${fmt(o.t)}] ${o.text}${o.es ? `\n(ES) ${o.es}` : ''}`).join('\n\n');
+}
+function copyLabel(){ return S.view === 'full' ? 'Copiar texto' : 'Copiar segmentos'; }
+
+copyBtn.addEventListener('click', () => {
+  const text = S.view === 'full' ? fullPlainText() : segmentsPlainText();
+  navigator.clipboard.writeText(text);
+  copyBtn.textContent = 'Copiado ✓';
+  setTimeout(() => copyBtn.textContent = copyLabel(), 1200);
+});
+mdBtn.addEventListener('click', () => download(`transcripcion-${Date.now()}.md`, asMarkdown(), 'text/markdown'));
+jsonBtn.addEventListener('click', () => download(`transcripcion-${Date.now()}.json`, JSON.stringify(S.segments, null, 2), 'application/json'));
+loadJsonBtn.addEventListener('click', () => jsonInput.click());
+jsonInput.addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const arr = JSON.parse(await f.text());
+    S.segments = []; segEl.innerHTML = '';
+    for (const o of arr) addSegment({ t:o.t, lang:o.lang, text:o.text, es:o.es, silent:o.silent });
+  } catch { banner('No pude leer ese archivo .json', 'err'); }
+  jsonInput.value = '';
+});
+clearBtn.addEventListener('click', () => {
+  if (!confirm('¿Borrar toda la transcripción actual?')) return;
+  S.segments = []; S.live = ''; segEl.innerHTML = emptyHtml();
+  refreshToolbar(); renderFull(); save();
+});
+
+/* ---------------- persistencia local (opcional) ---------------- */
+function save(){ try { localStorage.setItem('transcripcion-ue', JSON.stringify(S.segments)); } catch {} }
+function restore(){
+  try {
+    const arr = JSON.parse(localStorage.getItem('transcripcion-ue') || '[]');
+    if (arr.length){ for (const o of arr) addSegment({ t:o.t, lang:o.lang, text:o.text, es:o.es, silent:o.silent }); return true; }
+  } catch {}
+  return false;
+}
+
+/* ---------------- banners ---------------- */
+let bannerEl = null;
+function banner(html, kind){ clearBanner(); bannerEl = document.createElement('div');
+  bannerEl.className = 'banner ' + kind; bannerEl.innerHTML = html;
+  $('compat').after(bannerEl); }
+function clearBanner(){ bannerEl?.remove(); bannerEl = null; }
+
+/* ---------------- medidor visual ---------------- */
+function drawMeter(){
+  const c = $('meter'), ctx = c.getContext('2d');
+  const bins = 48, data = new Uint8Array(S.analyser.frequencyBinCount);
+  const loop = () => {
+    S.rafId = requestAnimationFrame(loop);
+    S.analyser.getByteFrequencyData(data);
+    ctx.clearRect(0,0,c.width,c.height);
+    const step = Math.floor(data.length / bins), bw = c.width / bins;
+    const color = S.busy ? getCSS('--live') : getCSS('--signal');
+    for (let i=0;i<bins;i++){
+      let sum=0; for(let j=0;j<step;j++) sum += data[i*step+j];
+      const v = (sum/step)/255;
+      const h = Math.max(2, v * c.height * 0.9);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.35 + v*0.65;
+      ctx.fillRect(i*bw+1, (c.height-h)/2, bw-2, h);
+    }
+    ctx.globalAlpha = 1;
+  };
+  loop();
+}
+function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+/* ---------------- init ---------------- */
+function emptyHtml(){ return `<div class="empty"><b>Sin transcripción todavía.</b><br>Carga el modelo, pulsa <b>Iniciar captura</b> y elige una pestaña o pantalla con la casilla de audio activada.</div>`; }
+if (!restore()) segEl.innerHTML = emptyHtml();
+refreshToolbar();
+renderFull();
+copyBtn.textContent = copyLabel();
+loadLib();
+renderLibrary();
+</script>
+</body>
+</html>
