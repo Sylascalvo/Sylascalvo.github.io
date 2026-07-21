@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lector de Audiolibros — BaldGames</title>
+<title>Lector de Audiolibros — Sylascalvo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -62,7 +62,7 @@
 <body>
 
 <header>
-  <span class="kicker">BaldGames · Herramienta interna</span>
+  <span class="kicker">Sylascalvo · Herramienta interna</span>
   <h1>Lector de Audiolibros</h1>
   <span class="sub">Texto a voz, todo en el navegador. Piper (español, neural, descargable) · Kokoro (inglés, descargable) · Voz del navegador (al instante).</span>
 </header>
@@ -126,7 +126,7 @@
 
 <div class="actions">
   <button id="loadBtn" class="primary">Preparar voz</button>
-  <button id="genBtn" class="primary">Generar y reproducir</button>
+  <button id="genBtn" class="primary">Procesar audio</button>
   <button id="pauseBtn" disabled>Pausar</button>
   <button id="stopBtn" disabled>Detener</button>
   <button id="dlBtn" class="ghost" disabled>Descargar audio</button>
@@ -136,13 +136,16 @@
 <div id="status"><span class="dot" id="dot"></span><span id="statusLabel">Listo</span><span id="pct" style="margin-left:auto"></span></div>
 <div class="bar"><i id="progBar"></i></div>
 
+<audio id="player" controls style="width:100%;margin-top:14px;display:none"></audio>
+<div id="playerNote" class="hint" style="display:none;margin-top:6px"></div>
+
 <div id="devTools" style="display:none">
   <div id="log">Registro:</div>
   <button id="copyLog" class="ghost">Copiar registro</button>
 </div>
 <div id="reader"></div>
 
-<footer>Piper/VITS · Kokoro-82M · eSpeak · Azure · v5 · <span id="devUnlock" style="cursor:pointer;opacity:.45">dev</span></footer>
+<footer>Piper · Kokoro · Azure · Voz del navegador · v6 · <span id="devUnlock" style="cursor:pointer;opacity:.45">dev</span></footer>
 
 <script type="module">
 const logEl=document.getElementById('log');
@@ -155,9 +158,9 @@ document.getElementById('copyLog').addEventListener('click',()=>{ navigator.clip
 
 function withTimeout(p,ms,label){ return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout en '+label+' tras '+(ms/1000)+'s')),ms))]); }
 
-const S={ engine:'piper', tts:null, piper:null, piperReady:{}, KokoroTTS:null, lame:null, espeakReady:false, speed:1,
-  chunks:[], buffers:[], pcms:[], wavBlobs:[], rate:24000, playIndex:0, curSource:null,
-  audioCtx:null, running:false, paused:false, stopped:false, waiting:false };
+const S={ engine:'piper', tts:null, piper:null, piperReady:{}, KokoroTTS:null, lame:null, speed:1,
+  chunks:[], acc:[], accRate:24000, playerUrl:null,
+  running:false, paused:false, stopped:false, dirty:false };
 
 const $=id=>document.getElementById(id);
 const textEl=$('text'),engineSel=$('engine'),voiceSel=$('voice'),chunkSel=$('chunkLen'),fmtSel=$('fmt'),speedSel=$('speed');
@@ -302,8 +305,7 @@ async function piperPrepare(){
 async function synthPiper(text){
   const p=await ensurePiper();
   const blob=await withTimeout(p.predict({text, voiceId:voiceSel.value}),60000,'predict');
-  const buffer=await S.audioCtx.decodeAudioData(await blob.arrayBuffer());
-  return { buffer, blob };
+  return { blob };
 }
 
 /* ---------------- Kokoro ---------------- */
@@ -316,11 +318,10 @@ async function loadKokoro(){
   setPct(1); setStatus('Modelo listo ✓','on'); log('Kokoro cargado ✓','k'); genBtn.disabled=false; loadBtn.textContent='Recargar modelo';
 }
 async function synthKokoro(text){
-  const a=await S.tts.generate(text,{voice:voiceSel.value,speed:S.speed});
+  const a=await S.tts.generate(text,{voice:voiceSel.value,speed:(S.speed||1)});
   const pcm=a.audio||a.samples||a.data, rate=a.sampling_rate||a.sampleRate||24000;
   if(!pcm) throw new Error('salida Kokoro sin audio');
-  const buffer=S.audioCtx.createBuffer(1,pcm.length,rate); buffer.copyToChannel(pcm,0);
-  return { buffer, pcm, rate };
+  return { pcm, rate };
 }
 
 /* ---------------- Azure (máxima calidad, clave del usuario) ---------------- */
@@ -346,9 +347,7 @@ async function synthAzure(text){
       else rej(new Error('Azure no sintetizó: '+(r.errorDetails||r.reason)));
     }, err=>{ synth.close(); rej(new Error('Azure error: '+err)); });
   }),60000,'síntesis Azure');
-  const blob=new Blob([data],{type:'audio/wav'});
-  const buffer=await S.audioCtx.decodeAudioData(data.slice(0));
-  return { buffer, blob };
+  return { blob: new Blob([data],{type:'audio/wav'}) };
 }
 
 /* ---------------- botón preparar/cargar ---------------- */
@@ -359,20 +358,33 @@ loadBtn.addEventListener('click', async ()=>{
   finally{ loadBtn.disabled=false; }
 });
 
-/* ---------------- reproducción común ---------------- */
+/* ---------------- progreso visual + reproductor ---------------- */
+const playerEl=document.getElementById('player'), playerNote=document.getElementById('playerNote');
 function highlightChunk(i){
   reader.querySelectorAll('.ch').forEach((el,idx)=>{ el.classList.toggle('active',idx===i); el.classList.toggle('done',idx<i); });
   const a=reader.querySelector('.ch.active'); if(a) a.scrollIntoView({behavior:'smooth',block:'center'});
 }
-function playFrom(){
-  if(S.stopped) return;
-  if(S.playIndex>=S.buffers.length){ if(!S.running){ setStatus('Reproducción terminada','on'); pauseBtn.disabled=true; } return; }
-  if(!S.buffers[S.playIndex]){ S.waiting=true; return; }
-  S.waiting=false; highlightChunk(S.playIndex);
-  const src=S.audioCtx.createBufferSource(); src.buffer=S.buffers[S.playIndex]; src.connect(S.audioCtx.destination);
-  src.onended=()=>{ if(S.stopped) return; S.playIndex++; playFrom(); };
-  S.curSource=src; src.start();
+function markProcessed(i){ const el=reader.querySelector(`.ch[data-i="${i}"]`); if(el) el.classList.add('done'); }
+function buildMasterBlob(){
+  const present=S.acc.filter(Boolean); if(!present.length) return null;
+  const total=present.reduce((a,p)=>a+p.length,0); const all=new Float32Array(total); let o=0;
+  for(const p of present){ all.set(p,o); o+=p.length; }
+  return encodeWav(all, S.accRate||24000);
 }
+// hace crecer el reproductor con lo ya procesado; no interrumpe si estás escuchando
+function refreshPlayer(force){
+  if(!S.acc.length) return;
+  if(!playerEl.paused && !force){ S.dirty=true; playerNote.style.display=''; playerNote.textContent='Hay más audio procesado; se actualizará cuando pauses la reproducción.'; return; }
+  const blob=buildMasterBlob(); if(!blob) return;
+  const t=playerEl.currentTime||0;
+  if(S.playerUrl){ try{URL.revokeObjectURL(S.playerUrl);}catch{} }
+  S.playerUrl=URL.createObjectURL(blob);
+  playerEl.src=S.playerUrl; playerEl.style.display=''; playerEl.load();
+  playerEl.addEventListener('loadedmetadata',()=>{ try{ if(t>0.2 && t<playerEl.duration) playerEl.currentTime=t; }catch{} },{once:true});
+  S.dirty=false; playerNote.style.display='none';
+}
+playerEl.addEventListener('pause',()=>{ if(S.dirty) refreshPlayer(true); });
+playerEl.addEventListener('ended',()=>{ if(S.dirty) refreshPlayer(true); });
 
 /* ---------------- Web Speech ---------------- */
 let keepalive=null;
@@ -384,20 +396,18 @@ function generateWebSpeech(chunks){
   speechSynthesis.cancel(); startKeepalive(); setStatus('Leyendo…','busy');
   chunks.forEach((c,i)=>{
     const u=new SpeechSynthesisUtterance(c); if(voice){u.voice=voice;u.lang=voice.lang;} u.rate=1; u.pitch=1;
-    u.onstart=()=>{ if(S.stopped) return; S.playIndex=i; highlightChunk(i); setPct((i+1)/chunks.length); setStatus(`Leyendo ${i+1}/${chunks.length}…`,'busy'); };
+    u.onstart=()=>{ if(S.stopped) return; highlightChunk(i); setPct((i+1)/chunks.length); setStatus(`Leyendo ${i+1}/${chunks.length}…`,'busy'); };
     u.onend=()=>{ if(i===chunks.length-1&&!S.stopped){ stopKeepalive(); setStatus('Lectura terminada','on'); pauseBtn.disabled=true; } };
     u.onerror=(e)=>{ if(e.error!=='canceled'&&e.error!=='interrupted') log('Web Speech error: '+e.error,'e'); };
     speechSynthesis.speak(u);
   });
 }
 
-/* ---------------- generación neural (Piper/Kokoro) ---------------- */
+/* ---------------- procesamiento neural (Piper/Kokoro/Azure) ---------------- */
 async function generateNeural(chunks, synthFn){
-  S.buffers=new Array(chunks.length); S.pcms=new Array(chunks.length); S.wavBlobs=new Array(chunks.length);
-  try{ if(S.audioCtx && S.audioCtx.state!=='closed') S.audioCtx.close().catch(()=>{}); }catch{}
-  S.audioCtx=new AudioContext(); dlBtn.disabled=true;
-  if (S.engine==='piper'){ try{ await piperPrepare(); }catch(e){ log('Error preparando voz: '+(e.message||e),'e'); banner('No pude descargar la voz. Copia el registro y pásamelo.','err'); S.running=false; return; } }
-  log(`Generando ${chunks.length} bloque(s) · ${voiceSel.value}`,'k'); setStatus('Sintetizando…','busy');
+  S.acc=[]; S.accRate=null; S.dirty=false; dlBtn.disabled=true;
+  if (S.engine==='piper'){ try{ await piperPrepare(); }catch(e){ log('Error preparando voz: '+(e.message||e),'e'); banner('No pude descargar la voz. Revisa el registro.','err'); S.running=false; return; } }
+  log(`Procesando ${chunks.length} bloque(s) · ${voiceSel.value}`,'k'); setStatus('Procesando…','busy');
   try{
     for(let i=0;i<chunks.length;i++){
       if(S.stopped) break;
@@ -412,17 +422,20 @@ async function generateNeural(chunks, synthFn){
         }
       }
       if(!r) break;
-      S.buffers[i]=r.buffer; S.rate=r.rate||r.buffer.sampleRate;
-      if(S.engine==='kokoro') S.pcms[i]={pcm:r.pcm,rate:r.rate};
-      if(S.engine==='piper'||S.engine==='azure') S.wavBlobs[i]=r.blob;
-      setPct((i+1)/chunks.length); setStatus(`Sintetizando bloque ${i+1}/${chunks.length}…`,'busy');
+      let samples, rate;
+      if(S.engine==='kokoro'){ samples=r.pcm; rate=r.rate; }
+      else { const w=await wavBlobsToFloat32([r.blob]); samples=w.samples; rate=w.rate; }
+      S.acc.push(samples); S.accRate=rate;
+      markProcessed(i);
+      setPct((i+1)/chunks.length); setStatus(`Procesando bloque ${i+1}/${chunks.length}…`,'busy');
       log(`Bloque ${i+1}/${chunks.length} ✓ (${((performance.now()-t0)/1000).toFixed(1)}s)`);
-      if(i===0&&!S.curSource) playFrom(); else if(S.waiting&&i===S.playIndex) playFrom();
+      refreshPlayer();                                   // el reproductor crece con lo ya procesado
       if(S.engine==='azure') await new Promise(res=>setTimeout(res, 120));   // respiro para no saturar el WebSocket
     }
-  }catch(e){ log('Error al sintetizar: '+(e.message||e),'e'); banner('Error al sintetizar. Pulsa "Copiar registro" y pásamelo.','err'); }
+  }catch(e){ log('Error al sintetizar: '+(e.message||e),'e'); banner('Error al sintetizar. Revisa el registro.','err'); }
   S.running=false;
-  if(!S.stopped&&S.buffers.some(Boolean)){ dlBtn.disabled=false; setStatus(S.playIndex>=chunks.length?'Listo':'Síntesis completa · reproduciendo','on'); }
+  if(S.acc.length){ dlBtn.disabled=false; refreshPlayer(true); }
+  setStatus(S.stopped?'Detenido (audio parcial disponible)':'Procesamiento completo · listo para reproducir y descargar','on');
 }
 
 /* ---------------- generar ---------------- */
@@ -430,34 +443,35 @@ genBtn.addEventListener('click', ()=>{
   if(S.engine==='kokoro'&&!S.tts){ banner('Carga el modelo primero.','warn'); return; }
   const chunks=splitIntoChunks(textEl.value,parseInt(chunkSel.value,10));
   if(!chunks.length){ banner('Pega algo de texto primero.','warn'); return; }
-  S.chunks=chunks; S.playIndex=0; S.running=(S.engine!=='webspeech'); S.stopped=false; S.paused=false; S.waiting=false; S.curSource=null;
+  S.chunks=chunks; S.running=(S.engine!=='webspeech'); S.stopped=false; S.paused=false; S.dirty=false;
+  if(S.playerUrl){ try{URL.revokeObjectURL(S.playerUrl);}catch{} S.playerUrl=null; }
+  try{ playerEl.pause(); }catch{} playerEl.removeAttribute('src'); playerEl.style.display='none'; playerNote.style.display='none';
   reader.style.display='block'; textEl.style.display='none'; editBtn.style.display='';
   reader.innerHTML=chunks.map((c,i)=>`<span class="ch" data-i="${i}">${escapeHtml(c)} </span>`).join('');
-  genBtn.disabled=true; loadBtn.disabled=true; pauseBtn.disabled=false; stopBtn.disabled=false; voiceSel.disabled=true; chunkSel.disabled=true; engineSel.disabled=true;
+  genBtn.disabled=true; loadBtn.disabled=true; pauseBtn.disabled=(S.engine!=='webspeech'); stopBtn.disabled=false; voiceSel.disabled=true; chunkSel.disabled=true; engineSel.disabled=true;
   if(S.engine==='piper') generateNeural(chunks, synthPiper);
   else if(S.engine==='azure') generateNeural(chunks, synthAzure);
   else if(S.engine==='kokoro') generateNeural(chunks, synthKokoro);
   else generateWebSpeech(chunks);
 });
 
-pauseBtn.addEventListener('click', async ()=>{
-  if(S.engine==='webspeech'){ if(S.paused){speechSynthesis.resume();S.paused=false;pauseBtn.textContent='Pausar';} else {speechSynthesis.pause();S.paused=true;pauseBtn.textContent='Reanudar';} return; }
-  if(!S.audioCtx) return;
-  if(S.paused){ await S.audioCtx.resume(); S.paused=false; pauseBtn.textContent='Pausar'; }
-  else { await S.audioCtx.suspend(); S.paused=true; pauseBtn.textContent='Reanudar'; }
+pauseBtn.addEventListener('click', ()=>{
+  if(S.engine!=='webspeech') return;   // en motores neurales se escucha con el reproductor de abajo
+  if(S.paused){ speechSynthesis.resume(); S.paused=false; pauseBtn.textContent='Pausar'; }
+  else { speechSynthesis.pause(); S.paused=true; pauseBtn.textContent='Reanudar'; }
 });
 function stopAll(){
   S.stopped=true; S.running=false; stopKeepalive();
   if(S.engine==='webspeech'){ try{speechSynthesis.cancel();}catch{} }
-  else { try{S.curSource&&S.curSource.stop();}catch{} try{ if(S.audioCtx && S.audioCtx.state!=='closed') S.audioCtx.close().catch(()=>{}); }catch{} }
   pauseBtn.disabled=true; stopBtn.disabled=true; pauseBtn.textContent='Pausar';
   genBtn.disabled=(S.engine==='kokoro'&&!S.tts); loadBtn.disabled=false; voiceSel.disabled=false; chunkSel.disabled=false; engineSel.disabled=false;
-  if(S.engine!=='webspeech'&&S.buffers.some(Boolean)) dlBtn.disabled=false;
+  if(S.acc && S.acc.length) dlBtn.disabled=false;
 }
-stopBtn.addEventListener('click', ()=>{ stopAll(); setStatus('Detenido','on'); });
+stopBtn.addEventListener('click', ()=>{ stopAll(); setStatus('Detenido','on'); if(S.acc&&S.acc.length) refreshPlayer(true); });
 editBtn.addEventListener('click', ()=>{
-  if(S.running&&!confirm('Se está generando. ¿Volver a editar y detener?')) return;
+  if(S.running&&!confirm('Se está procesando. ¿Volver a editar y detener?')) return;
   stopAll(); reader.style.display='none'; textEl.style.display=''; editBtn.style.display='none'; setPct(0);
+  try{ playerEl.pause(); }catch{} playerEl.style.display='none'; playerNote.style.display='none';
 });
 
 /* ---------------- descarga WAV ---------------- */
@@ -498,14 +512,11 @@ async function mergeWavBlobs(blobs){
   let p=44; for(const d of datas){ out.set(d,p); p+=d.length; }
   return new Blob([out],{type:'audio/wav'});
 }
-/* --- reúne el PCM final (Float32 + rate) sea cual sea el motor --- */
-async function pcmForDownload(){
-  if (S.engine==='kokoro'){
-    const present=S.pcms.filter(Boolean); const total=present.reduce((a,p)=>a+p.pcm.length,0);
-    const all=new Float32Array(total); let o=0; for(const p of present){ all.set(p.pcm,o); o+=p.pcm.length; }
-    return { samples:all, rate:S.rate };
-  }
-  return await wavBlobsToFloat32(S.wavBlobs);   // piper / azure
+/* --- reúne el PCM final (Float32 + rate) desde el acumulador --- */
+function pcmForDownload(){
+  const present=S.acc.filter(Boolean); const total=present.reduce((a,p)=>a+p.length,0);
+  const all=new Float32Array(total); let o=0; for(const p of present){ all.set(p,o); o+=p.length; }
+  return { samples:all, rate:S.accRate||24000 };
 }
 async function wavBlobsToFloat32(blobs){
   const parts=[]; let rate=22050;
@@ -565,6 +576,11 @@ dlBtn.addEventListener('click', async ()=>{
 function escapeHtml(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
 /* init */
+document.getElementById('devUnlock').addEventListener('click',()=>{
+  const dt=document.getElementById('devTools');
+  if(dt.style.display==='block'){ dt.style.display='none'; return; }
+  if(prompt('Clave de desarrollador:')==='1212') dt.style.display='block';
+});
 try { azKeyInput.value=localStorage.getItem('az-key')||''; azRegionInput.value=localStorage.getItem('az-region')||''; } catch {}
 azKeyInput.addEventListener('change',()=>{ try{localStorage.setItem('az-key',azKeyInput.value.trim());}catch{} });
 azRegionInput.addEventListener('change',()=>{ try{localStorage.setItem('az-region',azRegionInput.value.trim());}catch{} });
