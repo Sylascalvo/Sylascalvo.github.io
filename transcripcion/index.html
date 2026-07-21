@@ -342,7 +342,7 @@
 
 <input type="file" id="jsonInput" accept="application/json" hidden>
 
-<footer id="foot">Whisper vía transformers.js · Graba y transcribe al final · v7</footer>
+<footer id="foot">Whisper vía transformers.js · Graba y transcribe al final · v8</footer>
 
 <script type="module">
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
@@ -924,7 +924,7 @@ async function transcribeAll(){
     //    num_beams:5 -> búsqueda por haces: explora varias hipótesis y elige la mejor (más exacto, más lento)
     loadStatus.textContent = 'Transcribiendo… (puede tardar según el largo de la grabación)'; loadBar.style.width = '60%';
     const langSel = $('lang').value;
-    const opts = { task:'transcribe', return_timestamps:true, chunk_length_s:30, stride_length_s:7, num_beams:5, repetition_penalty:1.2 };
+    const opts = { task:'transcribe', return_timestamps:true, chunk_length_s:30, stride_length_s:6, num_beams:5, repetition_penalty:1.2 };
     if (langSel !== 'auto') opts.language = langSel;
     const out = await S.transcriber(audio, opts);
     loadBar.style.width = '100%';
