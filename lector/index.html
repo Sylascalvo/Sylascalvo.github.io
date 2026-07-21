@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTS— Sylascalvo</title>
+<title>Lector de Audiolibros — BaldGames</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -62,8 +62,8 @@
 <body>
 
 <header>
-  <span class="kicker">Sylascalvo · Herramienta interna</span>
-  <h1>TTS</h1>
+  <span class="kicker">BaldGames · Herramienta interna</span>
+  <h1>Lector de Audiolibros</h1>
   <span class="sub">Texto a voz, todo en el navegador. Piper (español, neural, descargable) · Kokoro (inglés, descargable) · Voz del navegador (al instante).</span>
 </header>
 
@@ -102,6 +102,18 @@
     </select>
     <div class="hint">MP3 pesa mucho menos; ideal para audiolibros largos.</div>
   </div>
+  <div class="field">
+    <label for="speed">Velocidad</label>
+    <select id="speed">
+      <option value="0.75">0.75×</option>
+      <option value="1" selected>1×</option>
+      <option value="1.25">1.25×</option>
+      <option value="1.5">1.5×</option>
+      <option value="1.75">1.75×</option>
+      <option value="2">2×</option>
+    </select>
+    <div class="hint">Afecta lo que escuchas y lo que descargas.</div>
+  </div>
 </div>
 
 <div id="azureRow">
@@ -124,11 +136,13 @@
 <div id="status"><span class="dot" id="dot"></span><span id="statusLabel">Listo</span><span id="pct" style="margin-left:auto"></span></div>
 <div class="bar"><i id="progBar"></i></div>
 
-<div id="log">Registro:</div>
-<button id="copyLog" class="ghost">Copiar registro</button>
+<div id="devTools" style="display:none">
+  <div id="log">Registro:</div>
+  <button id="copyLog" class="ghost">Copiar registro</button>
+</div>
 <div id="reader"></div>
 
-<footer>Piper/VITS · Kokoro-82M · Web Speech · síntesis 100% local · v4</footer>
+<footer>Piper/VITS · Kokoro-82M · eSpeak · Azure · v5 · <span id="devUnlock" style="cursor:pointer;opacity:.45">dev</span></footer>
 
 <script type="module">
 const logEl=document.getElementById('log');
@@ -141,12 +155,12 @@ document.getElementById('copyLog').addEventListener('click',()=>{ navigator.clip
 
 function withTimeout(p,ms,label){ return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout en '+label+' tras '+(ms/1000)+'s')),ms))]); }
 
-const S={ engine:'piper', tts:null, piper:null, piperReady:{}, KokoroTTS:null, lame:null,
+const S={ engine:'piper', tts:null, piper:null, piperReady:{}, KokoroTTS:null, lame:null, espeakReady:false, speed:1,
   chunks:[], buffers:[], pcms:[], wavBlobs:[], rate:24000, playIndex:0, curSource:null,
   audioCtx:null, running:false, paused:false, stopped:false, waiting:false };
 
 const $=id=>document.getElementById(id);
-const textEl=$('text'),engineSel=$('engine'),voiceSel=$('voice'),chunkSel=$('chunkLen'),fmtSel=$('fmt');
+const textEl=$('text'),engineSel=$('engine'),voiceSel=$('voice'),chunkSel=$('chunkLen'),fmtSel=$('fmt'),speedSel=$('speed');
 const azureRow=$('azureRow'), azKeyInput=$('azKey'), azRegionInput=$('azRegion');
 const loadBtn=$('loadBtn'),genBtn=$('genBtn'),pauseBtn=$('pauseBtn'),stopBtn=$('stopBtn'),dlBtn=$('dlBtn'),editBtn=$('editBtn');
 const dot=$('dot'),statusLabel=$('statusLabel'),progBar=$('progBar'),pctEl=$('pct'),
@@ -212,6 +226,7 @@ const AZURE_VOICES=`
 
 async function populateVoices(){
   if (S.engine==='kokoro'){ voiceSel.innerHTML=KOKORO_OPTS; voiceHint.textContent='Solo inglés (Kokoro no trae español en el navegador).'; return; }
+  if (S.engine==='espeak'){ voiceSel.innerHTML=`<option value="es">Español — robótica estándar</option><option value="es|m3">Español — grave (m3)</option><option value="es|m7">Español — grave 2 (m7)</option><option value="es|f3">Español — aguda (f3)</option><option value="es-la">Latinoamérica — robótica</option>`; voiceHint.textContent='Sonido clásico/retro (formant synth). No es Loquendo, pero es lo más cercano libre.'; return; }
   if (S.engine==='azure'){ voiceSel.innerHTML=AZURE_VOICES; voiceHint.textContent='Voces neurales de Microsoft. Catalina/Lorenzo son chilenas.'; return; }
   if (S.engine==='webspeech'){
     const vs=('speechSynthesis'in window)?speechSynthesis.getVoices():[];
@@ -247,15 +262,16 @@ if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged=()=>{ if(S.engi
 function applyEngineUI(){
   const e=S.engine;
   azureRow.classList.toggle('on', e==='azure');
-  loadBtn.style.display = (e==='webspeech'||e==='azure')?'none':'';
+  loadBtn.style.display = (e==='webspeech'||e==='azure'||e==='espeak')?'none':'';
   loadBtn.textContent = (e==='kokoro')?'Cargar modelo':'Preparar voz';
   genBtn.disabled = (e==='kokoro') ? !S.tts : false;
-  if (e==='piper'){ engineHint.textContent='Neural en español CON descarga de WAV. Descarga una voz la primera vez (verás %). Experimental: si falla, cópiame el registro.'; }
-  else if (e==='azure'){ engineHint.textContent='Máxima calidad (Microsoft neural, incl. voces chilenas). Escuchar + descargar. Nivel gratis: 500.000 caracteres/mes. Requiere clave + región de Azure Speech.'; }
-  else if (e==='kokoro'){ engineHint.textContent='Neural en inglés con descarga de WAV. Descarga un modelo (~80–330 MB).'; }
+  if (e==='piper'){ engineHint.textContent='Neural en español CON descarga. Descarga una voz la primera vez (verás %).'; }
+  else if (e==='azure'){ engineHint.textContent='Máxima calidad (Microsoft neural, incl. voces chilenas). Escuchar + descargar. Gratis: 500.000 caracteres/mes. Requiere clave + región.'; }
+  else if (e==='kokoro'){ engineHint.textContent='Neural en inglés con descarga. Descarga un modelo (~80–330 MB).'; }
+  else if (e==='espeak'){ engineHint.textContent='Voz robótica clásica (eSpeak). Ligera y descargable. Lo más cercano al viejo TTS estilo Loquendo, pero NO es Loquendo. Experimental.'; }
   else { engineHint.textContent='Al instante, sin descargas. Español y más idiomas. Solo escuchar (no descargable).'; }
   dlBtn.title = (e==='webspeech')?'La voz del navegador no permite descargar el audio.':'';
-  setStatus(e==='webspeech'?'Listo para leer':(e==='azure'?'Listo (pega tu clave de Azure)':(e==='kokoro'&&S.tts?'Modelo listo ✓':'Prepara la voz')), (e==='webspeech'||e==='azure'||(e==='kokoro'&&S.tts))?'on':'');
+  setStatus(e==='webspeech'?'Listo para leer':(e==='azure'?'Listo (pega tu clave de Azure)':(e==='kokoro'&&S.tts?'Modelo listo ✓':(e==='espeak'?'Listo (eSpeak)':'Prepara la voz'))), (e==='webspeech'||e==='azure'||e==='espeak'||(e==='kokoro'&&S.tts))?'on':'');
   populateVoices();
 }
 engineSel.addEventListener('change',()=>{ S.engine=engineSel.value; applyEngineUI(); });
@@ -300,7 +316,7 @@ async function loadKokoro(){
   setPct(1); setStatus('Modelo listo ✓','on'); log('Kokoro cargado ✓','k'); genBtn.disabled=false; loadBtn.textContent='Recargar modelo';
 }
 async function synthKokoro(text){
-  const a=await S.tts.generate(text,{voice:voiceSel.value,speed:1});
+  const a=await S.tts.generate(text,{voice:voiceSel.value,speed:S.speed});
   const pcm=a.audio||a.samples||a.data, rate=a.sampling_rate||a.sampleRate||24000;
   if(!pcm) throw new Error('salida Kokoro sin audio');
   const buffer=S.audioCtx.createBuffer(1,pcm.length,rate); buffer.copyToChannel(pcm,0);
@@ -378,6 +394,7 @@ function generateWebSpeech(chunks){
 /* ---------------- generación neural (Piper/Kokoro) ---------------- */
 async function generateNeural(chunks, synthFn){
   S.buffers=new Array(chunks.length); S.pcms=new Array(chunks.length); S.wavBlobs=new Array(chunks.length);
+  try{ if(S.audioCtx && S.audioCtx.state!=='closed') S.audioCtx.close().catch(()=>{}); }catch{}
   S.audioCtx=new AudioContext(); dlBtn.disabled=true;
   if (S.engine==='piper'){ try{ await piperPrepare(); }catch(e){ log('Error preparando voz: '+(e.message||e),'e'); banner('No pude descargar la voz. Copia el registro y pásamelo.','err'); S.running=false; return; } }
   log(`Generando ${chunks.length} bloque(s) · ${voiceSel.value}`,'k'); setStatus('Sintetizando…','busy');
@@ -385,13 +402,23 @@ async function generateNeural(chunks, synthFn){
     for(let i=0;i<chunks.length;i++){
       if(S.stopped) break;
       const t0=performance.now();
-      const r=await synthFn(chunks[i]);
+      let r=null;
+      for(let attempt=1; attempt<=3 && !S.stopped; attempt++){
+        try{ r=await synthFn(chunks[i]); break; }
+        catch(err){
+          if(attempt>=3) throw err;
+          log(`Bloque ${i+1}: fallo (${err.message||err}). Reintentando ${attempt}/2…`,'e');
+          await new Promise(res=>setTimeout(res, 800*attempt));   // espera creciente antes de reintentar
+        }
+      }
+      if(!r) break;
       S.buffers[i]=r.buffer; S.rate=r.rate||r.buffer.sampleRate;
       if(S.engine==='kokoro') S.pcms[i]={pcm:r.pcm,rate:r.rate};
       if(S.engine==='piper'||S.engine==='azure') S.wavBlobs[i]=r.blob;
       setPct((i+1)/chunks.length); setStatus(`Sintetizando bloque ${i+1}/${chunks.length}…`,'busy');
       log(`Bloque ${i+1}/${chunks.length} ✓ (${((performance.now()-t0)/1000).toFixed(1)}s)`);
       if(i===0&&!S.curSource) playFrom(); else if(S.waiting&&i===S.playIndex) playFrom();
+      if(S.engine==='azure') await new Promise(res=>setTimeout(res, 120));   // respiro para no saturar el WebSocket
     }
   }catch(e){ log('Error al sintetizar: '+(e.message||e),'e'); banner('Error al sintetizar. Pulsa "Copiar registro" y pásamelo.','err'); }
   S.running=false;
@@ -422,7 +449,7 @@ pauseBtn.addEventListener('click', async ()=>{
 function stopAll(){
   S.stopped=true; S.running=false; stopKeepalive();
   if(S.engine==='webspeech'){ try{speechSynthesis.cancel();}catch{} }
-  else { try{S.curSource&&S.curSource.stop();}catch{} try{S.audioCtx&&S.audioCtx.close();}catch{} }
+  else { try{S.curSource&&S.curSource.stop();}catch{} try{ if(S.audioCtx && S.audioCtx.state!=='closed') S.audioCtx.close().catch(()=>{}); }catch{} }
   pauseBtn.disabled=true; stopBtn.disabled=true; pauseBtn.textContent='Pausar';
   genBtn.disabled=(S.engine==='kokoro'&&!S.tts); loadBtn.disabled=false; voiceSel.disabled=false; chunkSel.disabled=false; engineSel.disabled=false;
   if(S.engine!=='webspeech'&&S.buffers.some(Boolean)) dlBtn.disabled=false;
