@@ -340,7 +340,7 @@
 
 <input type="file" id="jsonInput" accept="application/json" hidden>
 
-<footer id="foot">Whisper vía transformers.js · Traducción on-device · v1</footer>
+<footer id="foot">Whisper vía transformers.js · Traducción on-device · v2</footer>
 
 <script type="module">
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
@@ -793,7 +793,7 @@ startBtn.addEventListener('click', async () => {
   node.port.onmessage = e => onSamples(e.data);
 
   S.capturing = true;
-  S.win = []; S.winLen = 0; S.segIndex = 0; S.live = ''; S.lastPartial = 0;
+  S.win = []; S.winLen = 0; S.segIndex = 0; S.live = ''; S.lastPartial = 0; S._laggedWarned = false;
   updateLive();
   S.pumpTimer = setInterval(pump, 700);    // reintenta pases provisionales
   S.startTime = performance.now();
@@ -822,10 +822,15 @@ function stopCapture(){
 }
 async function finalizeRemaining(){
   clearLive(); updateLive();
-  if (S.winLen > S.sampleRate){          // al menos ~1 s útil
-    const seg = takeWindow(S.winLen);
+  // Whisper solo procesa <=30 s por llamada. Si quedó rezago acumulado,
+  // hay que vaciarlo en trozos de <=30 s; si no, todo lo que pase de 30 s se pierde.
+  const maxN = Math.round(Math.min(segSec(), 30) * S.sampleRate);
+  let guard = 0;
+  while (S.winLen > S.sampleRate * 0.6 && guard++ < 200){   // mientras quede ~0.6 s útil
+    const n = Math.min(maxN, S.winLen);
+    const seg = takeWindow(n);
     const t = S.segIndex * segSec(); S.segIndex++;
-    setStatus('Terminando de transcribir…', 'busy');
+    setStatus('Terminando de transcribir lo pendiente…', 'busy');
     await commitSegment(seg, t);
   }
   setStatus('Detenido', 'on');
@@ -877,6 +882,11 @@ async function pump(){
 
   // 1) ventana completa -> fijar como segmento definitivo
   if (S.winLen >= need){
+    // si la cola acumulada supera 2 ventanas, el modelo no alcanza en tiempo real
+    if (S.winLen > need * 2 && !S._laggedWarned){
+      S._laggedWarned = true;
+      banner('El modelo va más lento que el audio en tiempo real y se está acumulando un rezago. No se pierde nada: al pulsar <b>Detener</b> se termina de procesar lo pendiente (puede tardar un poco). Si pasa seguido, usa un modelo más liviano o segmentos más cortos.', 'warn');
+    }
     S.busy = true;
     const seg = takeWindow(need);
     const t = S.segIndex * segSec(); S.segIndex++;
@@ -887,12 +897,13 @@ async function pump(){
     return;
   }
 
-  // 2) pase provisional en vivo (ventana deslizante de ~8 s, refresco ~1 s)
-  if (S.capturing && S.winLen > S.sampleRate * 0.8 && (performance.now() - S.lastPartial) > 900){
+  // 2) pase provisional en vivo (ventana deslizante de ~6 s, refresco ~1 s)
+  //    se salta si ya casi hay una ventana completa: primero está la transcripción definitiva
+  if (S.capturing && S.winLen > S.sampleRate * 0.8 && S.winLen < need - S.sampleRate && (performance.now() - S.lastPartial) > 900){
     S.busy = true;
     S.lastPartial = performance.now();
     try {
-      const audio = await to16k(tailWindow(8), S.sampleRate);
+      const audio = await to16k(tailWindow(6), S.sampleRate);
       const out = await transcribe(audio);
       await showLive((out.text || '').trim());
     } catch (e) { /* silencioso: es solo una vista previa */ }
