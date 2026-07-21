@@ -340,7 +340,7 @@
 
 <input type="file" id="jsonInput" accept="application/json" hidden>
 
-<footer id="foot">Whisper vía transformers.js · Traducción on-device · v2</footer>
+<footer id="foot">Whisper vía transformers.js · Traducción on-device · v3</footer>
 
 <script type="module">
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
@@ -914,8 +914,10 @@ async function pump(){
 // una sola llamada a Whisper (sin chunking forzado: Whisper procesa <=30 s en una ventana)
 async function transcribe(audio16k){
   const langSel = $('lang').value;
-  // repetition_penalty desalienta que el decodificador entre en bucles de repeticion
-  const opts = { task:'transcribe', repetition_penalty: 1.2 };
+  // return_timestamps: true hace que Whisper recorra TODO el bloque frase por frase.
+  // Sin esto, el decodificador se detiene en la primera pausa y bota el resto del segmento.
+  // repetition_penalty desalienta que el decodificador entre en bucles de repeticion.
+  const opts = { task:'transcribe', return_timestamps: true, repetition_penalty: 1.2 };
   if (langSel !== 'auto') opts.language = langSel;
   return S.transcriber(audio16k, opts);
 }
