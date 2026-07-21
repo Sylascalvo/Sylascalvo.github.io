@@ -218,7 +218,8 @@
     <select id="model">
       <option value="onnx-community/whisper-tiny">Tiny — rápido, menos preciso (~75 MB)</option>
       <option value="onnx-community/whisper-base" selected>Base — equilibrado (~145 MB)</option>
-      <option value="onnx-community/whisper-small">Small — más preciso, más lento (~480 MB)</option>
+      <option value="onnx-community/whisper-small">Small — preciso, más lento (~480 MB)</option>
+      <option value="onnx-community/whisper-large-v3-turbo">Large v3 Turbo — máxima precisión (descarga grande ~800 MB, requiere GPU)</option>
     </select>
     <div class="hint">Se descarga una vez y queda en caché del navegador.</div>
   </div>
@@ -275,6 +276,7 @@
   <button id="startBtn" class="live" disabled>Iniciar grabación</button>
   <button id="stopBtn" disabled>Detener</button>
   <span class="spacer"></span>
+  <button id="cacheBtn" class="ghost">Modelos en caché…</button>
 </div>
 
 <div id="loadBox">
@@ -340,7 +342,7 @@
 
 <input type="file" id="jsonInput" accept="application/json" hidden>
 
-<footer id="foot">Whisper vía transformers.js · Graba y transcribe al final · v4</footer>
+<footer id="foot">Whisper vía transformers.js · Graba y transcribe al final · v6</footer>
 
 <script type="module">
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
@@ -700,7 +702,11 @@ loadBtn.addEventListener('click', async () => {
   loadBtn.disabled = true; startBtn.disabled = true;
   loadBox.style.display = 'block';
   const device = ('gpu' in navigator) ? 'webgpu' : 'wasm';
-  const dtype = device === 'webgpu' ? 'fp32' : 'q8';
+  // el modelo grande es enorme en fp32: se usa cuantización (fp16 encoder + q4 decoder en GPU)
+  const isLarge = /large/.test(modelId);
+  const dtype = isLarge
+    ? (device === 'webgpu' ? { encoder_model:'fp16', decoder_model_merged:'q4' } : { encoder_model:'q8', decoder_model_merged:'q8' })
+    : (device === 'webgpu' ? 'fp32' : 'q8');
   setStatus('Cargando modelo…', 'busy');
   try {
     S.transcriber = await pipeline('automatic-speech-recognition', modelId, {
@@ -729,6 +735,78 @@ loadBtn.addEventListener('click', async () => {
     loadBtn.disabled = false;
   }
 });
+
+/* ---------------- gestión de la caché de modelos ---------------- */
+const cacheBtn = $('cacheBtn');
+const fmtMB = b => (b/1048576).toFixed(0) + ' MB';
+// recorre la Cache Storage y agrupa por modelo (id tipo "onnx-community/whisper-small")
+async function scanModelCache(){
+  const out = {};
+  if (!('caches' in self)) return out;
+  for (const cn of await caches.keys()){
+    const cache = await caches.open(cn);
+    for (const req of await cache.keys()){
+      const url = req.url;
+      const m = url.match(/(?:huggingface\.co|hf\.co)\/([^/]+\/[^/?#]+)/) || url.match(/(onnx-community\/whisper-[^/?#]+)/);
+      if (!m) continue;
+      const id = m[1];
+      const resp = await cache.match(req);
+      const bytes = parseInt(resp?.headers.get('content-length') || '0', 10) || 0;
+      out[id] = out[id] || { bytes:0, count:0 };
+      out[id].bytes += bytes; out[id].count++;
+    }
+  }
+  return out;
+}
+async function deleteModelFromCache(id){
+  if (!('caches' in self)) return;
+  for (const cn of await caches.keys()){
+    const cache = await caches.open(cn);
+    for (const req of await cache.keys()){
+      if (req.url.includes(id)) await cache.delete(req);
+    }
+  }
+}
+async function showCachePanel(){
+  const rep = await scanModelCache();
+  const ids = Object.keys(rep).sort();
+  if (!ids.length){ banner('No hay modelos en caché todavía. Se guardan la primera vez que cargas cada modelo.', 'warn'); return; }
+  const total = ids.reduce((a,id)=>a+rep[id].bytes,0);
+  let usageStr = '';
+  try { if (navigator.storage?.estimate){ const est = await navigator.storage.estimate(); usageStr = ' · uso real del sitio: ' + fmtMB(est.usage||0); } } catch {}
+  const rows = ids.map(id => {
+    const loaded = (id === S.modelId) ? ' <b style="color:var(--signal)">(cargado ahora)</b>' : '';
+    return `<div style="display:flex;align-items:center;gap:10px;margin:5px 0">
+      <span style="flex:1">${id}${loaded} — ~${fmtMB(rep[id].bytes)} · ${rep[id].count} archivos</span>
+      <button data-del="${id}" style="padding:4px 10px;font-size:12px">Borrar</button>
+    </div>`;
+  }).join('');
+  clearBanner();
+  bannerEl = document.createElement('div'); bannerEl.className = 'banner warn';
+  bannerEl.innerHTML = `<div style="margin-bottom:8px"><b>Modelos en caché</b> — aprox ${fmtMB(total)}${usageStr}</div>${rows}
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button data-del-others="1" style="padding:6px 12px;font-size:12.5px">Borrar todos menos el cargado</button>
+      <button data-del-all="1" style="padding:6px 12px;font-size:12.5px">Borrar todos</button>
+      <button data-close="1" style="padding:6px 12px;font-size:12.5px">Cerrar</button>
+    </div>`;
+  $('compat').after(bannerEl);
+  bannerEl.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+    if (b.dataset.del === S.modelId && !confirm('Ese modelo está cargado ahora. Se borrará del disco, pero seguirá en memoria hasta que recargues la página. ¿Continuar?')) return;
+    b.disabled = true; b.textContent = '…'; await deleteModelFromCache(b.dataset.del); showCachePanel();
+  }));
+  bannerEl.querySelector('[data-del-all]').addEventListener('click', async () => {
+    if (!confirm('¿Borrar TODOS los modelos en caché? Tendrás que volver a descargarlos cuando los uses.')) return;
+    for (const id of ids) await deleteModelFromCache(id); showCachePanel();
+  });
+  bannerEl.querySelector('[data-del-others]').addEventListener('click', async () => {
+    const others = ids.filter(x => x !== S.modelId);
+    if (!others.length){ banner('No hay otros modelos que borrar; solo está el cargado.', 'warn'); return; }
+    if (!confirm('¿Borrar todos los modelos menos el cargado (' + (S.modelId || 'ninguno') + ')?')) return;
+    for (const id of others) await deleteModelFromCache(id); showCachePanel();
+  });
+  bannerEl.querySelector('[data-close]').addEventListener('click', clearBanner);
+}
+cacheBtn.addEventListener('click', showCachePanel);
 
 /* ---------------- worklet (recolector de audio) ---------------- */
 const WORKLET = `
@@ -837,12 +915,16 @@ async function transcribeAll(){
     const all = new Float32Array(S.recLen); let off = 0;
     for (const c of S.rec){ all.set(c, off); off += c.length; }
     S.rec = []; S.recLen = 0;
-    // 2) remuestrear a 16 kHz
-    const audio = await to16k(all, S.sampleRate);
-    // 3) transcribir TODO de una pasada: transformers.js hace el chunking con solapamiento (stride) y cose los bordes
+    // 2) remuestrear a 16 kHz y añadir 0.5 s de silencio al final
+    //    (evita que el último tramo termine en seco y Whisper se apure/enrede en el cierre)
+    const audio16 = await to16k(all, S.sampleRate);
+    const audio = new Float32Array(audio16.length + 8000);
+    audio.set(audio16, 0);
+    // 3) transcribir TODO de una pasada: transformers.js hace el chunking con solapamiento (stride) y cose los bordes.
+    //    num_beams:5 -> búsqueda por haces: explora varias hipótesis y elige la mejor (más exacto, más lento)
     loadStatus.textContent = 'Transcribiendo… (puede tardar según el largo de la grabación)'; loadBar.style.width = '60%';
     const langSel = $('lang').value;
-    const opts = { task:'transcribe', return_timestamps:true, chunk_length_s:30, stride_length_s:5, repetition_penalty:1.2 };
+    const opts = { task:'transcribe', return_timestamps:true, chunk_length_s:30, stride_length_s:5, num_beams:5, repetition_penalty:1.2 };
     if (langSel !== 'auto') opts.language = langSel;
     const out = await S.transcriber(audio, opts);
     loadBar.style.width = '100%';
