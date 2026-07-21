@@ -125,19 +125,6 @@
   .seg.silent{opacity:.5}
   .seg.silent .seg-text{font-style:italic;color:var(--muted)}
 
-  /* --- línea provisional en vivo --- */
-  #liveCard{background:var(--panel);border:1px dashed var(--signal-dim);border-radius:10px;
-    padding:12px 14px;margin-top:10px;display:none}
-  #liveCard.on{display:block}
-  .live-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-family:var(--mono);
-    font-size:11px;color:var(--signal)}
-  .live-meta .pulse{width:7px;height:7px;border-radius:50%;background:var(--signal);
-    animation:pulse 1.1s ease-in-out infinite}
-  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
-  #liveText{font-size:15px;color:var(--muted);font-style:italic;white-space:pre-wrap}
-  #liveEs{font-size:15px;color:var(--live);white-space:pre-wrap;margin-top:6px;display:none}
-  #liveEs:not(:empty){display:block}
-  button.ghost.active{border-color:var(--live);color:var(--live);font-weight:700}
   button.ghost.hlon{border-color:var(--signal-dim);color:var(--signal)}
 
   /* --- términos UE resaltados --- */
@@ -165,7 +152,6 @@
     padding:22px 26px;font-size:16px;line-height:1.75;max-width:72ch}
   #fulltext p{margin:0 0 14px}
   #fulltext p:last-child{margin-bottom:0}
-  #fulltext .live-tail{color:var(--muted);font-style:italic}
   #fulltext .ph{color:var(--muted);font-style:italic}
 
   /* --- biblioteca de transcripciones --- */
@@ -242,17 +228,6 @@
     <div class="hint">Fijar el idioma mejora la precisión frente a "auto".</div>
   </div>
 
-  <div class="field" style="display:none">
-    <label for="seg">Longitud de segmento</label>
-    <select id="seg">
-      <option value="10">10 s — menor latencia</option>
-      <option value="15" selected>15 s — equilibrado</option>
-      <option value="20">20 s</option>
-      <option value="30">30 s — máxima precisión</option>
-    </select>
-    <div class="hint">Segmentos largos = frases más completas.</div>
-  </div>
-
   <div class="field">
     <label for="src">Origen de traducción</label>
     <select id="src">
@@ -304,13 +279,11 @@
   </div>
   <div class="toolbar">
     <button id="hlBtn" class="ghost hlon">Resaltar UE: on</button>
-    <button id="autoTr" class="ghost">Traducir en vivo: off</button>
     <button id="translateAll" class="ghost" disabled>Traducir todo</button>
     <button id="copyBtn" class="ghost" disabled>Copiar</button>
     <button id="saveSessionBtn" class="ghost" disabled>Guardar sesión</button>
     <button id="mdBtn" class="ghost" disabled>Guardar .md</button>
     <button id="jsonBtn" class="ghost" disabled>Guardar .json</button>
-    <button id="loadJsonBtn" class="ghost">Importar .json</button>
     <button id="clearBtn" class="ghost" disabled>Limpiar</button>
   </div>
 </div>
@@ -330,19 +303,10 @@
   <div id="fulltext"></div>
 </div>
 
-<!-- línea provisional en vivo (compartida entre vistas) -->
-<div id="liveCard">
-  <div class="live-meta"><span class="pulse"></span> En vivo · provisional</div>
-  <div id="liveText"></div>
-  <div id="liveEs"></div>
-</div>
-
 <!-- glosario UE detectado -->
 <section id="glossary"></section>
 
-<input type="file" id="jsonInput" accept="application/json" hidden>
-
-<footer id="foot">Whisper vía transformers.js · Graba y transcribe al final · v8</footer>
+<footer id="foot">Whisper vía transformers.js · Graba y transcribe al final · v9</footer>
 
 <script type="module">
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
@@ -637,20 +601,13 @@ const S = {
   audioCtx: null,
   stream: null,
   sampleRate: 48000,
-  win: [],                  // ventana de audio en curso (chunks)
-  winLen: 0,
-  segIndex: 0,
-  busy: false,              // cerrojo: solo una transcripción a la vez
-  lastPartial: 0,           // timestamp del último pase provisional
-  live: '',                 // texto provisional en vivo (original)
-  liveEs: '',               // texto provisional en vivo (español)
-  autoTr: false,            // traducir en vivo mientras transcribe
+  rec: [],                  // buffer de toda la grabación (chunks)
+  recLen: 0,
   hl: true,                 // resaltar términos de Unreal Engine
   lib: [],                  // biblioteca de transcripciones guardadas
   loadedId: null,           // id de la sesión cargada actualmente
   view: 'seg',              // 'seg' | 'full'
   fullLang: 'orig',         // 'orig' | 'es'
-  pumpTimer: null,
   startTime: 0,
   clockTimer: null,
   segments: [],             // {id, t, lang, iso, text, es, silent}
@@ -665,12 +622,11 @@ const loadBtn = $('loadBtn'), startBtn = $('startBtn'), stopBtn = $('stopBtn');
 const loadBox = $('loadBox'), loadBar = $('loadBar'), loadStatus = $('loadStatus'), loadFile = $('loadFile');
 const segEl = $('segments'), countEl = $('count');
 const fullWrap = $('fulltextWrap'), fullEl = $('fulltext');
-const liveCard = $('liveCard'), liveText = $('liveText'), liveEs = $('liveEs');
 const viewSeg = $('viewSeg'), viewFull = $('viewFull'), fullOrig = $('fullOrig'), fullEs = $('fullEs');
 const glossaryEl = $('glossary'), hlBtn = $('hlBtn');
 const libList = $('libList'), libCount = $('libCount'), saveSessionBtn = $('saveSessionBtn');
-const translateAll = $('translateAll'), autoTrBtn = $('autoTr'), copyBtn = $('copyBtn'), mdBtn = $('mdBtn'),
-      jsonBtn = $('jsonBtn'), clearBtn = $('clearBtn'), loadJsonBtn = $('loadJsonBtn'), jsonInput = $('jsonInput');
+const translateAll = $('translateAll'), copyBtn = $('copyBtn'), mdBtn = $('mdBtn'),
+      jsonBtn = $('jsonBtn'), clearBtn = $('clearBtn');
 
 /* ---------------- compat ---------------- */
 (function compat(){
@@ -873,10 +829,9 @@ startBtn.addEventListener('click', async () => {
   S.capturing = true;
   S.rec = []; S.recLen = 0;              // buffer de TODA la grabación (sin cortar)
   S._longWarned = false;
-  updateLive();
   S.startTime = performance.now();
   startBtn.disabled = true; stopBtn.disabled = false; loadBtn.disabled = true;
-  ['model','lang','seg'].forEach(id => $(id).disabled = true);
+  ['model','lang'].forEach(id => $(id).disabled = true);
   setStatus('Grabando el audio del PC… (se transcribe al Detener)', 'on');
   drawMeter();
   S.clockTimer = setInterval(() => { clock.textContent = fmt((performance.now()-S.startTime)/1000); }, 500);
@@ -904,7 +859,7 @@ function buildSeg(t, lang, text){
 }
 function reenableControls(){
   startBtn.disabled = !S.transcriber; loadBtn.disabled = false;
-  ['model','lang','seg'].forEach(id => $(id).disabled = false);
+  ['model','lang'].forEach(id => $(id).disabled = false);
 }
 async function transcribeAll(){
   if (!S.recLen){ setStatus('Sin audio grabado', 'on'); reenableControls(); return; }
@@ -955,81 +910,12 @@ async function transcribeAll(){
   }
 }
 
-/* ---------------- acumulación + pump ---------------- */
-const segSec = () => parseInt($('seg').value, 10);
-
+/* ---------------- grabación ---------------- */
 function onSamples(chunk){
   S.rec.push(chunk); S.recLen += chunk.length;
   if (S.recLen > S.sampleRate * 60 * 20 && !S._longWarned){
     S._longWarned = true;
     banner('Llevas más de 20 min grabando. Las grabaciones muy largas usan bastante memoria y la transcripción final tardará; si puedes, corta por tramos.', 'warn');
-  }
-}
-// copia la ventana actual SIN consumirla (para el pase provisional en vivo)
-function concatWindow(){
-  const out = new Float32Array(S.winLen); let f = 0;
-  for (const c of S.win){ out.set(c, f); f += c.length; }
-  return out;
-}
-// copia SOLO los últimos `sec` segundos de la ventana (preview rápido y de tiempo casi constante)
-function tailWindow(sec){
-  const want = Math.round(sec * S.sampleRate);
-  if (S.winLen <= want) return concatWindow();
-  const out = new Float32Array(want);
-  let need = want, pos = want;
-  for (let i = S.win.length - 1; i >= 0 && need > 0; i--){
-    const c = S.win[i];
-    const take = Math.min(c.length, need);
-    out.set(c.subarray(c.length - take), pos - take);
-    pos -= take; need -= take;
-  }
-  return out;
-}
-// extrae y CONSUME n muestras del inicio de la ventana
-function takeWindow(n){
-  const size = Math.min(n, S.winLen);
-  const out = new Float32Array(size); let filled = 0;
-  while (filled < size && S.win.length){
-    const head = S.win[0]; const room = size - filled;
-    if (head.length <= room){ out.set(head, filled); filled += head.length; S.win.shift(); S.winLen -= head.length; }
-    else { out.set(head.subarray(0, room), filled); S.win[0] = head.subarray(room); S.winLen -= room; filled += room; }
-  }
-  return out;
-}
-
-// bucle único: primero fija segmentos completos; si no, refresca el pase provisional
-async function pump(){
-  if (S.busy || !S.transcriber) return;
-  const need = segSec() * S.sampleRate;
-
-  // 1) ventana completa -> fijar como segmento definitivo
-  if (S.winLen >= need){
-    // si la cola acumulada supera 2 ventanas, el modelo no alcanza en tiempo real
-    if (S.winLen > need * 2 && !S._laggedWarned){
-      S._laggedWarned = true;
-      banner('El modelo va más lento que el audio en tiempo real y se está acumulando un rezago. No se pierde nada: al pulsar <b>Detener</b> se termina de procesar lo pendiente (puede tardar un poco). Si pasa seguido, usa un modelo más liviano o segmentos más cortos.', 'warn');
-    }
-    S.busy = true;
-    const seg = takeWindow(need);
-    const t = S.segIndex * segSec(); S.segIndex++;
-    clearLive();
-    await commitSegment(seg, t);
-    S.busy = false;
-    pump();                       // encadena si ya hay otra ventana lista
-    return;
-  }
-
-  // 2) pase provisional en vivo (ventana deslizante de ~6 s, refresco ~1 s)
-  //    se salta si ya casi hay una ventana completa: primero está la transcripción definitiva
-  if (S.capturing && S.winLen > S.sampleRate * 0.8 && S.winLen < need - S.sampleRate && (performance.now() - S.lastPartial) > 900){
-    S.busy = true;
-    S.lastPartial = performance.now();
-    try {
-      const audio = await to16k(tailWindow(6), S.sampleRate);
-      const out = await transcribe(audio);
-      await showLive((out.text || '').trim());
-    } catch (e) { /* silencioso: es solo una vista previa */ }
-    S.busy = false;
   }
 }
 
@@ -1069,53 +955,6 @@ function deLoop(text){
 function isFiller(text){
   const t = text.toLowerCase().replace(/[.!?¿¡\s]/g,'');
   return t === '' || ['you','thankyou','thanksforwatching','thanks','bye','uh','um'].includes(t);
-}
-
-// transcribe un segmento definitivo y lo añade a la nota
-async function commitSegment(samples, t){
-  const langSel = $('lang').value;
-  const ph = addSegment({ t, lang: langSel, text: '…', pending: true });
-  try {
-    const audio = await to16k(samples, S.sampleRate);
-    const out = await transcribe(audio);
-    const text = deLoop((out.text || '').trim());
-    if (isFiller(text)) { updateSegment(ph, '(silencio)', true); return; }
-    // descarta si es idéntico al último segmento real (alucinación repetida entre chunks)
-    const lastReal = [...S.segments].reverse().find(o => !o.silent && !o.pending && o.id !== ph.id);
-    if (lastReal && lastReal.text.toLowerCase() === text.toLowerCase()){
-      updateSegment(ph, '(repetido)', true); return;
-    }
-    updateSegment(ph, text, false);
-    if (S.autoTr) translateSegment(ph);
-  } catch (e) {
-    console.error(e);
-    updateSegment(ph, '⚠ error al transcribir este segmento', false);
-  }
-}
-
-/* ---------------- línea provisional en vivo ---------------- */
-function liveSrcIso(){
-  const forced = $('src').value;
-  if (forced !== 'auto') return forced;
-  const iso = LANG_ISO[$('lang').value];
-  if (iso && iso !== 'auto' && iso !== 'es') return iso;
-  return 'en';
-}
-async function showLive(text){
-  text = deLoop(text);
-  S.live = text;
-  liveText.innerHTML = text ? highlightUE(escapeHtml(text)) : 'escuchando…';
-  if (S.autoTr && text){
-    try { S.liveEs = await translateKeepingUE(text, liveSrcIso()); }
-    catch (e) { S.liveEs = ''; }
-    liveEs.innerHTML = S.liveEs ? highlightUE(escapeHtml(S.liveEs)) : '';
-  }
-  if (S.view === 'full') renderFull();
-}
-function clearLive(){
-  S.live = ''; S.liveEs = '';
-  liveText.textContent = ''; liveEs.textContent = '';
-  if (S.view === 'full') renderFull();
 }
 
 /* ---------------- resample a 16 kHz ---------------- */
@@ -1166,15 +1005,6 @@ function wireSeg(el, o){
   const b = el.querySelector('[data-act="tr"]');
   if (b) b.addEventListener('click', () => translateSegment(o));
 }
-function updateSegment(o, text, silent){
-  o.text = text; o.pending = false; o.silent = !!silent;
-  const el = document.getElementById(o.id);
-  el.classList.remove('pending');
-  el.classList.toggle('silent', o.silent);
-  el.innerHTML = renderSeg(o);
-  wireSeg(el, o);
-  renderFull(); save();
-}
 function rerender(o){
   const el = document.getElementById(o.id);
   el.innerHTML = renderSeg(o);
@@ -1190,21 +1020,15 @@ function renderFull(){
     .filter(o => !o.silent && !o.pending)
     .map(o => useEs ? (o.es || o.text) : o.text)
     .filter(Boolean);
-  if (!parts.length && !S.live){
-    fullEl.innerHTML = `<p class="ph">Aún no hay texto. Inicia la captura y aparecerá aquí de corrido.</p>`;
+  if (!parts.length){
+    fullEl.innerHTML = `<p class="ph">Aún no hay texto. Graba y, al Detener, aparecerá aquí de corrido.</p>`;
     updateGlossaryPanel();
     return;
   }
   const paras = [];
   for (let i = 0; i < parts.length; i += 4) paras.push(parts.slice(i, i+4).join(' '));
-  let html = paras.map(p => `<p>${highlightUE(escapeHtml(p))}</p>`).join('');
-  if (useEs && S.liveEs) html += `<p class="live-tail">${highlightUE(escapeHtml(S.liveEs))}…</p>`;
-  else if (!useEs && S.live) html += `<p class="live-tail">${highlightUE(escapeHtml(S.live))}…</p>`;
-  fullEl.innerHTML = html;
+  fullEl.innerHTML = paras.map(p => `<p>${highlightUE(escapeHtml(p))}</p>`).join('');
   updateGlossaryPanel();
-}
-function updateLive(){
-  liveCard.style.display = 'none';   // sin transcripción en vivo: se transcribe todo al final
 }
 function setView(v){
   S.view = v;
@@ -1212,7 +1036,6 @@ function setView(v){
   viewFull.classList.toggle('active', v === 'full');
   segEl.style.display = v === 'seg' ? '' : 'none';
   fullWrap.style.display = v === 'full' ? 'block' : 'none';
-  updateLive();
   copyBtn.textContent = copyLabel();
   if (v === 'full') renderFull();
 }
@@ -1250,7 +1073,6 @@ hlBtn.addEventListener('click', () => {
   hlBtn.classList.toggle('hlon', S.hl);
   hlBtn.textContent = 'Resaltar UE: ' + (S.hl ? 'on' : 'off');
   redraw();
-  if (S.live) liveText.innerHTML = highlightUE(escapeHtml(S.live));
 });
 
 /* ---------------- biblioteca de transcripciones ---------------- */
@@ -1300,7 +1122,7 @@ function loadSession(id){
   const e = S.lib.find(x => x.id === id); if (!e) return;
   if (S.capturing && !confirm('Hay una captura en curso. ¿Cargar de todas formas?')) return;
   S.segments = JSON.parse(JSON.stringify(e.segments));
-  S.live = ''; S.liveEs = ''; S.loadedId = id;
+  S.loadedId = id;
   redraw(); refreshToolbar(); save(); renderLibrary();
   document.querySelector('.transcript-head').scrollIntoView({ behavior:'smooth', block:'start' });
 }
@@ -1390,15 +1212,8 @@ async function translateSegment(o){
   } catch (e) {
     banner('No hay traductor disponible para ese idioma. Activa la <b>API de traducción de Chrome</b> (Chrome/Edge recientes) o usa contenido en inglés para la traducción local.', 'err');
     if (btn){ btn.disabled = false; btn.textContent = 'Traducir'; }
-    if (S.autoTr){ S.autoTr = false; autoTrBtn.classList.remove('active'); autoTrBtn.textContent = 'Traducir en vivo: off'; }
   }
 }
-autoTrBtn.addEventListener('click', () => {
-  S.autoTr = !S.autoTr;
-  autoTrBtn.classList.toggle('active', S.autoTr);
-  autoTrBtn.textContent = 'Traducir en vivo: ' + (S.autoTr ? 'on' : 'off');
-  if (!S.autoTr){ S.liveEs = ''; liveEs.textContent = ''; if (S.view==='full') renderFull(); }
-});
 translateAll.addEventListener('click', async () => {
   translateAll.disabled = true; translateAll.textContent = 'Traduciendo…';
   for (const o of S.segments){ if (!o.es && !o.pending && !o.silent){ await translateSegment(o); } }
@@ -1454,19 +1269,9 @@ copyBtn.addEventListener('click', () => {
 });
 mdBtn.addEventListener('click', () => download(`transcripcion-${Date.now()}.md`, asMarkdown(), 'text/markdown'));
 jsonBtn.addEventListener('click', () => download(`transcripcion-${Date.now()}.json`, JSON.stringify(S.segments, null, 2), 'application/json'));
-loadJsonBtn.addEventListener('click', () => jsonInput.click());
-jsonInput.addEventListener('change', async e => {
-  const f = e.target.files[0]; if (!f) return;
-  try {
-    const arr = JSON.parse(await f.text());
-    S.segments = []; segEl.innerHTML = '';
-    for (const o of arr) addSegment({ t:o.t, lang:o.lang, text:o.text, es:o.es, silent:o.silent });
-  } catch { banner('No pude leer ese archivo .json', 'err'); }
-  jsonInput.value = '';
-});
 clearBtn.addEventListener('click', () => {
   if (!confirm('¿Borrar toda la transcripción actual?')) return;
-  S.segments = []; S.live = ''; segEl.innerHTML = emptyHtml();
+  S.segments = []; segEl.innerHTML = emptyHtml();
   refreshToolbar(); renderFull(); save();
 });
 
@@ -1496,7 +1301,7 @@ function drawMeter(){
     S.analyser.getByteFrequencyData(data);
     ctx.clearRect(0,0,c.width,c.height);
     const step = Math.floor(data.length / bins), bw = c.width / bins;
-    const color = S.busy ? getCSS('--live') : getCSS('--signal');
+    const color = getCSS('--signal');
     for (let i=0;i<bins;i++){
       let sum=0; for(let j=0;j<step;j++) sum += data[i*step+j];
       const v = (sum/step)/255;
