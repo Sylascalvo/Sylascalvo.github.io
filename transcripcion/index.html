@@ -195,7 +195,7 @@
   <div class="brand">
     <span class="kicker">Sylascalvo · Herramienta interna</span>
     <h1>Monitor de Transcripción</h1>
-    <span class="sub">Captura el audio que suena en tu PC (una pestaña o toda la pantalla), lo transcribe con Whisper en el navegador y lo traduce al español. Todo local, sin servidor.</span>
+    <span class="sub">Graba el audio que suena en tu PC (una pestaña o toda la pantalla) y, al detener, lo transcribe completo con Whisper en el navegador para revisarlo. Todo local, sin servidor.</span>
   </div>
 </header>
 
@@ -241,7 +241,7 @@
     <div class="hint">Fijar el idioma mejora la precisión frente a "auto".</div>
   </div>
 
-  <div class="field">
+  <div class="field" style="display:none">
     <label for="seg">Longitud de segmento</label>
     <select id="seg">
       <option value="10">10 s — menor latencia</option>
@@ -272,7 +272,7 @@
 
 <div class="actions">
   <button id="loadBtn" class="primary">Cargar modelo</button>
-  <button id="startBtn" class="live" disabled>Iniciar captura</button>
+  <button id="startBtn" class="live" disabled>Iniciar grabación</button>
   <button id="stopBtn" disabled>Detener</button>
   <span class="spacer"></span>
 </div>
@@ -340,7 +340,7 @@
 
 <input type="file" id="jsonInput" accept="application/json" hidden>
 
-<footer id="foot">Whisper vía transformers.js · Traducción on-device · v3</footer>
+<footer id="foot">Whisper vía transformers.js · Graba y transcribe al final · v4</footer>
 
 <script type="module">
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
@@ -793,13 +793,13 @@ startBtn.addEventListener('click', async () => {
   node.port.onmessage = e => onSamples(e.data);
 
   S.capturing = true;
-  S.win = []; S.winLen = 0; S.segIndex = 0; S.live = ''; S.lastPartial = 0; S._laggedWarned = false;
+  S.rec = []; S.recLen = 0;              // buffer de TODA la grabación (sin cortar)
+  S._longWarned = false;
   updateLive();
-  S.pumpTimer = setInterval(pump, 700);    // reintenta pases provisionales
   S.startTime = performance.now();
   startBtn.disabled = true; stopBtn.disabled = false; loadBtn.disabled = true;
   ['model','lang','seg'].forEach(id => $(id).disabled = true);
-  setStatus('Escuchando el audio del PC…', 'on');
+  setStatus('Grabando el audio del PC… (se transcribe al Detener)', 'on');
   drawMeter();
   S.clockTimer = setInterval(() => { clock.textContent = fmt((performance.now()-S.startTime)/1000); }, 500);
 });
@@ -809,39 +809,79 @@ stopBtn.addEventListener('click', stopCapture);
 function stopCapture(){
   if (!S.capturing) return;
   S.capturing = false;
-  clearInterval(S.pumpTimer);
   S.stream?.getTracks().forEach(t => t.stop());
   cancelAnimationFrame(S.rafId);
   clearInterval(S.clockTimer);
   if (S.audioCtx) S.audioCtx.close();
-  stopBtn.disabled = true; startBtn.disabled = false; loadBtn.disabled = false;
-  ['model','lang','seg'].forEach(id => $(id).disabled = false);
-  finalizeRemaining();   // vuelca lo que quede en la ventana como último segmento
+  stopBtn.disabled = true;
   const ctx = $('meter').getContext('2d');
   ctx.clearRect(0,0,$('meter').width,$('meter').height);
+  transcribeAll();   // transcribe TODA la grabación de una sola pasada (con solapamiento interno)
 }
-async function finalizeRemaining(){
-  clearLive(); updateLive();
-  // Whisper solo procesa <=30 s por llamada. Si quedó rezago acumulado,
-  // hay que vaciarlo en trozos de <=30 s; si no, todo lo que pase de 30 s se pierde.
-  const maxN = Math.round(Math.min(segSec(), 30) * S.sampleRate);
-  let guard = 0;
-  while (S.winLen > S.sampleRate * 0.6 && guard++ < 200){   // mientras quede ~0.6 s útil
-    const n = Math.min(maxN, S.winLen);
-    const seg = takeWindow(n);
-    const t = S.segIndex * segSec(); S.segIndex++;
-    setStatus('Terminando de transcribir lo pendiente…', 'busy');
-    await commitSegment(seg, t);
+
+let _segCounter = 0;
+function buildSeg(t, lang, text){
+  const iso = LANG_ISO[lang] || lang || 'auto';
+  return { id: 'seg-' + (_segCounter++) + '-' + Date.now(), t, lang, iso, text, es:null, pending:false, silent:false };
+}
+function reenableControls(){
+  startBtn.disabled = !S.transcriber; loadBtn.disabled = false;
+  ['model','lang','seg'].forEach(id => $(id).disabled = false);
+}
+async function transcribeAll(){
+  if (!S.recLen){ setStatus('Sin audio grabado', 'on'); reenableControls(); return; }
+  setStatus('Transcribiendo toda la grabación…', 'busy');
+  loadBox.style.display = 'block'; loadStatus.textContent = 'Preparando el audio…'; loadBar.style.width = '25%'; loadFile.textContent = '';
+  try {
+    // 1) unir todos los trozos en un solo buffer y liberar la cola
+    const all = new Float32Array(S.recLen); let off = 0;
+    for (const c of S.rec){ all.set(c, off); off += c.length; }
+    S.rec = []; S.recLen = 0;
+    // 2) remuestrear a 16 kHz
+    const audio = await to16k(all, S.sampleRate);
+    // 3) transcribir TODO de una pasada: transformers.js hace el chunking con solapamiento (stride) y cose los bordes
+    loadStatus.textContent = 'Transcribiendo… (puede tardar según el largo de la grabación)'; loadBar.style.width = '60%';
+    const langSel = $('lang').value;
+    const opts = { task:'transcribe', return_timestamps:true, chunk_length_s:30, stride_length_s:5, repetition_penalty:1.2 };
+    if (langSel !== 'auto') opts.language = langSel;
+    const out = await S.transcriber(audio, opts);
+    loadBar.style.width = '100%';
+    // 4) poblar segmentos con los tramos reales que devuelve Whisper (marcas de tiempo reales)
+    S.segments = [];
+    const chunks = (Array.isArray(out.chunks) && out.chunks.length) ? out.chunks : null;
+    if (chunks){
+      for (const ch of chunks){
+        const text = deLoop((ch.text || '').trim());
+        if (!text || isFiller(text)) continue;
+        const t = Math.floor((ch.timestamp && ch.timestamp[0]) || 0);
+        S.segments.push(buildSeg(t, langSel, text));
+      }
+    }
+    if (!S.segments.length){                       // respaldo: un solo bloque con todo el texto
+      const text = deLoop((out.text || '').trim());
+      if (text) S.segments.push(buildSeg(0, langSel, text));
+    }
+    redraw(); refreshToolbar(); renderFull(); save();
+    setStatus('Transcripción lista · ' + S.segments.length + ' tramo' + (S.segments.length===1?'':'s'), 'on');
+  } catch (e) {
+    console.error(e);
+    banner('Error al transcribir la grabación. Abre la consola (F12) para ver el detalle y me lo cuentas.', 'err');
+    setStatus('Error al transcribir', '');
+  } finally {
+    loadBox.style.display = 'none';
+    reenableControls();
   }
-  setStatus('Detenido', 'on');
 }
 
 /* ---------------- acumulación + pump ---------------- */
 const segSec = () => parseInt($('seg').value, 10);
 
 function onSamples(chunk){
-  S.win.push(chunk); S.winLen += chunk.length;
-  pump();
+  S.rec.push(chunk); S.recLen += chunk.length;
+  if (S.recLen > S.sampleRate * 60 * 20 && !S._longWarned){
+    S._longWarned = true;
+    banner('Llevas más de 20 min grabando. Las grabaciones muy largas usan bastante memoria y la transcripción final tardará; si puedes, corta por tramos.', 'warn');
+  }
 }
 // copia la ventana actual SIN consumirla (para el pase provisional en vivo)
 function concatWindow(){
@@ -1082,7 +1122,7 @@ function renderFull(){
   updateGlossaryPanel();
 }
 function updateLive(){
-  liveCard.style.display = (S.capturing && S.view === 'seg') ? 'block' : 'none';
+  liveCard.style.display = 'none';   // sin transcripción en vivo: se transcribe todo al final
 }
 function setView(v){
   S.view = v;
@@ -1390,7 +1430,7 @@ function drawMeter(){
 function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
 
 /* ---------------- init ---------------- */
-function emptyHtml(){ return `<div class="empty"><b>Sin transcripción todavía.</b><br>Carga el modelo, pulsa <b>Iniciar captura</b> y elige una pestaña o pantalla con la casilla de audio activada.</div>`; }
+function emptyHtml(){ return `<div class="empty"><b>Sin transcripción todavía.</b><br>Carga el modelo, pulsa <b>Iniciar grabación</b>, elige una pestaña o pantalla con la casilla de audio activada, y al <b>Detener</b> se transcribirá todo.</div>`; }
 if (!restore()) segEl.innerHTML = emptyHtml();
 refreshToolbar();
 renderFull();
