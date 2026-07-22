@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lector de Audiolibros — Sylascalvo</title>
+<title>Lector de Audiolibros — BaldGames</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -55,6 +55,19 @@
   #reader .ch{color:var(--muted);transition:.2s}
   #reader .ch.done{color:var(--txt)}
   #reader .ch.active{color:var(--signal);background:rgba(62,230,196,.10);border-radius:4px;box-shadow:0 0 0 2px rgba(62,230,196,.10)}
+  #chapters{display:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:14px}
+  #chapters .chap-idx-head{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .chap-idx{display:flex;gap:8px;align-items:baseline;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:14px}
+  .chap-idx:hover{background:var(--panel-2)}
+  .chap-idx.active{background:rgba(62,230,196,.12);color:var(--signal)}
+  .chap-idx.pend{opacity:.5;cursor:default}
+  .chap-idx .ct{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .chap-idx.active .ct{color:var(--signal)}
+  #reader .chap{padding:6px 4px;border-radius:8px;transition:background .2s}
+  #reader .chap.active{background:rgba(62,230,196,.06);box-shadow:inset 3px 0 0 var(--signal-dim)}
+  #reader .chap-title{font-weight:700;font-size:15px;margin:6px 0 4px;color:var(--txt)}
+  #reader .chap.active .chap-title{color:var(--signal)}
+  #subRow{display:none;gap:8px;margin-top:10px}
   footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);font-family:var(--mono)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -62,7 +75,7 @@
 <body>
 
 <header>
-  <span class="kicker">Sylascalvo · Herramienta interna</span>
+  <span class="kicker">BaldGames · Herramienta interna</span>
   <h1>Lector de Audiolibros</h1>
   <span class="sub">Texto a voz, todo en el navegador. Piper (español, neural, descargable) · Kokoro (inglés, descargable) · Voz del navegador (al instante).</span>
 </header>
@@ -138,6 +151,11 @@
 
 <audio id="player" controls style="width:100%;margin-top:14px;display:none"></audio>
 <div id="playerNote" class="hint" style="display:none;margin-top:6px"></div>
+<div id="subRow">
+  <button id="srtBtn" class="ghost">Descargar .srt</button>
+  <button id="vttBtn" class="ghost">Descargar .vtt</button>
+</div>
+<div id="chapters"></div>
 
 <div id="devTools" style="display:none">
   <div id="log">Registro:</div>
@@ -145,7 +163,7 @@
 </div>
 <div id="reader"></div>
 
-<footer>Piper · Kokoro · Azure · Voz del navegador · v6 · <span id="devUnlock" style="cursor:pointer;opacity:.45">dev</span></footer>
+<footer>Piper · Kokoro · Azure · Voz del navegador · v7 · karaoke+subs · <span id="devUnlock" style="cursor:pointer;opacity:.45">dev</span></footer>
 
 <script type="module">
 const logEl=document.getElementById('log');
@@ -159,7 +177,7 @@ document.getElementById('copyLog').addEventListener('click',()=>{ navigator.clip
 function withTimeout(p,ms,label){ return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout en '+label+' tras '+(ms/1000)+'s')),ms))]); }
 
 const S={ engine:'piper', tts:null, piper:null, piperReady:{}, KokoroTTS:null, lame:null, speed:1,
-  chunks:[], acc:[], accRate:24000, playerUrl:null,
+  chunks:[], chapters:[], starts:[], cumSamples:0, acc:[], accRate:24000, playerUrl:null, lastActiveChap:-1,
   running:false, paused:false, stopped:false, dirty:false };
 
 const $=id=>document.getElementById(id);
@@ -385,6 +403,85 @@ function refreshPlayer(force){
 }
 playerEl.addEventListener('pause',()=>{ if(S.dirty) refreshPlayer(true); });
 playerEl.addEventListener('ended',()=>{ if(S.dirty) refreshPlayer(true); });
+playerEl.addEventListener('timeupdate', updateKaraoke);
+
+/* ---------------- capítulos, índice y karaoke ---------------- */
+// arma la lista de bloques + capítulos: los títulos se marcan con "# " al inicio de línea
+function buildPlan(text, maxLen){
+  const lines=text.replace(/\r/g,'').split('\n');
+  const segs=[]; let buf=[];
+  const flush=()=>{ if(buf.join('').trim()) segs.push({type:'body',text:buf.join('\n')}); buf=[]; };
+  for(const ln of lines){
+    const m=ln.match(/^#\s+(.*)/);
+    if(m){ flush(); segs.push({type:'chapter',title:m[1].trim()}); }
+    else buf.push(ln);
+  }
+  flush();
+  const chunks=[], chapters=[];
+  for(const s of segs){
+    if(s.type==='chapter'){ chapters.push({title:s.title, chunkStart:chunks.length}); for(const t of splitIntoChunks(s.title,maxLen)) chunks.push(t); }
+    else { for(const t of splitIntoChunks(s.text,maxLen)) chunks.push(t); }
+  }
+  return { chunks, chapters };
+}
+function renderReader(){
+  const chs=S.chapters;
+  const span=i=>`<span class="ch" data-i="${i}">${escapeHtml(S.chunks[i])} </span>`;
+  let html='';
+  if(!chs.length){ html=`<div class="chap" data-c="0">`+S.chunks.map((_,i)=>span(i)).join('')+`</div>`; }
+  else {
+    if(chs[0].chunkStart>0){ let s=''; for(let i=0;i<chs[0].chunkStart;i++) s+=span(i); html+=`<div class="chap" data-c="intro">${s}</div>`; }
+    for(let k=0;k<chs.length;k++){
+      const start=chs[k].chunkStart, end=(k+1<chs.length)?chs[k+1].chunkStart:S.chunks.length;
+      html+=`<div class="chap" data-c="${k}"><div class="chap-title ch" data-i="${start}">${escapeHtml(chs[k].title)}</div>`;
+      for(let i=start+1;i<end;i++) html+=span(i);
+      html+=`</div>`;
+    }
+  }
+  reader.innerHTML=html;
+}
+function chunkStartTime(i){ return (S.starts[i]||0)/(S.accRate||24000); }
+function fmtClock(t){ const m=Math.floor(t/60), s=Math.floor(t%60); return m+':'+String(s).padStart(2,'0'); }
+function renderChapterIndex(){
+  const el=document.getElementById('chapters');
+  if(!S.chapters.length){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='';
+  el.innerHTML='<div class="chap-idx-head">Capítulos (clic para saltar)</div>'+S.chapters.map((c,k)=>{
+    const known=S.acc.length>c.chunkStart;
+    const t=known?chunkStartTime(c.chunkStart):null;
+    return `<div class="chap-idx${known?'':' pend'}" data-c="${k}" data-t="${known?t:''}">${k+1}. ${escapeHtml(c.title)}<span class="ct">${known?fmtClock(t):'…'}</span></div>`;
+  }).join('');
+}
+document.getElementById('chapters').addEventListener('click', e=>{
+  const it=e.target.closest('.chap-idx'); if(!it||!it.dataset.t) return;
+  const t=parseFloat(it.dataset.t);
+  if(playerEl.src && !isNaN(t)){ playerEl.style.display=''; try{ playerEl.currentTime=Math.min(t, (playerEl.duration||t)); }catch{} }
+});
+function updateKaraoke(){
+  if(!S.chapters.length) return;
+  const t=playerEl.currentTime||0;
+  let active=-1;
+  for(let k=0;k<S.chapters.length;k++){ if(S.acc.length>S.chapters[k].chunkStart && chunkStartTime(S.chapters[k].chunkStart)<=t+0.05) active=k; }
+  document.querySelectorAll('#chapters .chap-idx').forEach(el=>el.classList.toggle('active', +el.dataset.c===active));
+  reader.querySelectorAll('.chap').forEach(el=>el.classList.toggle('active', el.dataset.c===String(active)));
+  if(active!==S.lastActiveChap){ S.lastActiveChap=active; const a=reader.querySelector('.chap.active'); if(a) a.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+}
+
+/* ---------------- subtítulos .srt / .vtt ---------------- */
+function buildCues(){
+  const rate=S.accRate||24000; const cues=[];
+  for(let i=0;i<S.acc.length;i++){
+    const st=(S.starts[i]||0)/rate, en=st+((S.acc[i]?S.acc[i].length:0)/rate);
+    const txt=(S.chunks[i]||'').trim(); if(txt) cues.push({start:st,end:en,text:txt});
+  }
+  return cues;
+}
+function subTs(t,comma){ const h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=Math.floor(t%60),ms=Math.round((t-Math.floor(t))*1000); const p=(n,l=2)=>String(n).padStart(l,'0'); return `${p(h)}:${p(m)}:${p(s)}${comma?',':'.'}${p(ms,3)}`; }
+function toSRT(){ return buildCues().map((c,i)=>`${i+1}\n${subTs(c.start,true)} --> ${subTs(c.end,true)}\n${c.text}`).join('\n\n')+'\n'; }
+function toVTT(){ return 'WEBVTT\n\n'+buildCues().map(c=>`${subTs(c.start)} --> ${subTs(c.end)}\n${c.text}`).join('\n\n')+'\n'; }
+function dlText(name,content,type){ const b=new Blob([content],{type}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
+document.getElementById('srtBtn').addEventListener('click',()=>{ if(!S.acc.length){banner('Aún no hay audio procesado.','warn');return;} dlText(`subtitulos-${Date.now()}.srt`, toSRT(), 'text/plain'); });
+document.getElementById('vttBtn').addEventListener('click',()=>{ if(!S.acc.length){banner('Aún no hay audio procesado.','warn');return;} dlText(`subtitulos-${Date.now()}.vtt`, toVTT(), 'text/vtt'); });
 
 /* ---------------- Web Speech ---------------- */
 let keepalive=null;
@@ -405,7 +502,7 @@ function generateWebSpeech(chunks){
 
 /* ---------------- procesamiento neural (Piper/Kokoro/Azure) ---------------- */
 async function generateNeural(chunks, synthFn){
-  S.acc=[]; S.accRate=null; S.dirty=false; dlBtn.disabled=true;
+  S.acc=[]; S.accRate=null; S.starts=[]; S.cumSamples=0; S.dirty=false; dlBtn.disabled=true;
   if (S.engine==='piper'){ try{ await piperPrepare(); }catch(e){ log('Error preparando voz: '+(e.message||e),'e'); banner('No pude descargar la voz. Revisa el registro.','err'); S.running=false; return; } }
   log(`Procesando ${chunks.length} bloque(s) · ${voiceSel.value}`,'k'); setStatus('Procesando…','busy');
   try{
@@ -425,8 +522,9 @@ async function generateNeural(chunks, synthFn){
       let samples, rate;
       if(S.engine==='kokoro'){ samples=r.pcm; rate=r.rate; }
       else { const w=await wavBlobsToFloat32([r.blob]); samples=w.samples; rate=w.rate; }
+      S.starts[i]=S.cumSamples; S.cumSamples+=samples.length;      // tiempo de inicio de este bloque
       S.acc.push(samples); S.accRate=rate;
-      markProcessed(i);
+      markProcessed(i); renderChapterIndex();                       // actualiza los tiempos del índice
       setPct((i+1)/chunks.length); setStatus(`Procesando bloque ${i+1}/${chunks.length}…`,'busy');
       log(`Bloque ${i+1}/${chunks.length} ✓ (${((performance.now()-t0)/1000).toFixed(1)}s)`);
       refreshPlayer();                                   // el reproductor crece con lo ya procesado
@@ -434,25 +532,27 @@ async function generateNeural(chunks, synthFn){
     }
   }catch(e){ log('Error al sintetizar: '+(e.message||e),'e'); banner('Error al sintetizar. Revisa el registro.','err'); }
   S.running=false;
-  if(S.acc.length){ dlBtn.disabled=false; refreshPlayer(true); }
+  if(S.acc.length){ dlBtn.disabled=false; refreshPlayer(true); renderChapterIndex(); if(S.chapters.length||true) document.getElementById('subRow').style.display='flex'; }
   setStatus(S.stopped?'Detenido (audio parcial disponible)':'Procesamiento completo · listo para reproducir y descargar','on');
 }
 
 /* ---------------- generar ---------------- */
 genBtn.addEventListener('click', ()=>{
   if(S.engine==='kokoro'&&!S.tts){ banner('Carga el modelo primero.','warn'); return; }
-  const chunks=splitIntoChunks(textEl.value,parseInt(chunkSel.value,10));
-  if(!chunks.length){ banner('Pega algo de texto primero.','warn'); return; }
-  S.chunks=chunks; S.running=(S.engine!=='webspeech'); S.stopped=false; S.paused=false; S.dirty=false;
+  const plan=buildPlan(textEl.value,parseInt(chunkSel.value,10));
+  if(!plan.chunks.length){ banner('Pega algo de texto primero.','warn'); return; }
+  S.chunks=plan.chunks; S.chapters=plan.chapters; S.lastActiveChap=-1;
+  S.running=(S.engine!=='webspeech'); S.stopped=false; S.paused=false; S.dirty=false;
   if(S.playerUrl){ try{URL.revokeObjectURL(S.playerUrl);}catch{} S.playerUrl=null; }
   try{ playerEl.pause(); }catch{} playerEl.removeAttribute('src'); playerEl.style.display='none'; playerNote.style.display='none';
+  document.getElementById('subRow').style.display='none';
   reader.style.display='block'; textEl.style.display='none'; editBtn.style.display='';
-  reader.innerHTML=chunks.map((c,i)=>`<span class="ch" data-i="${i}">${escapeHtml(c)} </span>`).join('');
+  renderReader(); renderChapterIndex();
   genBtn.disabled=true; loadBtn.disabled=true; pauseBtn.disabled=(S.engine!=='webspeech'); stopBtn.disabled=false; voiceSel.disabled=true; chunkSel.disabled=true; engineSel.disabled=true;
-  if(S.engine==='piper') generateNeural(chunks, synthPiper);
-  else if(S.engine==='azure') generateNeural(chunks, synthAzure);
-  else if(S.engine==='kokoro') generateNeural(chunks, synthKokoro);
-  else generateWebSpeech(chunks);
+  if(S.engine==='piper') generateNeural(S.chunks, synthPiper);
+  else if(S.engine==='azure') generateNeural(S.chunks, synthAzure);
+  else if(S.engine==='kokoro') generateNeural(S.chunks, synthKokoro);
+  else generateWebSpeech(S.chunks);
 });
 
 pauseBtn.addEventListener('click', ()=>{
@@ -472,6 +572,7 @@ editBtn.addEventListener('click', ()=>{
   if(S.running&&!confirm('Se está procesando. ¿Volver a editar y detener?')) return;
   stopAll(); reader.style.display='none'; textEl.style.display=''; editBtn.style.display='none'; setPct(0);
   try{ playerEl.pause(); }catch{} playerEl.style.display='none'; playerNote.style.display='none';
+  document.getElementById('subRow').style.display='none'; document.getElementById('chapters').style.display='none';
 });
 
 /* ---------------- descarga WAV ---------------- */
