@@ -163,7 +163,7 @@
 </div>
 <div id="reader"></div>
 
-<footer>Piper · Kokoro · Azure · Voz del navegador · v8 · capítulos+preview · <span id="devUnlock" style="cursor:pointer;opacity:.45">dev</span></footer>
+<footer>Piper · Kokoro · Azure · Voz del navegador · v9 · panel capítulos visible · <span id="devUnlock" style="cursor:pointer;opacity:.45">dev</span></footer>
 
 <script type="module">
 const logEl=document.getElementById('log');
@@ -446,12 +446,12 @@ function renderChapterIndex(){
   const el=document.getElementById('chapters');
   if(!S.chapters.length){
     if(textEl.value.trim()){
-      el.style.display='';
+      el.style.display='block';
       el.innerHTML='<div class="chap-idx-head">Capítulos</div><div class="chap-idx pend" style="cursor:default">No se detectaron capítulos. Marca cada título con <b>#</b> y un espacio al inicio de la línea. Ejemplo: <b># Capítulo 1</b></div>';
     } else { el.style.display='none'; el.innerHTML=''; }
     return;
   }
-  el.style.display='';
+  el.style.display='block';
   const anyKnown=S.acc.length>0;
   el.innerHTML=`<div class="chap-idx-head">Capítulos detectados${anyKnown?' (clic para ir y reproducir)':' (procesa el audio para poder saltar)'}</div>`+S.chapters.map((c,k)=>{
     const known=S.acc.length>c.chunkStart;
