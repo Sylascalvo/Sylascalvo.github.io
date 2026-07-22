@@ -163,7 +163,7 @@
 </div>
 <div id="reader"></div>
 
-<footer>Piper · Kokoro · Azure · Voz del navegador · v7 · karaoke+subs · <span id="devUnlock" style="cursor:pointer;opacity:.45">dev</span></footer>
+<footer>Piper · Kokoro · Azure · Voz del navegador · v8 · capítulos+preview · <span id="devUnlock" style="cursor:pointer;opacity:.45">dev</span></footer>
 
 <script type="module">
 const logEl=document.getElementById('log');
@@ -444,9 +444,16 @@ function chunkStartTime(i){ return (S.starts[i]||0)/(S.accRate||24000); }
 function fmtClock(t){ const m=Math.floor(t/60), s=Math.floor(t%60); return m+':'+String(s).padStart(2,'0'); }
 function renderChapterIndex(){
   const el=document.getElementById('chapters');
-  if(!S.chapters.length){ el.style.display='none'; el.innerHTML=''; return; }
+  if(!S.chapters.length){
+    if(textEl.value.trim()){
+      el.style.display='';
+      el.innerHTML='<div class="chap-idx-head">Capítulos</div><div class="chap-idx pend" style="cursor:default">No se detectaron capítulos. Marca cada título con <b>#</b> y un espacio al inicio de la línea. Ejemplo: <b># Capítulo 1</b></div>';
+    } else { el.style.display='none'; el.innerHTML=''; }
+    return;
+  }
   el.style.display='';
-  el.innerHTML='<div class="chap-idx-head">Capítulos (clic para saltar)</div>'+S.chapters.map((c,k)=>{
+  const anyKnown=S.acc.length>0;
+  el.innerHTML=`<div class="chap-idx-head">Capítulos detectados${anyKnown?' (clic para ir y reproducir)':' (procesa el audio para poder saltar)'}</div>`+S.chapters.map((c,k)=>{
     const known=S.acc.length>c.chunkStart;
     const t=known?chunkStartTime(c.chunkStart):null;
     return `<div class="chap-idx${known?'':' pend'}" data-c="${k}" data-t="${known?t:''}">${k+1}. ${escapeHtml(c.title)}<span class="ct">${known?fmtClock(t):'…'}</span></div>`;
@@ -455,8 +462,20 @@ function renderChapterIndex(){
 document.getElementById('chapters').addEventListener('click', e=>{
   const it=e.target.closest('.chap-idx'); if(!it||!it.dataset.t) return;
   const t=parseFloat(it.dataset.t);
-  if(playerEl.src && !isNaN(t)){ playerEl.style.display=''; try{ playerEl.currentTime=Math.min(t, (playerEl.duration||t)); }catch{} }
+  if(playerEl.src && !isNaN(t)){
+    playerEl.style.display='';
+    try{ playerEl.currentTime=Math.min(t, (playerEl.duration||t)); playerEl.play().catch(()=>{}); }catch{}
+  }
 });
+// vista previa: muestra los capítulos detectados apenas se pega/edita el texto (sin necesidad de procesar)
+let _prevTimer=null;
+function previewChapters(){
+  if(S.running) return;
+  const plan=buildPlan(textEl.value, parseInt(chunkSel.value,10));
+  S.chapters=plan.chapters; S.chunks=plan.chunks;
+  renderChapterIndex();
+}
+textEl.addEventListener('input', ()=>{ clearTimeout(_prevTimer); _prevTimer=setTimeout(previewChapters, 300); });
 function updateKaraoke(){
   if(!S.chapters.length) return;
   const t=playerEl.currentTime||0;
@@ -686,6 +705,7 @@ try { azKeyInput.value=localStorage.getItem('az-key')||''; azRegionInput.value=l
 azKeyInput.addEventListener('change',()=>{ try{localStorage.setItem('az-key',azKeyInput.value.trim());}catch{} });
 azRegionInput.addEventListener('change',()=>{ try{localStorage.setItem('az-region',azRegionInput.value.trim());}catch{} });
 applyEngineUI();
+try{ previewChapters(); }catch{}
 log('Interfaz lista. Motor por defecto: Piper (español). Pulsa "Preparar voz" o directamente "Generar".','k');
 </script>
 </body>
