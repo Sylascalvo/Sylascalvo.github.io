@@ -240,10 +240,10 @@ const brazier = new THREE.PointLight(0xff8a3c, 3, 44, 2); brazier.position.set(C
 const EYE = 1.7;
 const player = { pos: new THREE.Vector3(0, height(0, 8) + EYE, 8), yaw: -Math.PI / 2, pitch: 0, vy: 0, onGround: true, radius: 0.5, hp: 100, mp: 100, bobT: 0, shake: 0 };
 let alive = true, kills = 0;
-const wLight = new THREE.PointLight(0xfff2dc, 0.7, 4, 2); wLight.position.set(0.3, -0.2, -0.5); camera.add(wLight);
+const wLight = new THREE.PointLight(0xfff2dc, 0.25, 3, 2); wLight.position.set(0.3, -0.2, -0.5); camera.add(wLight);
 
 const sword = new THREE.Group();
-{ const steel = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: 0.9, roughness: 0.28 }); const gold = new THREE.MeshStandardMaterial({ color: 0xb98a3a, metalness: 0.8, roughness: 0.35 }); const grip = new THREE.MeshStandardMaterial({ color: 0x3a2418, roughness: 0.9 });
+{ const steel = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: 0.55, roughness: 0.45 }); const gold = new THREE.MeshStandardMaterial({ color: 0xb98a3a, metalness: 0.8, roughness: 0.35 }); const grip = new THREE.MeshStandardMaterial({ color: 0x3a2418, roughness: 0.9 });
   const blade = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.9, 0.02), steel); blade.position.y = 0.6;
   const tip = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.18, 4), steel); tip.position.y = 1.13; tip.rotation.x = Math.PI;
   const guard = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.06, 0.06), gold); guard.position.y = 0.12;
@@ -282,7 +282,7 @@ function selectSlot(i) {
 // OJO con la mayuscula: GitHub Pages distingue Soldier.glb de soldier.glb.
 // Si algun dia falla la red/CORS, el juego cae de vuelta al enemigo procedural.
 const ENEMY_MODEL_URL = './Soldier.glb';
-const MODEL_SCALE = 1.2;                 // ajusta si sale gigante o enano
+const MODEL_SCALE = 0.12;                // 10% del tamano anterior (subilo si quedan muy chicos)
 const MODEL_YAW = Math.PI;               // si camina de espaldas, cambia a 0
 const MODEL_FEET_OFFSET = -1.4;          // baja el modelo para que los pies toquen el suelo
 const gltfLoader = new GLTFLoader();
