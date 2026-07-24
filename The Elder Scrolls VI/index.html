@@ -278,10 +278,13 @@ function selectSlot(i) {
 // ===========================================================================
 // GLTF model pipeline (procedural fallback if no URL / load fails)
 // ===========================================================================
-// Deploy on Pages: drop a rigged .glb in a /models folder and set ENEMY_MODEL_URL.
-// A ready public example (needs network + CORS):
-//   'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/models/gltf/Soldier.glb'
-const ENEMY_MODEL_URL = null;
+// El .glb vive en la misma carpeta que index.html -> ruta relativa './Soldier.glb'.
+// OJO con la mayuscula: GitHub Pages distingue Soldier.glb de soldier.glb.
+// Si algun dia falla la red/CORS, el juego cae de vuelta al enemigo procedural.
+const ENEMY_MODEL_URL = './Soldier.glb';
+const MODEL_SCALE = 1.2;                 // ajusta si sale gigante o enano
+const MODEL_YAW = Math.PI;               // si camina de espaldas, cambia a 0
+const MODEL_FEET_OFFSET = -1.4;          // baja el modelo para que los pies toquen el suelo
 const gltfLoader = new GLTFLoader();
 const mixers = [];
 function attachModel(en) {
@@ -289,15 +292,23 @@ function attachModel(en) {
   gltfLoader.load(ENEMY_MODEL_URL, (gltf) => {
     const model = gltf.scene;
     model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
-    model.scale.setScalar(1.4);
-    en.group.clear();                    // remove procedural body
+    model.scale.setScalar(MODEL_SCALE);
+    model.rotation.y = MODEL_YAW;
+    model.position.y = MODEL_FEET_OFFSET;
+    en.group.clear();                    // saca el cuerpo procedural
     en.group.add(model);
+    en.body = en.head = en.armL = en.armR = null;   // ya no existen esas partes
     if (gltf.animations.length) {
       const mx = new THREE.AnimationMixer(model);
-      const clip = THREE.AnimationClip.findByName(gltf.animations, 'Run') || gltf.animations[0];
+      const clip = THREE.AnimationClip.findByName(gltf.animations, 'Run')
+                || THREE.AnimationClip.findByName(gltf.animations, 'Walk')
+                || gltf.animations[0];
       mx.clipAction(clip).play(); mixers.push(mx); en.mixer = mx;
+      console.log('modelo cargado, animaciones:', gltf.animations.map(a => a.name));
+    } else {
+      console.log('modelo cargado (sin animaciones)');
     }
-  }, undefined, (err) => console.warn('glb no cargado, uso procedural:', err));
+  }, undefined, (err) => console.warn('glb NO cargado, uso procedural:', err));
 }
 
 // ===========================================================================
