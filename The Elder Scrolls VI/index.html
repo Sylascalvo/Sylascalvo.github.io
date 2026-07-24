@@ -282,9 +282,8 @@ function selectSlot(i) {
 // OJO con la mayuscula: GitHub Pages distingue knightwalk.glb de KnightWalk.glb.
 // Si algun dia falla la red/CORS, el juego cae de vuelta al enemigo procedural.
 const ENEMY_MODEL_URL = './knightwalk.glb';
-const MODEL_SCALE = 0.5;                 // tamano humano aprox (subilo/bajalo a gusto)
+const MODEL_TARGET_HEIGHT = 1.9;         // altura del enemigo en "metros" (tu camara esta a 1.7)
 const MODEL_YAW = 0;                     // si camina de espaldas, cambia a Math.PI
-const MODEL_FEET_OFFSET = -1.4;          // baja el modelo para que los pies toquen el suelo
 const TURN_SPEED = 6;                    // rapidez de la rotacion interpolada (mas alto = gira mas rapido)
 const gltfLoader = new GLTFLoader();
 const mixers = [];
@@ -304,9 +303,18 @@ function attachModel(en) {
         }
       }
     });
-    model.scale.setScalar(MODEL_SCALE);
+    // auto-escala: mide la altura nativa del modelo y lo ajusta a MODEL_TARGET_HEIGHT,
+    // sin importar con que tamano venga exportado el glb.
     model.rotation.y = MODEL_YAW;
-    model.position.y = MODEL_FEET_OFFSET;
+    model.updateMatrixWorld(true);
+    let box = new THREE.Box3().setFromObject(model);
+    const nativeH = Math.max(box.getSize(new THREE.Vector3()).y, 0.001);
+    model.scale.setScalar(MODEL_TARGET_HEIGHT / nativeH);
+    // recalcula la caja ya escalado y baja el modelo para que los pies toquen el suelo.
+    // el grupo del enemigo vive en height+1.4, asi que los pies deben quedar en -1.4 local.
+    model.updateMatrixWorld(true);
+    box = new THREE.Box3().setFromObject(model);
+    model.position.y = -1.4 - box.min.y;
     en.group.clear();                    // saca el cuerpo procedural
     en.group.add(model);
     en.body = en.head = en.armL = en.armR = null;   // ya no existen esas partes
