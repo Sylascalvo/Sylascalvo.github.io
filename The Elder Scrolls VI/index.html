@@ -278,32 +278,46 @@ function selectSlot(i) {
 // ===========================================================================
 // GLTF model pipeline (procedural fallback if no URL / load fails)
 // ===========================================================================
-// El .glb vive en la misma carpeta que index.html -> ruta relativa './Soldier.glb'.
-// OJO con la mayuscula: GitHub Pages distingue Soldier.glb de soldier.glb.
+// El .glb vive en la misma carpeta que index.html -> ruta relativa './knightwalk.glb'.
+// OJO con la mayuscula: GitHub Pages distingue knightwalk.glb de KnightWalk.glb.
 // Si algun dia falla la red/CORS, el juego cae de vuelta al enemigo procedural.
-const ENEMY_MODEL_URL = './Soldier.glb';
+const ENEMY_MODEL_URL = './knightwalk.glb';
 const MODEL_SCALE = 0.12;                // 10% del tamano anterior (subilo si quedan muy chicos)
-const MODEL_YAW = Math.PI;               // si camina de espaldas, cambia a 0
+const MODEL_YAW = 0;                     // si camina de espaldas, cambia a Math.PI
 const MODEL_FEET_OFFSET = -1.4;          // baja el modelo para que los pies toquen el suelo
+const TURN_SPEED = 6;                    // rapidez de la rotacion interpolada (mas alto = gira mas rapido)
 const gltfLoader = new GLTFLoader();
 const mixers = [];
 function attachModel(en) {
   if (!ENEMY_MODEL_URL) return;
   gltfLoader.load(ENEMY_MODEL_URL, (gltf) => {
     const model = gltf.scene;
-    model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+    model.traverse(o => {
+      if (o.isMesh) {
+        o.castShadow = true; o.frustumCulled = false;
+        // fix de texturas: los mapas de color deben estar en espacio sRGB,
+        // si no el modelo se ve gris/lavado. Esto no daña nada si ya venia bien.
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        for (const m of mats) {
+          if (m && m.map) { m.map.colorSpace = THREE.SRGBColorSpace; m.needsUpdate = true; }
+          if (m && m.emissiveMap) m.emissiveMap.colorSpace = THREE.SRGBColorSpace;
+        }
+      }
+    });
     model.scale.setScalar(MODEL_SCALE);
     model.rotation.y = MODEL_YAW;
     model.position.y = MODEL_FEET_OFFSET;
     en.group.clear();                    // saca el cuerpo procedural
     en.group.add(model);
     en.body = en.head = en.armL = en.armR = null;   // ya no existen esas partes
+    en.targetYaw = en.group.rotation.y;             // para la rotacion interpolada
     if (gltf.animations.length) {
       const mx = new THREE.AnimationMixer(model);
       const clip = THREE.AnimationClip.findByName(gltf.animations, 'Run')
                 || THREE.AnimationClip.findByName(gltf.animations, 'Walk')
                 || gltf.animations[0];
-      mx.clipAction(clip).play(); mixers.push(mx); en.mixer = mx;
+      en.action = mx.clipAction(clip); en.action.play();
+      mixers.push(mx); en.mixer = mx;
       console.log('modelo cargado, animaciones:', gltf.animations.map(a => a.name));
     } else {
       console.log('modelo cargado (sin animaciones)');
@@ -443,10 +457,20 @@ function update(dt) {
   }
   for (const en of enemies) {
     if (en.dead) continue; en.bob += dt * 2.2;
-    const to = new THREE.Vector3(player.pos.x - en.group.position.x, 0, player.pos.z - en.group.position.z), dist = to.length();
-    if (dist > 1.4) { to.normalize(); en.group.position.addScaledVector(to, 3.4 * dt); }
+    const dx = player.pos.x - en.group.position.x, dz = player.pos.z - en.group.position.z;
+    const dist = Math.hypot(dx, dz);
+    const moving = dist > 1.6;
+    if (moving) { const inv = 1 / dist; en.group.position.x += dx * inv * 3.4 * dt; en.group.position.z += dz * inv * 3.4 * dt; }
     en.group.position.y = height(en.group.position.x, en.group.position.z) + 1.4 + Math.sin(en.bob) * 0.22;
-    en.group.lookAt(player.pos.x, en.group.position.y, player.pos.z);
+    // rotacion interpolada hacia el jugador (camino angular mas corto)
+    const targetYaw = Math.atan2(dx, dz);
+    if (en.targetYaw === undefined) { en.group.rotation.y = targetYaw; en.targetYaw = targetYaw; }
+    let dYaw = targetYaw - en.group.rotation.y;
+    dYaw = Math.atan2(Math.sin(dYaw), Math.cos(dYaw));
+    en.group.rotation.y += dYaw * Math.min(1, TURN_SPEED * dt);
+    // pausa la animacion de caminar cuando se detiene
+    if (en.action) en.action.paused = !moving;
+    // brazos procedurales (solo si aun no cargo el modelo)
     if (en.armL) { en.armL.rotation.x = Math.sin(en.bob * 1.5) * 0.6; en.armR.rotation.x = -Math.sin(en.bob * 1.5) * 0.6; }
     en.hitCd -= dt; if (alive && dist < 2.1 && en.hitCd <= 0) { hurt(9); en.hitCd = 1; }
   }
