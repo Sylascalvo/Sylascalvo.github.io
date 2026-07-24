@@ -282,7 +282,7 @@ function selectSlot(i) {
 // OJO con la mayuscula: GitHub Pages distingue knightwalk.glb de KnightWalk.glb.
 // Si algun dia falla la red/CORS, el juego cae de vuelta al enemigo procedural.
 const ENEMY_MODEL_URL = './knightwalk.glb';
-const MODEL_TARGET_HEIGHT = 1.9;         // altura del enemigo en "metros" (tu camara esta a 1.7)
+const MODEL_TARGET_HEIGHT = 2.2;         // altura del enemigo en "metros" (tu camara esta a 1.7)
 const MODEL_YAW = 0;                     // si camina de espaldas, cambia a Math.PI
 const TURN_SPEED = 6;                    // rapidez de la rotacion interpolada (mas alto = gira mas rapido)
 const gltfLoader = new GLTFLoader();
@@ -317,7 +317,7 @@ function attachModel(en) {
     model.position.y = -1.4 - box.min.y;
     en.group.clear();                    // saca el cuerpo procedural
     en.group.add(model);
-    en.body = en.head = en.armL = en.armR = null;   // ya no existen esas partes
+    en.body = en.head = en.armL = en.armR = en.core = null;   // ya no existen esas partes
     en.targetYaw = en.group.rotation.y;             // para la rotacion interpolada
     if (gltf.animations.length) {
       const mx = new THREE.AnimationMixer(model);
@@ -362,8 +362,16 @@ function impact(pos, color) {
   for (let i = 0; i < 12; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.13, 0.13), new THREE.MeshBasicMaterial({ color: hdr(color, 1.8) })); sp.position.copy(pos); scene.add(sp); const v = new THREE.Vector3(Math.random() - 0.5, Math.random() * 0.9 + 0.25, Math.random() - 0.5).normalize().multiplyScalar(4 + Math.random() * 5); effects.push({ mesh: sp, vel: v, t: 0, dur: 0.65, gravity: true }); }
   Audio.boom(color);
 }
+// ---- enemy archetypes: cada enemigo "piensa" distinto ----
+const ENEMY_SPELLS = [
+  { color: 0x9b3cff, speed: 26, dmg: 12 },  // arcano
+  { color: 0xff6a1f, speed: 30, dmg: 15 },  // fuego
+  { color: 0x54c6ff, speed: 22, dmg: 10 },  // escarcha
+];
+function rand(a, b) { return a + Math.random() * (b - a); }
+
 function spawnEnemy() {
-  const a = Math.random() * 6.28, r = 55 + Math.random() * 45, x = Math.cos(a) * r, z = Math.sin(a) * r, g = new THREE.Group();
+  const a = Math.random() * 6.28, r = 45 + Math.random() * 55, x = Math.cos(a) * r, z = Math.sin(a) * r, g = new THREE.Group();
   const dark = new THREE.MeshStandardMaterial({ color: 0x241830, emissive: 0x150a20, roughness: 1, flatShading: true, transparent: true, opacity: 0.94 });
   const body = new THREE.Mesh(new THREE.IcosahedronGeometry(0.85, 0), dark); body.scale.set(0.9, 1.5, 0.9); body.position.y = 0.2; body.castShadow = true;
   const head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.42, 0), dark); head.position.y = 1.35; head.castShadow = true;
@@ -371,11 +379,45 @@ function spawnEnemy() {
   const armR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.9, 0.18), dark); armR.position.set(0.65, 0.4, 0);
   const core = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 12), new THREE.MeshBasicMaterial({ color: hdr(0x9b3cff, 2) })); core.position.y = 0.55; core.add(new THREE.PointLight(0x9b3cff, 1.4, 9, 2));
   g.add(body, head, armL, armR, core); g.position.set(x, height(x, z) + 1.4, z); scene.add(g);
-  const en = { group: g, body, head, core, armL, armR, hp: 60, hitCd: 0, dead: false, bob: Math.random() * 6.28, mixer: null };
+
+  // personalidad: cada uno con rangos, ritmo y estilo propios
+  const kiter = Math.random() < 0.5;                 // mitad prefieren mantener distancia
+  const en = {
+    group: g, body, head, core, armL, armR, hp: 60, dead: false, bob: Math.random() * 6.28, mixer: null, action: null,
+    state: 'patrol', stateT: 0, alertT: 0, castCd: rand(0.5, 2.5), hitCd: 0, moving: false,
+    // sentidos y combate
+    visionRange: rand(45, 75),                        // cono de vision largo
+    visionCos: Math.cos(rand(0.9, 1.35)),             // semi-angulo ~50-77 grados (cono ancho)
+    earRange: rand(10, 16),                           // te "oye" de cerca aunque no te vea
+    speed: rand(2.6, 4.6),
+    spell: ENEMY_SPELLS[(Math.random() * ENEMY_SPELLS.length) | 0],
+    castRange: rand(24, 40),
+    castRate: rand(1.3, 2.8),                         // segundos entre hechizos
+    keepDist: kiter ? rand(9, 16) : rand(2.5, 5),     // distancia a la que se planta
+    // patrulla alrededor del punto de aparicion
+    home: new THREE.Vector3(x, 0, z),
+    patrol: new THREE.Vector3(x, 0, z),
+    patrolRadius: rand(12, 28),
+    waitT: 0,
+    targetYaw: undefined,
+  };
   enemies.push(en); attachModel(en);
 }
 for (let i = 0; i < 6; i++) spawnEnemy();
 let respawnT = 0;
+
+// ---- proyectiles de los enemigos hacia el jugador ----
+const enemyShots = [];
+function enemyCast(en) {
+  const s = en.spell;
+  const from = en.group.position.clone(); from.y += 1.4;
+  const target = player.pos.clone();
+  const dir = target.sub(from).normalize();
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.35, 14, 14), new THREE.MeshBasicMaterial({ color: hdr(s.color, 2.2) }));
+  mesh.position.copy(from); mesh.add(new THREE.PointLight(s.color, 2.5, 12, 2)); scene.add(mesh);
+  enemyShots.push({ mesh, vel: dir.multiplyScalar(s.speed), life: 4, dmg: s.dmg, color: s.color });
+  Audio.spell(s.color === 0xff6a1f ? 'fire' : 'frost');
+}
 function damageEnemy(e, dmg) { e.hp -= dmg; if (e.body) { e.body.material.emissive.setHex(0xffffff); e.head.material.emissive.setHex(0xffffff); setTimeout(() => { if (!e.dead && e.body) { e.body.material.emissive.setHex(0x150a20); e.head.material.emissive.setHex(0x150a20); } }, 80); } Audio.hit(); if (e.hp <= 0) killEnemy(e); }
 function killEnemy(e) { e.dead = true; kills++; impact(e.group.position, 0x9b3cff); scene.remove(e.group); if (e.mixer) { const mi = mixers.indexOf(e.mixer); if (mi >= 0) mixers.splice(mi, 1); } const i = enemies.indexOf(e); if (i >= 0) enemies.splice(i, 1); }
 
@@ -463,24 +505,60 @@ function update(dt) {
     else { f.mesh.scale.setScalar(0.4 + k * 5); f.mesh.material.opacity = 0.9 * (1 - k); if (f.light) f.light.intensity = 5 * (1 - k); }
     if (f.t >= f.dur) { scene.remove(f.mesh); if (f.light) scene.remove(f.light); effects.splice(i, 1); }
   }
+  // proyectiles de enemigos hacia el jugador
+  for (let i = enemyShots.length - 1; i >= 0; i--) {
+    const p = enemyShots[i]; p.mesh.position.addScaledVector(p.vel, dt); p.life -= dt; let hit = false;
+    if (alive && p.mesh.position.distanceTo(player.pos) < 1.3) { hurt(p.dmg); hit = true; }
+    if (p.mesh.position.y <= height(p.mesh.position.x, p.mesh.position.z)) hit = true;
+    if (hit || p.life <= 0) { impact(p.mesh.position, p.color); scene.remove(p.mesh); enemyShots.splice(i, 1); }
+  }
+  // IA: patrulla -> persigue -> ataca, con cono de vision y personalidad por enemigo
   for (const en of enemies) {
-    if (en.dead) continue; en.bob += dt * 2.2;
-    const dx = player.pos.x - en.group.position.x, dz = player.pos.z - en.group.position.z;
-    const dist = Math.hypot(dx, dz);
-    const moving = dist > 1.6;
-    if (moving) { const inv = 1 / dist; en.group.position.x += dx * inv * 3.4 * dt; en.group.position.z += dz * inv * 3.4 * dt; }
-    en.group.position.y = height(en.group.position.x, en.group.position.z) + 1.4 + Math.sin(en.bob) * 0.22;
-    // rotacion interpolada hacia el jugador (camino angular mas corto)
-    const targetYaw = Math.atan2(dx, dz);
-    if (en.targetYaw === undefined) { en.group.rotation.y = targetYaw; en.targetYaw = targetYaw; }
-    let dYaw = targetYaw - en.group.rotation.y;
-    dYaw = Math.atan2(Math.sin(dYaw), Math.cos(dYaw));
+    if (en.dead) continue;
+    en.bob += dt * 2.2; en.stateT += dt; en.castCd -= dt; en.alertT -= dt; en.hitCd -= dt;
+    const ex = en.group.position.x, ez = en.group.position.z;
+    const dx = player.pos.x - ex, dz = player.pos.z - ez;
+    const dist = Math.hypot(dx, dz) || 0.001;
+    // sentidos: cono de vision (rango + angulo) y oido a corta distancia
+    const yaw = en.group.rotation.y;
+    const fdotp = (Math.sin(yaw) * dx + Math.cos(yaw) * dz) / dist;   // 1 = jugador justo al frente
+    if (alive && ((dist < en.visionRange && fdotp > en.visionCos) || dist < en.earRange)) en.alertT = 4;
+    const detected = en.alertT > 0;
+    let mX = 0, mZ = 0, faceYaw = yaw, wantMove = false;
+
+    if (en.state === 'patrol') {
+      if (detected) en.state = 'chase';
+      else {
+        const pdx = en.patrol.x - ex, pdz = en.patrol.z - ez, pd = Math.hypot(pdx, pdz);
+        if (pd < 2) {
+          en.waitT -= dt;
+          if (en.waitT <= 0) { const aa = Math.random() * 6.28, rr = Math.random() * en.patrolRadius; en.patrol.set(en.home.x + Math.cos(aa) * rr, 0, en.home.z + Math.sin(aa) * rr); en.waitT = rand(0.5, 2.5); }
+        } else { mX = pdx / pd; mZ = pdz / pd; wantMove = true; faceYaw = Math.atan2(pdx, pdz); }
+      }
+    } else if (en.state === 'chase') {
+      faceYaw = Math.atan2(dx, dz);
+      if (!detected) { en.state = 'patrol'; en.patrol.copy(en.home); }
+      else if (dist <= en.castRange) en.state = 'attack';
+      else { mX = dx / dist; mZ = dz / dist; wantMove = true; }
+    } else {                                   // attack
+      faceYaw = Math.atan2(dx, dz);
+      if (!detected || dist > en.castRange * 1.25) en.state = 'chase';
+      else {
+        if (dist < en.keepDist - 1) { mX = -dx / dist; mZ = -dz / dist; wantMove = true; }      // kitea: retrocede
+        else if (dist > en.keepDist + 2) { mX = dx / dist; mZ = dz / dist; wantMove = true; }    // se acerca
+        if (en.castCd <= 0) { enemyCast(en); en.castCd = en.castRate; }
+      }
+    }
+
+    if (wantMove) { en.group.position.x += mX * en.speed * dt; en.group.position.z += mZ * en.speed * dt; }
+    en.moving = wantMove;
+    en.group.position.y = height(en.group.position.x, en.group.position.z) + 1.4;   // planta los pies, sin flote vertical
+    if (en.targetYaw === undefined) { en.group.rotation.y = faceYaw; en.targetYaw = faceYaw; }
+    let dYaw = faceYaw - en.group.rotation.y; dYaw = Math.atan2(Math.sin(dYaw), Math.cos(dYaw));
     en.group.rotation.y += dYaw * Math.min(1, TURN_SPEED * dt);
-    // pausa la animacion de caminar cuando se detiene
-    if (en.action) en.action.paused = !moving;
-    // brazos procedurales (solo si aun no cargo el modelo)
-    if (en.armL) { en.armL.rotation.x = Math.sin(en.bob * 1.5) * 0.6; en.armR.rotation.x = -Math.sin(en.bob * 1.5) * 0.6; }
-    en.hitCd -= dt; if (alive && dist < 2.1 && en.hitCd <= 0) { hurt(9); en.hitCd = 1; }
+    if (en.action) en.action.paused = !en.moving;          // camina solo si se mueve
+    if (en.armL) { const s = en.moving ? Math.sin(en.bob * 1.5) * 0.6 : 0; en.armL.rotation.x = s; en.armR.rotation.x = -s; }
+    if (alive && dist < 2.2 && en.hitCd <= 0) { hurt(8); en.hitCd = 1; }   // dano por contacto
   }
   respawnT -= dt; if (enemies.length < 6 && respawnT <= 0) { spawnEnemy(); respawnT = 4; }
   for (const mx of mixers) mx.update(dt);
