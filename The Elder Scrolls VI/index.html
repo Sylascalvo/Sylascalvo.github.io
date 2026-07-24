@@ -232,7 +232,7 @@ const keep = new THREE.Mesh(new THREE.BoxGeometry(13, 18, 13), stoneMat); keep.p
 boxes.push({ minx: CX - 2.5, maxx: CX + 10.5, minz: CZ - 6.5, maxz: CZ + 6.5 });
 const keepRoof = new THREE.Mesh(new THREE.ConeGeometry(10, 9, 4), roofMat); keepRoof.position.set(CX + 4, PLATEAU + 22.5, CZ); keepRoof.rotation.y = Math.PI / 4; keepRoof.castShadow = true; scene.add(keepRoof);
 tower(CX - HW, CZ - HW); tower(CX + HW, CZ - HW); tower(CX - HW, CZ + HW); tower(CX + HW, CZ + HW);
-scene.add(Object.assign(new THREE.PointLight(0xff8a3c, 3, 44, 2), { position: new THREE.Vector3(CX, PLATEAU + 6, CZ) }));
+const brazier = new THREE.PointLight(0xff8a3c, 3, 44, 2); brazier.position.set(CX, PLATEAU + 6, CZ); scene.add(brazier);
 
 // ===========================================================================
 // Player + weapons
