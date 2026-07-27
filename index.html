@@ -299,13 +299,21 @@
   }
   .carousel-bottom {
     position: absolute;
-    bottom: 60px;
-    right: 60px;
+    bottom: 46px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    text-align: right;
-    gap: 22px;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    width: min(560px, 90%);
+  }
+  .carousel-bottom-row {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    justify-content: center;
   }
   .slide-name {
     font-family: 'Oswald', sans-serif;
@@ -313,6 +321,7 @@
     font-size: 1.5rem; letter-spacing: 4px;
     color: var(--text);
     min-height: 1.6em;
+    text-align: center;
   }
   .carousel-controls { display: flex; align-items: center; gap: 20px; }
   .c-arrow {
@@ -326,7 +335,7 @@
   }
   .c-arrow:hover { border-color: var(--accent); background: var(--accent-soft); transform: scale(1.08); }
   .c-arrow svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .carousel-dots { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; max-width: 320px; }
+  .carousel-dots { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; max-width: 320px; }
   .c-dot {
     width: 9px; height: 9px; border-radius: 50%;
     border: 1.5px solid rgba(255,255,255,0.35);
@@ -336,12 +345,30 @@
   .c-dot.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); transform: scale(1.25); }
 
   /* ===== BIO / SOBRE MI ===== */
-  #bio .module-content { max-width: 900px; margin: 0 auto; }
-  .bio-p { font-size: 1.15rem; line-height: 1.95; color: var(--text-dim); margin-bottom: 24px; max-width: 720px; }
+  #bio .module-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: flex-start;
+    padding-left: 8vw;
+  }
+  #bio .bio-block {
+    max-width: 640px;
+    margin-left: clamp(0px, 6vw, 120px);
+  }
+  #bio .section-title { position: relative; }
+  #bio .section-title::before {
+    content: '';
+    position: absolute;
+    left: -30px; top: 8px; bottom: 8px;
+    width: 3px;
+    background: var(--accent);
+    box-shadow: 0 0 14px var(--accent-glow);
+  }
+  .bio-p { font-size: 1.15rem; line-height: 1.95; color: var(--text-dim); margin-bottom: 24px; max-width: 620px; }
   .bio-p .hl { color: var(--text); }
   .skills-wrap { margin-top: 40px; }
   .skills-label { font-family:'Oswald',sans-serif; font-size:0.8rem; letter-spacing:5px; color:var(--accent); text-transform:uppercase; margin-bottom:20px; }
-  .skills-grid { display: flex; flex-wrap: wrap; gap: 10px; max-width: 700px; }
+  .skills-grid { display: flex; flex-wrap: wrap; gap: 10px; max-width: 600px; }
   .skill {
     padding: 9px 20px;
     border: 1px solid rgba(255,255,255,0.12);
@@ -410,6 +437,10 @@
     .carousel-bottom { bottom: 40px; right: 24px; left: 24px; align-items: center; text-align: center; }
     .carousel-dots { justify-content: center; }
     .slide-name { font-size: 1.15rem; letter-spacing: 2px; }
+    .carousel-bottom-row { gap: 14px; }
+    #bio .module-content { padding-left: 24px; }
+    #bio .bio-block { margin-left: 0; }
+    #bio .section-title::before { left: -16px; }
   }
 </style>
 </head>
@@ -473,9 +504,9 @@
       </div>
       <div class="carousel-bottom">
         <p class="slide-name reveal" id="gameName">Senjiro no Tabi — Trailer</p>
-        <a id="gamePlay" href="#" target="_blank" class="btn solid reveal" data-cursor="play"><span class="play-tri"></span> Reproducir video</a>
-        <div class="carousel-controls reveal">
+        <div class="carousel-bottom-row reveal">
           <button class="c-arrow" id="gamePrev" data-cursor="prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <a id="gamePlay" href="#" target="_blank" class="btn solid" data-cursor="play"><span class="play-tri"></span> Reproducir video</a>
           <button class="c-arrow" id="gameNext" data-cursor="next"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
         </div>
         <div class="carousel-dots reveal" id="gameDots"></div>
@@ -495,9 +526,9 @@
       </div>
       <div class="carousel-bottom">
         <p class="slide-name reveal" id="animName">Caminata</p>
-        <a id="animPlay" href="#" target="_blank" class="btn solid reveal" data-cursor="play"><span class="play-tri"></span> Reproducir video</a>
-        <div class="carousel-controls reveal">
+        <div class="carousel-bottom-row reveal">
           <button class="c-arrow" id="animPrev" data-cursor="prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <a id="animPlay" href="#" target="_blank" class="btn solid" data-cursor="play"><span class="play-tri"></span> Reproducir video</a>
           <button class="c-arrow" id="animNext" data-cursor="next"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
         </div>
         <div class="carousel-dots reveal" id="animDots"></div>
@@ -508,16 +539,18 @@
   <!-- ===== BIO ===== -->
   <section class="module" id="bio">
     <div class="module-content">
-      <p class="section-index reveal">03 — Sobre mí</p>
-      <h2 class="section-title reveal">Creador digital<br>&amp; programador</h2>
-      <div style="margin-top:30px;">
-        <p class="bio-p reveal">Soy <span class="hl">Ilian Levio</span>, Ingeniero en Realidad Virtual y Diseño de Juegos Digitales, con experiencia en <span class="hl">Unreal Engine</span> y Unity.</p>
-        <p class="bio-p reveal">Mi trabajo abarca desde sistemas de combate y mecánicas de movimiento en <span class="hl">C++ y Blueprints</span>, hasta pipelines de modelado, rigging y animación en 3D. Vengo de una formación técnica en telecomunicaciones, lo que me dio una base sólida en software.</p>
-        <p class="bio-p reveal">Además de desarrollar, enseño. He dado formación en Unreal Engine y me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.</p>
-      </div>
-      <div class="skills-wrap reveal">
-        <p class="skills-label">Stack &amp; Herramientas</p>
-        <div class="skills-grid" id="skillsGrid"></div>
+      <div class="bio-block">
+        <p class="section-index reveal">03 — Sobre mí</p>
+        <h2 class="section-title reveal">Creador digital<br>&amp; programador</h2>
+        <div style="margin-top:30px;">
+          <p class="bio-p reveal">Soy <span class="hl">Ilian Levio</span>, Ingeniero en Realidad Virtual y Diseño de Juegos Digitales, con experiencia en <span class="hl">Unreal Engine</span> y Unity.</p>
+          <p class="bio-p reveal">Mi trabajo abarca desde sistemas de combate y mecánicas de movimiento en <span class="hl">C++ y Blueprints</span>, hasta pipelines de modelado, rigging y animación en 3D. Vengo de una formación técnica en telecomunicaciones, lo que me dio una base sólida en software.</p>
+          <p class="bio-p reveal">Además de desarrollar, enseño. He dado formación en Unreal Engine y me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.</p>
+        </div>
+        <div class="skills-wrap reveal">
+          <p class="skills-label">Stack &amp; Herramientas</p>
+          <div class="skills-grid" id="skillsGrid"></div>
+        </div>
       </div>
     </div>
   </section>
