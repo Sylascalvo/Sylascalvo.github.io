@@ -285,28 +285,38 @@
     margin-bottom: 10px;
   }
 
-  /* ===== PROJECTS CAROUSEL ===== */
+  /* ===== PROJECTS CAROUSEL — corner layout ===== */
   .carousel-stage {
     position: relative; z-index: 2;
     height: 100vh;
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-    text-align: center;
-    padding: var(--nav-h) 24px 0;
+    padding: var(--nav-h) 60px 48px;
   }
-  .carousel-meta { margin-bottom: 8px; }
+  .carousel-top {
+    position: absolute;
+    top: calc(var(--nav-h) + 50px);
+    left: 60px;
+    max-width: 60%;
+  }
+  .carousel-bottom {
+    position: absolute;
+    bottom: 60px;
+    right: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    gap: 22px;
+  }
   .slide-name {
     font-family: 'Oswald', sans-serif;
     font-weight: 300;
     font-size: 1.5rem; letter-spacing: 4px;
-    color: var(--text-dim);
-    margin: 18px 0 34px;
+    color: var(--text);
     min-height: 1.6em;
-    transition: opacity 0.4s;
   }
-  .carousel-controls { display: flex; align-items: center; gap: 28px; }
+  .carousel-controls { display: flex; align-items: center; gap: 20px; }
   .c-arrow {
-    width: 58px; height: 58px; border-radius: 50%;
+    width: 54px; height: 54px; border-radius: 50%;
     border: 1px solid rgba(255,255,255,0.25);
     background: rgba(6,6,8,0.4);
     backdrop-filter: blur(8px);
@@ -316,13 +326,7 @@
   }
   .c-arrow:hover { border-color: var(--accent); background: var(--accent-soft); transform: scale(1.08); }
   .c-arrow svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .c-counter {
-    font-family: 'Oswald', sans-serif;
-    letter-spacing: 3px; font-size: 1rem; color: var(--text-dim);
-    min-width: 70px;
-  }
-  .c-counter b { color: var(--text); font-weight: 500; }
-  .carousel-dots { display: flex; gap: 10px; margin-top: 34px; justify-content: center; flex-wrap: wrap; max-width: 340px; }
+  .carousel-dots { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; max-width: 320px; }
   .c-dot {
     width: 9px; height: 9px; border-radius: 50%;
     border: 1.5px solid rgba(255,255,255,0.35);
@@ -401,6 +405,11 @@
     .video-bg iframe { width: 300vw; height: 100vh; }
     .hero-actions { flex-direction: column; align-items: center; }
     .bio-p { font-size: 1.05rem; }
+    .carousel-stage { padding: var(--nav-h) 24px 40px; }
+    .carousel-top { top: calc(var(--nav-h) + 30px); left: 24px; max-width: 85%; }
+    .carousel-bottom { bottom: 40px; right: 24px; left: 24px; align-items: center; text-align: center; }
+    .carousel-dots { justify-content: center; }
+    .slide-name { font-size: 1.15rem; letter-spacing: 2px; }
   }
 </style>
 </head>
@@ -458,18 +467,19 @@
     <div class="overlay"></div>
     <div class="vignette"></div>
     <div class="carousel-stage">
-      <div class="carousel-meta">
+      <div class="carousel-top">
         <p class="section-index reveal">01 — Narrativa &amp; Gameplay</p>
         <h2 class="section-title reveal">Videojuegos</h2>
       </div>
-      <p class="slide-name" id="gameName">Senjiro no Tabi — Trailer</p>
-      <div class="carousel-controls reveal">
-        <button class="c-arrow" id="gamePrev" data-cursor="prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <span class="c-counter"><b id="gameCur">01</b> / <span id="gameTot">08</span></span>
-        <button class="c-arrow" id="gameNext" data-cursor="next"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+      <div class="carousel-bottom">
+        <p class="slide-name reveal" id="gameName">Senjiro no Tabi — Trailer</p>
+        <a id="gamePlay" href="#" target="_blank" class="btn solid reveal" data-cursor="play"><span class="play-tri"></span> Reproducir video</a>
+        <div class="carousel-controls reveal">
+          <button class="c-arrow" id="gamePrev" data-cursor="prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="c-arrow" id="gameNext" data-cursor="next"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+        </div>
+        <div class="carousel-dots reveal" id="gameDots"></div>
       </div>
-      <a id="gamePlay" href="#" target="_blank" class="btn solid reveal" data-cursor="play" style="margin-top:34px;"><span class="play-tri"></span> Reproducir video</a>
-      <div class="carousel-dots" id="gameDots"></div>
     </div>
   </section>
 
@@ -479,18 +489,19 @@
     <div class="overlay"></div>
     <div class="vignette"></div>
     <div class="carousel-stage">
-      <div class="carousel-meta">
+      <div class="carousel-top">
         <p class="section-index reveal">02 — Comercial &amp; 3D</p>
         <h2 class="section-title reveal">Modelado / Animación</h2>
       </div>
-      <p class="slide-name" id="animName">Caminata</p>
-      <div class="carousel-controls reveal">
-        <button class="c-arrow" id="animPrev" data-cursor="prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <span class="c-counter"><b id="animCur">01</b> / <span id="animTot">06</span></span>
-        <button class="c-arrow" id="animNext" data-cursor="next"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+      <div class="carousel-bottom">
+        <p class="slide-name reveal" id="animName">Caminata</p>
+        <a id="animPlay" href="#" target="_blank" class="btn solid reveal" data-cursor="play"><span class="play-tri"></span> Reproducir video</a>
+        <div class="carousel-controls reveal">
+          <button class="c-arrow" id="animPrev" data-cursor="prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="c-arrow" id="animNext" data-cursor="next"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+        </div>
+        <div class="carousel-dots reveal" id="animDots"></div>
       </div>
-      <a id="animPlay" href="#" target="_blank" class="btn solid reveal" data-cursor="play" style="margin-top:34px;"><span class="play-tri"></span> Reproducir video</a>
-      <div class="carousel-dots" id="animDots"></div>
     </div>
   </section>
 
@@ -633,12 +644,11 @@ window.addEventListener('load', () => {
    CAROUSEL
 ============================================================ */
 function buildCarousel(cfg) {
-  const { slides, bgId, nameId, playId, dotsId, prevId, nextId, curId } = cfg;
+  const { slides, bgId, nameId, playId, dotsId, prevId, nextId } = cfg;
   const bg = document.getElementById(bgId);
   const nameEl = document.getElementById(nameId);
   const playEl = document.getElementById(playId);
   const dotsEl = document.getElementById(dotsId);
-  const curEl = document.getElementById(curId);
   let cur = 0;
   const frames = [];
 
@@ -665,7 +675,6 @@ function buildCarousel(cfg) {
     if (!frames[cur].src) frames[cur].src = embed(slides[cur].id);
     frames[cur].classList.add('active');
     dotsEl.children[cur].classList.add('active');
-    curEl.textContent = String(cur+1).padStart(2,'0');
 
     gsap.fromTo(nameEl, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
     nameEl.textContent = slides[cur].title;
@@ -679,8 +688,8 @@ function buildCarousel(cfg) {
   nameEl.textContent = slides[0].title;
 }
 
-buildCarousel({ slides: gameSlides, bgId:'gameBg', nameId:'gameName', playId:'gamePlay', dotsId:'gameDots', prevId:'gamePrev', nextId:'gameNext', curId:'gameCur' });
-buildCarousel({ slides: animSlides, bgId:'animBg', nameId:'animName', playId:'animPlay', dotsId:'animDots', prevId:'animPrev', nextId:'animNext', curId:'animCur' });
+buildCarousel({ slides: gameSlides, bgId:'gameBg', nameId:'gameName', playId:'gamePlay', dotsId:'gameDots', prevId:'gamePrev', nextId:'gameNext' });
+buildCarousel({ slides: animSlides, bgId:'animBg', nameId:'animName', playId:'animPlay', dotsId:'animDots', prevId:'animPrev', nextId:'animNext' });
 
 /* ============================================================
    SKILLS
@@ -714,10 +723,34 @@ document.getElementById('menuToggle').addEventListener('click', () => {
 });
 
 /* ============================================================
-   SCROLL SPY — update nav + side + reveals (IntersectionObserver)
+   SCROLL SPY + MODULE ASSEMBLY
+   Cada módulo se "arma" con animación escalonada al entrar,
+   y se re-dispara cada vez que vuelves a él.
 ============================================================ */
 const navBtns = document.querySelectorAll('.nav-links button');
 const sideBtns = document.querySelectorAll('.side-item');
+
+// preparar: agrupar reveals por módulo
+modules.forEach(id => {
+  const mod = document.getElementById(id);
+  mod._reveals = mod.querySelectorAll('.reveal');
+});
+
+let activeModule = null;
+
+function assembleModule(mod) {
+  const els = mod._reveals;
+  if (!els || !els.length) return;
+  gsap.killTweensOf(els);
+  gsap.set(els, { opacity: 0, y: 34 });
+  gsap.to(els, {
+    opacity: 1, y: 0,
+    duration: 0.9,
+    ease: 'power3.out',
+    stagger: 0.12,
+    overwrite: true
+  });
+}
 
 const spy = new IntersectionObserver((entries) => {
   entries.forEach(en => {
@@ -725,21 +758,16 @@ const spy = new IntersectionObserver((entries) => {
       const id = en.target.id;
       navBtns.forEach(b => b.classList.toggle('active', b.dataset.nav === id));
       sideBtns.forEach(b => b.classList.toggle('active', b.dataset.nav === id));
-    }
-  });
-}, { threshold: 0.5 });
-modules.forEach(id => spy.observe(document.getElementById(id)));
 
-// reveal on scroll
-const revealObs = new IntersectionObserver((entries) => {
-  entries.forEach(en => {
-    if (en.isIntersecting) {
-      gsap.to(en.target, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' });
-      revealObs.unobserve(en.target);
+      // armar el módulo (excepto el hero, que tiene su propia intro)
+      if (activeModule !== id) {
+        activeModule = id;
+        if (id !== 'home') assembleModule(en.target);
+      }
     }
   });
-}, { threshold: 0.2 });
-document.querySelectorAll('.reveal').forEach((el, i) => revealObs.observe(el));
+}, { threshold: 0.4 });
+modules.forEach(id => spy.observe(document.getElementById(id)));
 
 /* ============================================================
    PARALLAX on hero scroll
