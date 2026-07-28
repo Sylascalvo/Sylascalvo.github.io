@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SylasCalvo | Portafolio</title>
+<title>Sylascalvo | Portafolio</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
@@ -395,9 +395,11 @@
   .skill:hover { border-color: var(--accent); color: #fff; background: var(--accent-soft); transform: translateY(-3px); }
 
   /* ===== CONTACT ===== */
-  #contacto { position: relative; }
+  #contacto { position: relative; min-height: 100vh; display: flex; flex-direction: column; }
   #contactParticles {
-    position: absolute; inset: 0; z-index: 0;
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
     pointer-events: none;
   }
   #contacto::before {
@@ -945,15 +947,15 @@ if (!isMobile) {
     W = canvas.width = canvas.offsetWidth;
     H = canvas.height = canvas.offsetHeight;
     // densidad proporcional al área
-    const target = Math.round((W * H) / 14000);
+    const target = Math.round((W * H) / 8000);
     particles = [];
     for (let i = 0; i < target; i++) {
       particles.push({
         x: Math.random() * W, y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: (Math.random() - 0.5) * 0.25,
-        r: Math.random() * 1.6 + 0.4,
-        a: Math.random() * 0.4 + 0.12
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r: Math.random() * 1.2 + 0.4,
+        a: Math.random() * 0.5 + 0.35
       });
     }
   }
@@ -990,15 +992,22 @@ if (!isMobile) {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(34,211,238,${p.a})`;
+      ctx.shadowColor = 'rgba(34,211,238,0.8)';
+      ctx.shadowBlur = 6;
       ctx.fill();
+      ctx.shadowBlur = 0;
     });
     if (running) requestAnimationFrame(draw);
   }
 
   const io = new IntersectionObserver((entries) => {
     entries.forEach(en => {
-      if (en.isIntersecting && !running) { running = true; draw(); }
-      else if (!en.isIntersecting) { running = false; }
+      if (en.isIntersecting) {
+        resize(); // recalcular tamaño real al entrar
+        if (!running) { running = true; draw(); }
+      } else {
+        running = false;
+      }
     });
   }, { threshold: 0.1 });
   io.observe(section);
