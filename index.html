@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sylascalvo | Portafolio</title>
+<title>SylasCalvo | Portafolio</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
@@ -436,75 +436,22 @@
     pointer-events: none;
   }
 
-  /* ===== SECTION TRANSITION WIPE ===== */
-  #wipe {
-    position: fixed; inset: 0;
-    z-index: 5000;
-    pointer-events: none;
-    display: flex;
-    transform: translateX(-100%);
+  /* ===== SLIDE NAME GLITCH (preview on arrow hover) ===== */
+  .slide-name { position: relative; }
+  .slide-name.glitching {
+    animation: nameGlitch 0.28s steps(2) 1;
+    color: var(--accent);
+    text-shadow: 2px 0 rgba(255,51,102,0.7), -2px 0 rgba(34,211,238,0.7);
   }
-  #wipe .panel {
-    flex: 1;
-    background: linear-gradient(90deg, rgba(6,6,8,0.98), rgba(10,14,16,0.98));
+  @keyframes nameGlitch {
+    0%   { transform: translate(0); clip-path: inset(0 0 0 0); }
+    20%  { transform: translate(-3px, 1px); clip-path: inset(20% 0 40% 0); }
+    40%  { transform: translate(3px, -1px); clip-path: inset(50% 0 10% 0); }
+    60%  { transform: translate(-2px, 0); clip-path: inset(10% 0 60% 0); }
+    80%  { transform: translate(2px, 1px); clip-path: inset(40% 0 20% 0); }
+    100% { transform: translate(0); clip-path: inset(0 0 0 0); }
   }
-  #wipe .edge {
-    position: absolute;
-    top: 0; bottom: 0; right: 0;
-    width: 3px;
-    background: var(--accent);
-    box-shadow: 0 0 24px 4px var(--accent-glow), 0 0 60px 8px var(--accent-glow);
-  }
-  #wipe .wipe-label {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: 'Oswald', sans-serif;
-    font-size: clamp(2rem, 7vw, 5rem);
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text);
-    opacity: 0;
-    white-space: nowrap;
-  }
-
-  /* ===== ARROW HOVER PREVIEW ===== */
-  .c-arrow { position: relative; }
-  .arrow-preview {
-    position: absolute;
-    bottom: calc(100% + 14px);
-    left: 50%;
-    transform: translateX(-50%) translateY(6px);
-    background: rgba(6,6,8,0.9);
-    border: 1px solid var(--accent);
-    box-shadow: 0 0 16px var(--accent-glow);
-    padding: 8px 16px;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.72rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text);
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
-    max-width: 240px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .arrow-preview::after {
-    content: '';
-    position: absolute;
-    top: 100%; left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: var(--accent);
-  }
-  .c-arrow:hover .arrow-preview {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+  .slide-name.preview { color: var(--accent); }
 
   /* ===== responsive ===== */
   @media (max-width: 820px) {
@@ -539,13 +486,6 @@
 
 <!-- FILM GRAIN -->
 <div id="grain"></div>
-
-<!-- SECTION TRANSITION WIPE -->
-<div id="wipe">
-  <div class="panel"></div>
-  <div class="wipe-label" id="wipeLabel"></div>
-  <div class="edge"></div>
-</div>
 
 <!-- CURSOR -->
 <div class="cursor-dot" id="cDot"></div>
@@ -821,17 +761,29 @@ function buildCarousel(cfg) {
   document.getElementById(prevId).addEventListener('click', () => go(cur===0?slides.length-1:cur-1));
   document.getElementById(nextId).addEventListener('click', () => go(cur===slides.length-1?0:cur+1));
 
-  // hover preview en las flechas
+  // hover en flechas → el nombre del slide hace glitch y muestra preview del adyacente
   const prevBtn = document.getElementById(prevId);
   const nextBtn = document.getElementById(nextId);
-  const prevPrev = document.createElement('span'); prevPrev.className = 'arrow-preview'; prevBtn.appendChild(prevPrev);
-  const nextPrev = document.createElement('span'); nextPrev.className = 'arrow-preview'; nextBtn.appendChild(nextPrev);
-  prevBtn.addEventListener('mouseenter', () => {
-    prevPrev.textContent = slides[cur===0?slides.length-1:cur-1].title;
-  });
-  nextBtn.addEventListener('mouseenter', () => {
-    nextPrev.textContent = slides[cur===slides.length-1?0:cur+1].title;
-  });
+
+  function showPreview(targetIdx) {
+    nameEl.classList.remove('glitching');
+    void nameEl.offsetWidth; // reinicia animación
+    nameEl.classList.add('glitching', 'preview');
+    nameEl.textContent = slides[targetIdx].title;
+  }
+  function restoreName() {
+    nameEl.classList.remove('glitching');
+    void nameEl.offsetWidth;
+    nameEl.classList.add('glitching');
+    nameEl.classList.remove('preview');
+    nameEl.textContent = slides[cur].title;
+    setTimeout(() => nameEl.classList.remove('glitching'), 300);
+  }
+
+  prevBtn.addEventListener('mouseenter', () => showPreview(cur===0?slides.length-1:cur-1));
+  nextBtn.addEventListener('mouseenter', () => showPreview(cur===slides.length-1?0:cur+1));
+  prevBtn.addEventListener('mouseleave', restoreName);
+  nextBtn.addEventListener('mouseleave', restoreName);
 
   playEl.href = watch(slides[0].id);
   nameEl.textContent = slides[0].title;
@@ -848,43 +800,20 @@ skills.forEach(s => { const el = document.createElement('span'); el.className = 
 if (window._bindCursor) window._bindCursor();
 
 /* ============================================================
-   NAV — cinematic wipe transition between modules
+   NAV — smooth scroll between modules
 ============================================================ */
 const modules = ['home','videojuegos','animacion','bio','contacto'];
-const moduleNames = { home:'Inicio', videojuegos:'Videojuegos', animacion:'Animación', bio:'Bio', contacto:'Contacto' };
-const wipe = document.getElementById('wipe');
-const wipeLabel = document.getElementById('wipeLabel');
-let wiping = false;
 
-function goToModule(id, useWipe) {
+function goToModule(id) {
   const target = document.getElementById(id);
   if (!target) return;
-
-  if (useWipe && !isMobile && !wiping) {
-    wiping = true;
-    wipeLabel.textContent = moduleNames[id] || '';
-    const tl = gsap.timeline({ onComplete: () => { wiping = false; } });
-    // barrido entra
-    tl.set(wipe, { xPercent: -100 })
-      .to(wipe, { xPercent: 0, duration: 0.5, ease: 'power3.inOut' })
-      .to(wipeLabel, { opacity: 1, duration: 0.25 }, '-=0.25')
-      // salto instantáneo detrás del panel
-      .add(() => { window.scrollTo(0, target.offsetTop); })
-      .to(wipeLabel, { opacity: 0, duration: 0.25 }, '+=0.1')
-      // barrido sale
-      .to(wipe, { xPercent: 100, duration: 0.55, ease: 'power3.inOut' }, '-=0.1')
-      .set(wipe, { xPercent: -100 });
-  } else {
-    gsap.to(window, { duration: 1.0, ease: 'power3.inOut', scrollTo: { y: target, autoKill: true } });
-  }
+  gsap.to(window, { duration: 1.0, ease: 'power3.inOut', scrollTo: { y: target, autoKill: true } });
 }
 
 document.querySelectorAll('[data-nav]').forEach(btn => {
   btn.addEventListener('click', (e) => {
     e.preventDefault();
-    // wipe solo desde el nav superior y lateral; el scroll del hero usa scroll suave
-    const fromNav = btn.closest('nav') || btn.closest('.side-nav');
-    goToModule(btn.dataset.nav, !!fromNav);
+    goToModule(btn.dataset.nav);
     document.getElementById('navLinks').classList.remove('open');
   });
 });
