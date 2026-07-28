@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SylasCalvo | Portafolio</title>
+<title>Sylascalvo | Portafolio</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
@@ -99,6 +99,10 @@
     position: relative;
   }
   .logo span { color: var(--accent); }
+  .logo.logo-glitch {
+    animation: navGlitch 0.32s steps(2) 1;
+    text-shadow: 1.5px 0 rgba(255,51,102,0.7), -1.5px 0 rgba(34,211,238,0.7);
+  }
 
   .nav-links { display: flex; gap: 8px; list-style: none; }
   .nav-links button {
@@ -113,19 +117,19 @@
     position: relative;
     transition: color 0.4s var(--ease);
   }
-  .nav-links button::after {
-    content: '';
-    position: absolute;
-    bottom: 4px; left: 50%;
-    width: 0; height: 1px;
-    background: var(--accent);
-    box-shadow: 0 0 8px var(--accent-glow);
-    transform: translateX(-50%);
-    transition: width 0.4s var(--ease);
-  }
   .nav-links button:hover { color: var(--text); }
-  .nav-links button.active { color: var(--text); }
-  .nav-links button.active::after { width: 60%; }
+  .nav-links button.active {
+    color: var(--accent);
+    text-shadow: 1.5px 0 rgba(255,51,102,0.55), -1.5px 0 rgba(34,211,238,0.55);
+    animation: navGlitchIdle 2.6s steps(2) infinite;
+  }
+  @keyframes navGlitchIdle {
+    0%, 92%, 100% { transform: translate(0); text-shadow: 1.5px 0 rgba(255,51,102,0.55), -1.5px 0 rgba(34,211,238,0.55); }
+    93% { transform: translate(-1.5px, 0.5px); text-shadow: 2px 0 rgba(255,51,102,0.8), -2px 0 rgba(34,211,238,0.8); }
+    95% { transform: translate(1.5px, -0.5px); }
+    97% { transform: translate(-1px, 0); }
+    99% { transform: translate(1px, 0.5px); }
+  }
   .nav-links button.nav-glitch {
     animation: navGlitch 0.3s steps(2) 1;
     text-shadow: 1px 0 rgba(255,51,102,0.6), -1px 0 rgba(34,211,238,0.6);
@@ -669,6 +673,17 @@ document.querySelectorAll('.nav-links button').forEach(btn => {
   });
   btn.addEventListener('animationend', () => btn.classList.remove('nav-glitch'));
 });
+
+// glitch en el logo
+const logoEl = document.querySelector('.logo');
+if (logoEl) {
+  logoEl.addEventListener('mouseenter', () => {
+    logoEl.classList.remove('logo-glitch');
+    void logoEl.offsetWidth;
+    logoEl.classList.add('logo-glitch');
+  });
+  logoEl.addEventListener('animationend', () => logoEl.classList.remove('logo-glitch'));
+}
 
 /* ============================================================
    CUSTOM CURSOR
