@@ -126,6 +126,17 @@
   .nav-links button:hover { color: var(--text); }
   .nav-links button.active { color: var(--text); }
   .nav-links button.active::after { width: 60%; }
+  .nav-links button.nav-glitch {
+    animation: navGlitch 0.3s steps(2) 1;
+    text-shadow: 1px 0 rgba(255,51,102,0.6), -1px 0 rgba(34,211,238,0.6);
+  }
+  @keyframes navGlitch {
+    0%   { transform: translate(0); }
+    25%  { transform: translate(-1.5px, 0.5px); }
+    50%  { transform: translate(1.5px, -0.5px); }
+    75%  { transform: translate(-1px, 0); }
+    100% { transform: translate(0); }
+  }
 
   .menu-toggle { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; }
   .menu-toggle span { width: 26px; height: 2px; background: var(--text); transition: 0.3s; }
@@ -430,12 +441,6 @@
     100%{transform:translate(2%,-2%);}
   }
 
-  /* ===== HERO PARTICLES ===== */
-  #heroParticles {
-    position: absolute; inset: 0; z-index: 1;
-    pointer-events: none;
-  }
-
   /* ===== SLIDE NAME GLITCH (preview on arrow hover) ===== */
   .slide-name { position: relative; }
   .slide-name.glitching {
@@ -519,7 +524,6 @@
   <!-- ===== HERO ===== -->
   <section class="module" id="home">
     <div class="video-bg" id="heroBg"></div>
-    <canvas id="heroParticles"></canvas>
     <div class="overlay"></div>
     <div class="vignette"></div>
     <div class="hero-inner">
@@ -646,6 +650,25 @@ const skills = ['Unreal Engine','Unity','C++','C#','Blueprints','Gameplay Progra
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const embed = (id) => `https://www.youtube.com/embed/${id}?${YT}&playlist=${id}`;
 const watch = (id) => `https://www.youtube.com/watch?v=${id}`;
+
+/* ============================================================
+   FORZAR INICIO AL RECARGAR
+============================================================ */
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.addEventListener('beforeunload', () => window.scrollTo(0, 0));
+window.scrollTo(0, 0);
+
+/* ============================================================
+   NAVBAR GLITCH ON HOVER
+============================================================ */
+document.querySelectorAll('.nav-links button').forEach(btn => {
+  btn.addEventListener('mouseenter', () => {
+    btn.classList.remove('nav-glitch');
+    void btn.offsetWidth;
+    btn.classList.add('nav-glitch');
+  });
+  btn.addEventListener('animationend', () => btn.classList.remove('nav-glitch'));
+});
 
 /* ============================================================
    CUSTOM CURSOR
@@ -878,81 +901,6 @@ const spy = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.4 });
 modules.forEach(id => spy.observe(document.getElementById(id)));
-
-/* ============================================================
-   HERO PARTICLES (cyan, reactivas al mouse) — desktop only
-============================================================ */
-if (!isMobile) {
-  const canvas = document.getElementById('heroParticles');
-  const ctx = canvas.getContext('2d');
-  let W, H, particles = [];
-  const COUNT = 55;
-  let pmx = -999, pmy = -999;
-
-  function resize() {
-    W = canvas.width = canvas.offsetWidth;
-    H = canvas.height = canvas.offsetHeight;
-  }
-  resize();
-  addEventListener('resize', resize);
-
-  const heroSection = document.getElementById('home');
-  heroSection.addEventListener('mousemove', e => {
-    const r = canvas.getBoundingClientRect();
-    pmx = e.clientX - r.left; pmy = e.clientY - r.top;
-  });
-  heroSection.addEventListener('mouseleave', () => { pmx = -999; pmy = -999; });
-
-  for (let i = 0; i < COUNT; i++) {
-    particles.push({
-      x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      r: Math.random() * 1.8 + 0.5,
-      a: Math.random() * 0.5 + 0.1
-    });
-  }
-
-  function drawParticles() {
-    ctx.clearRect(0, 0, W, H);
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0 || p.x > W) p.vx *= -1;
-      if (p.y < 0 || p.y > H) p.vy *= -1;
-
-      // reacción al mouse
-      const dx = p.x - pmx, dy = p.y - pmy;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 120) {
-        const force = (120 - dist) / 120;
-        p.x += (dx / dist) * force * 1.5;
-        p.y += (dy / dist) * force * 1.5;
-      }
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(34,211,238,${p.a})`;
-      ctx.fill();
-    });
-
-    // líneas entre partículas cercanas
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const a = particles[i], b = particles[j];
-        const d = Math.hypot(a.x - b.x, a.y - b.y);
-        if (d < 110) {
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = `rgba(34,211,238,${0.08 * (1 - d/110)})`;
-          ctx.lineWidth = 0.6;
-          ctx.stroke();
-        }
-      }
-    }
-    requestAnimationFrame(drawParticles);
-  }
-  drawParticles();
-}
 
 /* ============================================================
    PARALLAX on hero scroll
