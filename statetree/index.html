@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>State Tree — Demo interactivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1a1a1c; --bg2:#202024; --panel:#28282c; --panel2:#323238;
+    --line:#3c3c42; --grid:#333338; --ink:#ffffff; --muted:#9a9aa0;
+    --accent:#29b6ff; --bt:#ff9d42; --danger:#e0574f; --ok:#4fd08a;
+    --stage-w:1280px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{background:#141416; color:var(--ink); font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; overflow:hidden;}
+  .stage{width:min(96vw,var(--stage-w)); aspect-ratio:16/9; background:linear-gradient(160deg,var(--bg2),var(--bg)); border:1px solid var(--line); border-radius:10px; position:relative; overflow:hidden; box-shadow:0 30px 90px rgba(0,0,0,.6); display:flex; flex-direction:column; padding:34px 40px 26px;}
+  .stage::before{content:""; position:absolute; inset:0; opacity:.5; pointer-events:none; background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px); background-size:40px 40px; mask-image:radial-gradient(95% 85% at 50% 45%,#000 45%,transparent 100%);}
+
+  h1{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:26px; color:#fff; position:relative;}
+  h1 .sub{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; display:block; margin-top:4px; font-weight:400;}
+
+  .work{flex:1; display:grid; grid-template-columns:1.55fr 1fr; gap:26px; margin-top:20px; min-height:0;}
+
+  /* ---- árbol ---- */
+  .treewrap{background:rgba(0,0,0,.18); border:1px solid var(--line); border-radius:10px; padding:22px 22px; display:flex; align-items:center; min-height:0;}
+  .tree{font-family:'JetBrains Mono',monospace; width:100%; display:flex; flex-direction:column; gap:9px;}
+  .branch{margin-left:18px; padding-left:18px; border-left:1.7px solid var(--line); display:flex; flex-direction:column; gap:9px; position:relative;}
+  .branch.active-guide{border-left-color:rgba(41,182,255,.45);}
+  .row{position:relative; display:flex; align-items:center; gap:8px; padding:5px 7px; border-radius:7px;}
+  .branch > .row::before{content:''; position:absolute; left:-18px; top:50%; width:15px; height:1.7px; background:var(--line);}
+  .branch.active-guide > .row.active-branch::before,.branch.active-guide > .row.active::before{background:rgba(41,182,255,.5);}
+  .chip{display:flex; align-items:center; gap:6px; border-radius:6px; white-space:nowrap;}
+  .chip.name{background:#3a3a42; color:#fff; padding:5px 12px; font-weight:600; font-size:13px; border:1.5px solid transparent; transition:border-color .3s, box-shadow .3s, background .3s;}
+  .chip.name svg{opacity:.85;}
+  .chip.task{background:#2c2c32; color:#e8e8ea; padding:5px 10px; font-size:11.5px;}
+  .chip.task svg{opacity:.7;}
+  .trans{color:var(--muted); font-size:11px; margin-left:2px; display:flex; align-items:center; gap:9px; white-space:nowrap;}
+  .trans .tr{display:inline-flex; align-items:center; gap:5px;}
+  .trans .tr b{color:#fff; font-weight:600; transition:color .2s, text-shadow .2s;}
+  .trans .tr .ar{transition:color .2s, text-shadow .2s;}
+  .trans .sep{color:#55555c;}
+  .tr.fire b, .tr.fire .ar{color:var(--accent); text-shadow:0 0 10px rgba(41,182,255,.9);}
+
+  .row.root .chip.name{background:#44444c;}
+  .row.group .chip.name{background:#3f3a34; border-color:#5a5040;}   /* grupo, tono cálido tenue */
+  .row.active-branch .chip.name{border-color:rgba(41,182,255,.55); box-shadow:0 0 8px rgba(41,182,255,.25);}
+  .row.active .chip.name{border-color:var(--accent); background:#1f3646; box-shadow:0 0 16px rgba(41,182,255,.6); animation:breath 2.6s ease-in-out infinite;}
+  .row.dim{opacity:.4;}
+  .row.dead.active .chip.name{border-color:var(--danger); background:#3a1f1e; box-shadow:0 0 16px rgba(224,87,79,.6); animation:none;}
+  @keyframes breath{0%,100%{box-shadow:0 0 12px rgba(41,182,255,.45);}50%{box-shadow:0 0 22px rgba(41,182,255,.75);}}
+
+  /* barra de montage dentro de Attack */
+  .montage{display:inline-flex; align-items:center; gap:6px; margin-left:2px; opacity:.35; transition:opacity .3s;}
+  .montage.run{opacity:1;}
+  .montage .mlabel{font-size:9.5px; color:var(--muted);}
+  .montage .mtrack{width:60px; height:5px; border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden;}
+  .montage .mbar{height:100%; width:0; background:var(--accent); box-shadow:0 0 8px var(--accent);}
+
+  /* ---- dock de control ---- */
+  .dock{display:flex; flex-direction:column; gap:14px; min-height:0;}
+  .now{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
+  .now .lbl{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);}
+  .now .val{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; color:var(--accent); margin-top:2px; display:flex; align-items:center; gap:8px;}
+  .now .path{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); margin-top:4px;}
+
+  .events{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+  .events .evbtn{background:var(--panel2); color:#fff; border:1px solid var(--line); border-radius:9px; padding:11px 10px; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; justify-content:center; transition:border-color .2s, box-shadow .2s, transform .05s;}
+  .events .evbtn:hover{border-color:var(--muted);}
+  .events .evbtn:active{transform:translateY(1px);}
+  .events .evbtn.avail{border-color:var(--accent); box-shadow:0 0 12px rgba(41,182,255,.28);}
+  .events .evbtn.die.avail{border-color:var(--danger); box-shadow:0 0 12px rgba(224,87,79,.28);}
+  .events .evbtn.shake{animation:shake .32s;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+  .evbtn svg{flex:none;}
+
+  .log{flex:1; background:#000000; border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-family:'JetBrains Mono',monospace; font-size:11.5px; line-height:1.5; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; gap:3px; min-height:0;}
+  .log .ln{color:#cfcfd4; opacity:0; animation:lnin .3s forwards;}
+  .log .ln .k{color:var(--accent);}
+  .log .ln .up{color:var(--bt);}
+  .log .ln .no{color:var(--danger);}
+  .log .ln.muted{color:#6a6a70;}
+  @keyframes lnin{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .foot{margin-top:14px; display:flex; align-items:center; justify-content:space-between;}
+  .foot .reset{background:var(--panel2); color:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer;}
+  .foot .reset:hover{border-color:var(--accent); color:var(--accent);}
+  .foot .hint{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted);}
+  body.clean .foot .hint{opacity:0;}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <h1>State Tree — Demo interactivo<span class="sub">Enemigo · presiona un evento y observa la transición</span></h1>
+
+  <div class="work">
+    <!-- ÁRBOL -->
+    <div class="treewrap">
+      <div class="tree" id="tree">
+        <div class="row root" data-state="root">
+          <span class="chip name"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M7 7v6a4 4 0 0 0 4 4h6"/><path d="M14 14l4 3-4 3"/></svg>Root</span>
+        </div>
+        <div class="branch" id="rootBranch">
+          <div class="row leaf" data-state="idle">
+            <span class="chip name">Idle</span>
+            <span class="chip task">Idle Anim</span>
+            <span class="trans"><span class="tr" data-ev="see"><span class="ar">→</span> VeJugador <b>Combat</b></span></span>
+          </div>
+
+          <div class="row group" data-state="combat">
+            <span class="chip name"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M7 7v6a4 4 0 0 0 4 4h6"/><path d="M14 14l4 3-4 3"/></svg>Combat</span>
+            <span class="trans"><span class="tr" data-ev="lose"><span class="ar">→</span> PierdeJugador <b>Idle</b></span></span>
+          </div>
+          <div class="branch" id="combatBranch">
+            <div class="row leaf" data-state="chase">
+              <span class="chip name">Chase</span>
+              <span class="chip task"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 20l7-16 3 9 3-4 3 11z"/></svg>MoveTo Jugador</span>
+              <span class="trans"><span class="tr" data-ev="attack"><span class="ar">→</span> EnRango <b>Attack</b></span></span>
+            </div>
+            <div class="row leaf" data-state="attack">
+              <span class="chip name">Attack</span>
+              <span class="chip task"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Attack Montage</span>
+              <span class="montage" id="montage"><span class="mlabel">montage</span><span class="mtrack"><span class="mbar" id="mbar"></span></span></span>
+              <span class="trans"><span class="tr" data-ev="completed"><span class="ar">→</span> OnCompleted <b>Chase</b></span></span>
+            </div>
+          </div>
+
+          <div class="row leaf dead" data-state="dead">
+            <span class="chip name">Dead</span>
+            <span class="chip task">Death</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLES -->
+    <div class="dock">
+      <div class="now">
+        <div class="lbl">Estado activo</div>
+        <div class="val" id="nowVal">Idle</div>
+        <div class="path" id="nowPath">Root › Idle</div>
+      </div>
+
+      <div class="events" id="events">
+        <button class="evbtn" data-ev="see">Ver jugador</button>
+        <button class="evbtn" data-ev="attack">Atacar</button>
+        <button class="evbtn" data-ev="lose">Perder jugador</button>
+        <button class="evbtn die" data-ev="die">Morir</button>
+      </div>
+
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <button class="reset" id="reset">↻ Reiniciar</button>
+    <span class="hint">H: modo limpio · los botones que brillan tienen transición válida desde el estado actual</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- modelo del State Tree ----------
+  const S = {
+    root:   { name:'Root',   parent:null,     type:'root' },
+    idle:   { name:'Idle',   parent:'root',   type:'leaf',  trans:[{ev:'see',    to:'combat'}] },
+    combat: { name:'Combat', parent:'root',   type:'group', child:'chase', trans:[{ev:'lose', to:'idle'}] },
+    chase:  { name:'Chase',  parent:'combat', type:'leaf',  trans:[{ev:'attack', to:'attack'}] },
+    attack: { name:'Attack', parent:'combat', type:'leaf',  montage:2200, trans:[{ev:'completed', to:'chase'}] },
+    dead:   { name:'Dead',   parent:'root',   type:'leaf',  trans:[] },
+  };
+  // transiciones globales (nivel raíz, alta prioridad, desde cualquier estado activo)
+  const GLOBAL = [{ev:'die', to:'dead'}];
+  const EVLABEL = {see:'Ver jugador', attack:'Atacar', lose:'Perder jugador', die:'Morir', completed:'OnStateCompleted'};
+
+  let active = 'idle';
+  let montageTimer=null, montageRAF=null;
+
+  // path leaf -> ... -> root
+  function pathUp(key){ const p=[]; let k=key; while(k){ p.push(k); k=S[k].parent; } return p; }
+  // baja desde un state hasta un leaf (grupos seleccionan su child por defecto)
+  function descend(key){ let k=key; while(S[k].type==='group'){ k=S[k].child; } return k; }
+
+  // ---------- render de estado activo ----------
+  function render(){
+    const path = pathUp(active);            // p.ej. [attack, combat, root]
+    document.querySelectorAll('#tree .row').forEach(r=>{
+      const st=r.dataset.state;
+      r.classList.remove('active','active-branch','dim');
+      if(st===active) r.classList.add('active');
+      else if(path.includes(st)) r.classList.add('active-branch');
+      else r.classList.add('dim');
+    });
+    // guías de rama activas
+    const combatActive = path.includes('combat');
+    document.getElementById('combatBranch').classList.toggle('active-guide', combatActive);
+    document.getElementById('rootBranch').classList.add('active-guide');
+
+    document.getElementById('nowVal').textContent = S[active].name;
+    document.getElementById('nowPath').textContent = pathUp(active).reverse().map(k=>S[k].name).join(' › ');
+
+    // marcar botones con transición disponible
+    document.querySelectorAll('#events .evbtn').forEach(b=>{
+      b.classList.toggle('avail', !!findTransition(b.dataset.ev));
+    });
+  }
+
+  // busca la primera transición para un evento, subiendo leaf->root, luego globales
+  function findTransition(ev){
+    for(const k of pathUp(active)){
+      const t=(S[k].trans||[]).find(x=>x.ev===ev);
+      if(t) return {from:k, to:t.to};
+    }
+    const g=GLOBAL.find(x=>x.ev===ev);
+    if(g) return {from:'root', to:g.to, global:true};
+    return null;
+  }
+
+  // ---------- log ----------
+  function log(html, cls){
+    const box=document.getElementById('log');
+    const ln=document.createElement('div'); ln.className='ln'+(cls?(' '+cls):''); ln.innerHTML=html;
+    box.appendChild(ln);
+    while(box.children.length>7) box.removeChild(box.firstChild);
+  }
+
+  // resalta la transición disparada en el árbol
+  function flashTransition(fromKey, ev){
+    document.querySelectorAll('#tree .tr').forEach(t=>t.classList.remove('fire'));
+    const row=document.querySelector('#tree .row[data-state="'+fromKey+'"]');
+    if(row){ const tr=row.querySelector('.tr[data-ev="'+ev+'"]'); if(tr){ tr.classList.add('fire'); setTimeout(()=>tr.classList.remove('fire'),900); } }
+  }
+
+  // ---------- montage (auto-retorno) ----------
+  function stopMontage(){ if(montageTimer){clearTimeout(montageTimer); montageTimer=null;} if(montageRAF){cancelAnimationFrame(montageRAF); montageRAF=null;} const m=document.getElementById('montage'); m.classList.remove('run'); document.getElementById('mbar').style.width='0'; }
+  function startMontage(){
+    const m=document.getElementById('montage'), bar=document.getElementById('mbar');
+    m.classList.add('run'); bar.style.width='0';
+    const dur=S.attack.montage, t0=performance.now();
+    const step=(now)=>{ const p=Math.min(1,(now-t0)/dur); bar.style.width=(p*100)+'%'; if(p<1){ montageRAF=requestAnimationFrame(step); } };
+    montageRAF=requestAnimationFrame(step);
+    montageTimer=setTimeout(()=>{ log('<span class="k">OnStateCompleted</span>: el montage terminó → vuelve a <b>Chase</b>'); handleEvent('completed', true); }, dur);
+  }
+
+  // ---------- motor de eventos ----------
+  function setActive(leaf){
+    stopMontage();
+    active=leaf; render();
+    if(active==='attack') startMontage();
+  }
+
+  function handleEvent(ev, isAuto){
+    const t=findTransition(ev);
+    if(!t){
+      log('<span class="no">✗</span> <b>'+(EVLABEL[ev]||ev)+'</b>: '+S[active].name+' no tiene transición para este evento', 'muted');
+      const btn=document.querySelector('#events .evbtn[data-ev="'+ev+'"]'); if(btn){ btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake'); }
+      return;
+    }
+    // ¿la transición vino de un padre? (subida)
+    const ascended = (t.from!==active);
+    const target = descend(t.to);       // baja hasta un leaf
+    const descended = (target!==t.to);
+
+    if(!isAuto){
+      let msg = '<span class="k">'+(EVLABEL[ev]||ev)+'</span>: transición ';
+      if(ascended) msg += '<span class="up">'+S[active].name+' no la maneja → sube a '+S[t.from].name+'</span> → ';
+      msg += S[t.from].name+' → <b>'+S[t.to].name+'</b>';
+      if(descended) msg += ' <span class="k">(baja hasta leaf '+S[target].name+')</span>';
+      log(msg);
+    }
+    flashTransition(t.from, ev);
+    setTimeout(()=>setActive(target), 260);
+  }
+
+  // ---------- init ----------
+  document.querySelectorAll('#events .evbtn').forEach(b=>b.addEventListener('click',()=>handleEvent(b.dataset.ev,false)));
+  document.getElementById('reset').addEventListener('click',()=>{ stopMontage(); active='idle'; document.getElementById('log').innerHTML=''; log('Reiniciado. Estado activo: <b>Idle</b>','muted'); render(); });
+  document.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='h') document.body.classList.toggle('clean'); });
+
+  log('Estado inicial: <b>Idle</b>. Prueba "Ver jugador".','muted');
+  render();
+})();
+</script>
+</body>
+</html>
