@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transcriptor en vivo · Reuniones</title>
+<style>
+  :root{
+    --bg:#0a0d10; --panel:#12171c; --panel-2:#171e25; --line:#232c35;
+    --txt:#e8eef3; --muted:#8ea0af; --signal:#3ee6c4; --signal-dim:#1f6b5c;
+    --live:#ffb454; --warn:#ffcc66; --err:#ff6b6b; --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5}
+  .wrap{max-width:1000px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:20px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:13.5px;display:block;margin-bottom:18px}
+  .row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .field{flex:1;min-width:170px}
+  label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  select,button{font:inherit}
+  select{width:100%;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+  .hint{color:var(--muted);font-size:12px;margin-top:6px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0 16px}
+  button{background:var(--panel-2);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:10px 16px;cursor:pointer;transition:.15s}
+  button:hover:not(:disabled){border-color:var(--signal-dim)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.primary{background:var(--signal-dim);border-color:var(--signal-dim);color:#eafff9;font-weight:600}
+  button.live{border-color:var(--live)}
+  button.ghost{background:transparent}
+  .spacer{flex:1}
+  #status{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--muted);margin-bottom:6px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--line);flex:none}
+  .dot.on{background:var(--signal);box-shadow:0 0 8px var(--signal)}
+  .dot.busy{background:var(--live);box-shadow:0 0 8px var(--live);animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+  .bar{height:4px;background:var(--panel-2);border-radius:3px;overflow:hidden;margin-bottom:14px}
+  .bar i{display:block;height:100%;width:0;background:var(--signal);transition:width .2s}
+  #meterWrap{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  #meter{flex:1;height:26px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px}
+  #clock{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .panes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.panes{grid-template-columns:1fr}}
+  .pane{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-height:220px;max-height:56vh;overflow:auto}
+  .pane h2{font-size:12px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+  .final{font-size:15.5px;white-space:pre-wrap}
+  .partial{color:var(--live);font-style:italic;opacity:.9}
+  .ph{color:var(--muted);font-style:italic}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  #loadBox{display:none;margin:8px 0 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  #loadBar{height:6px;background:var(--panel-2);border-radius:4px;overflow:hidden;margin-top:8px}
+  #loadBar i{display:block;height:100%;width:0;background:var(--signal);transition:width .2s}
+  .banner{margin:10px 0;padding:10px 14px;border-radius:9px;font-size:13.5px;border:1px solid}
+  .banner.warn{background:rgba(255,204,102,.08);border-color:var(--warn);color:var(--warn)}
+  .banner.err{background:rgba(255,107,107,.08);border-color:var(--err);color:var(--err)}
+  footer{margin-top:26px;color:var(--muted);font-size:11.5px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Transcriptor en vivo</h1>
+  <span class="sub">Para reuniones. Captura el audio de una pestaña y lo transcribe (y traduce) en tiempo real, con la menor latencia posible. Todo en el navegador.</span>
+
+  <div class="row">
+    <div class="field">
+      <label for="model">Modelo</label>
+      <select id="model">
+        <option value="onnx-community/whisper-base" selected>Base — recomendado para tiempo real (~145 MB)</option>
+        <option value="onnx-community/whisper-tiny">Tiny — mínima latencia, menos preciso (~75 MB)</option>
+        <option value="onnx-community/whisper-small">Small — más preciso, más latencia (~480 MB)</option>
+      </select>
+      <div class="hint">Para tiempo real conviene Base. Small solo si tu equipo es potente.</div>
+    </div>
+    <div class="field">
+      <label for="lang">Idioma de la reunión</label>
+      <select id="lang">
+        <option value="english" selected>Inglés</option>
+        <option value="spanish">Español</option>
+        <option value="portuguese">Portugués</option>
+        <option value="french">Francés</option>
+        <option value="german">Alemán</option>
+        <option value="italian">Italiano</option>
+        <option value="auto">Auto-detectar (menos preciso)</option>
+      </select>
+      <div class="hint">Fijar el idioma mejora bastante la precisión.</div>
+    </div>
+    <div class="field">
+      <label for="win">Latencia / ventana</label>
+      <select id="win">
+        <option value="4">Baja — refresca ~1 s (más rápido)</option>
+        <option value="6" selected>Media — refresca ~1.3 s (equilibrado)</option>
+        <option value="8">Alta — refresca ~1.6 s (más contexto)</option>
+      </select>
+      <div class="hint">Ventanas más grandes = más preciso pero más delay.</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="loadBtn" class="primary">Cargar modelo</button>
+    <button id="startBtn" class="live" disabled>Iniciar captura</button>
+    <button id="stopBtn" disabled>Detener</button>
+    <span class="spacer"></span>
+    <button id="clearBtn" class="ghost">Limpiar</button>
+    <button id="copyBtn" class="ghost">Copiar</button>
+    <button id="mdBtn" class="ghost">Guardar .txt</button>
+  </div>
+
+  <div id="loadBox">
+    <div id="loadStatus">Descargando modelo…</div>
+    <div id="loadBar"><i></i></div>
+    <div class="hint" id="loadFile"></div>
+  </div>
+
+  <div id="status"><span class="dot" id="dot"></span><span id="statusLabel">Carga un modelo para empezar.</span></div>
+  <div id="meterWrap"><canvas id="meter"></canvas><span id="clock">00:00</span></div>
+
+  <div class="panes">
+    <div class="pane">
+      <h2>Original (<span id="langLabel">inglés</span>)</h2>
+      <div id="orig" class="final"><span class="ph">La transcripción en vivo aparecerá aquí…</span></div>
+    </div>
+    <div class="pane">
+      <h2>Traducción (español)</h2>
+      <div id="es" class="final"><span class="ph">La traducción en vivo aparecerá aquí…</span></div>
+    </div>
+  </div>
+
+  <div id="bannerZone"></div>
+
+  <footer>Whisper vía transformers.js · Streaming en vivo · Traducción on-device · v1</footer>
+</div>
+
+<script type="module">
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
+env.allowLocalModels = false;
+
+const $ = id => document.getElementById(id);
+const LANG_ISO = { english:'en', spanish:'es', portuguese:'pt', french:'fr', german:'de', italian:'it', auto:'auto' };
+const LANG_NAME = { english:'inglés', spanish:'español', portuguese:'portugués', french:'francés', german:'alemán', italian:'italiano', auto:'auto' };
+
+const S = {
+  transcriber: null, translator: null, modelId: null,
+  capturing: false, audioCtx: null, stream: null, analyser: null, rafId: null,
+  sampleRate: 48000,
+  ring: [], ringLen: 0,        // buffer circular de audio reciente (ventana deslizante)
+  busy: false, loopTimer: null,
+  finals: [],                  // segmentos ya confirmados (texto original)
+  finalsEs: [],                // traducidos
+  lastPartial: '',
+  startTime: 0, clockTimer: null,
+  chromeTr: null,
+};
+
+const loadBox=$('loadBox'), loadStatus=$('loadStatus'), loadBar=$('loadBar').firstElementChild, loadFile=$('loadFile');
+const loadBtn=$('loadBtn'), startBtn=$('startBtn'), stopBtn=$('stopBtn'), clearBtn=$('clearBtn'), copyBtn=$('copyBtn'), mdBtn=$('mdBtn');
+const origEl=$('orig'), esEl=$('es'), dot=$('dot'), statusLabel=$('statusLabel'), clock=$('clock'), langLabel=$('langLabel'), bannerZone=$('bannerZone');
+
+function setStatus(t, cls){ statusLabel.textContent=t; dot.className='dot'+(cls?(' '+cls):''); }
+function banner(html, type){ clearBanner(); const d=document.createElement('div'); d.className='banner '+(type||'warn'); d.innerHTML=html; d.id='theBanner'; bannerZone.appendChild(d); }
+function clearBanner(){ const b=$('theBanner'); if(b) b.remove(); }
+function fmt(s){ s=Math.floor(s); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+
+$('lang').addEventListener('change', ()=>{ langLabel.textContent = LANG_NAME[$('lang').value]; });
+
+/* ---------------- carga del modelo ---------------- */
+loadBtn.addEventListener('click', async ()=>{
+  const modelId=$('model').value;
+  loadBtn.disabled=true; loadBox.style.display='block'; clearBanner();
+  setStatus('Cargando modelo…','busy');
+  const device = ('gpu' in navigator) ? 'webgpu' : 'wasm';
+  const dtype = device==='webgpu' ? 'fp32' : 'q8';
+  try{
+    const prog = p => {
+      if(p.status==='progress' && p.total){ loadBar.style.width=Math.round(p.loaded/p.total*100)+'%'; loadFile.textContent=(p.file||'')+' · '+(p.loaded/1048576).toFixed(1)+' MB'; }
+      else if(p.status){ loadStatus.textContent='Modelo: '+(p.status)+'…'; }
+    };
+    loadStatus.textContent='Descargando modelo de reconocimiento…';
+    S.transcriber = await pipeline('automatic-speech-recognition', modelId, { device, dtype, progress_callback: prog });
+    S.modelId = modelId;
+    // traductor: intentamos la API nativa de Chrome; si no, cargamos opus-mt bajo demanda
+    loadStatus.textContent='Listo.';
+    loadBox.style.display='none';
+    setStatus('Modelo cargado. Pulsa "Iniciar captura".','on');
+    startBtn.disabled=false; loadBtn.disabled=false; loadBtn.textContent='Recargar modelo';
+  }catch(e){
+    console.error(e);
+    loadBox.style.display='none';
+    setStatus('Error al cargar el modelo.','');
+    banner('No pude cargar el modelo. Revisa tu conexión y recarga la página.','err');
+    loadBtn.disabled=false;
+  }
+});
+
+/* ---------------- captura de audio de la pestaña ---------------- */
+startBtn.addEventListener('click', async ()=>{
+  if(!S.transcriber){ banner('Carga el modelo primero.','warn'); return; }
+  clearBanner();
+  try{
+    S.stream = await navigator.mediaDevices.getDisplayMedia({ video:true, audio:true });
+  }catch(e){ banner('No se pudo iniciar la captura. Debes elegir una pestaña o pantalla y marcar <b>Compartir audio</b>.','err'); return; }
+  const audioTracks = S.stream.getAudioTracks();
+  if(!audioTracks.length){
+    banner('No hay audio en lo que compartiste. Vuelve a intentarlo y marca la casilla <b>Compartir audio de la pestaña</b>.','err');
+    S.stream.getTracks().forEach(t=>t.stop()); return;
+  }
+  // no necesitamos el video; lo detenemos para ahorrar recursos
+  S.stream.getVideoTracks().forEach(t=>t.stop());
+
+  S.audioCtx = new AudioContext();
+  S.sampleRate = S.audioCtx.sampleRate;
+  const src = S.audioCtx.createMediaStreamSource(S.stream);
+  S.analyser = S.audioCtx.createAnalyser(); S.analyser.fftSize=512; src.connect(S.analyser);
+
+  // worklet que junta muestras y las manda al hilo principal
+  const workletCode = `
+    class Collector extends AudioWorkletProcessor {
+      process(inputs){ const ch=inputs[0][0]; if(ch){ this.port.postMessage(ch.slice(0)); } return true; }
+    }
+    registerProcessor('collector', Collector);`;
+  const blob = new Blob([workletCode], {type:'application/javascript'});
+  await S.audioCtx.audioWorklet.addModule(URL.createObjectURL(blob));
+  const node = new AudioWorkletNode(S.audioCtx, 'collector');
+  node.port.onmessage = e => onSamples(e.data);
+  src.connect(node);
+
+  // si el usuario detiene el compartir desde la barra del navegador
+  audioTracks[0].addEventListener('ended', ()=>{ if(S.capturing) stopCapture(); });
+
+  S.capturing=true; S.ring=[]; S.ringLen=0; S.busy=false; S.lastPartial='';
+  startBtn.disabled=true; stopBtn.disabled=false; loadBtn.disabled=true;
+  ['model','lang','win'].forEach(id=>$(id).disabled=true);
+  setStatus('Escuchando la reunión…','on');
+  S.startTime=performance.now();
+  S.clockTimer=setInterval(()=>{ clock.textContent=fmt((performance.now()-S.startTime)/1000); }, 500);
+  drawMeter();
+  // bucle de transcripción: procesa la ventana reciente cada ~700 ms
+  S.loopTimer=setInterval(pump, 700);
+});
+
+function stopCapture(){
+  if(!S.capturing) return;
+  S.capturing=false;
+  clearInterval(S.loopTimer); clearInterval(S.clockTimer); cancelAnimationFrame(S.rafId);
+  S.stream?.getTracks().forEach(t=>t.stop());
+  if(S.audioCtx && S.audioCtx.state!=='closed') S.audioCtx.close().catch(()=>{});
+  stopBtn.disabled=true; startBtn.disabled=false; loadBtn.disabled=false;
+  ['model','lang','win'].forEach(id=>$(id).disabled=false);
+  // vuelca el último parcial como final
+  if(S.lastPartial){ commitFinal(S.lastPartial); S.lastPartial=''; renderPartial(''); }
+  setStatus('Detenido.','');
+  const c=$('meter').getContext('2d'); c.clearRect(0,0,$('meter').width,$('meter').height);
+}
+stopBtn.addEventListener('click', stopCapture);
+
+/* ---------------- buffer de ventana deslizante ---------------- */
+function winSec(){ return parseInt($('win').value,10); }
+function onSamples(chunk){
+  S.ring.push(chunk); S.ringLen += chunk.length;
+  // mantenemos solo los últimos `winSec` segundos + un poco
+  const maxLen = Math.round((winSec()+1) * S.sampleRate);
+  while(S.ringLen > maxLen && S.ring.length>1){ const head=S.ring.shift(); S.ringLen-=head.length; }
+}
+function currentWindow(){
+  const out=new Float32Array(S.ringLen); let o=0;
+  for(const c of S.ring){ out.set(c,o); o+=c.length; }
+  return out;
+}
+
+/* ---------------- resample a 16 kHz ---------------- */
+async function to16k(float32, rate){
+  if(rate===16000) return float32;
+  const off=new OfflineAudioContext(1, Math.ceil(float32.length*16000/rate), 16000);
+  const buf=off.createBuffer(1, float32.length, rate); buf.copyToChannel(float32,0);
+  const s=off.createBufferSource(); s.buffer=buf; s.connect(off.destination); s.start();
+  const rendered=await off.startRendering();
+  return rendered.getChannelData(0);
+}
+
+/* ---------------- transcripción en vivo ---------------- */
+async function transcribe(audio16k){
+  const langSel=$('lang').value;
+  const opts={ task:'transcribe', chunk_length_s:0, no_speech_threshold:0.6 };
+  if(langSel!=='auto') opts.language=langSel;
+  return S.transcriber(audio16k, opts);
+}
+
+function deHallucinate(t){
+  t=(t||'').trim();
+  const low=t.toLowerCase().replace(/[.!?¿¡\s]/g,'');
+  if(!low || ['you','thankyou','thanksforwatching','bye','sub','subscribe'].includes(low)) return '';
+  return t;
+}
+
+// heurística simple: cuando el parcial "se estabiliza", confirmamos la primera parte
+async function pump(){
+  if(S.busy || !S.capturing || S.ringLen < S.sampleRate*0.8) return;
+  S.busy=true;
+  try{
+    const audio=await to16k(currentWindow(), S.sampleRate);
+    const out=await transcribe(audio);
+    const text=deHallucinate((out.text||''));
+    if(text){
+      S.lastPartial=text;
+      renderPartial(text);
+      translatePartial(text);
+    }
+  }catch(e){ /* silencioso: es tiempo real, un fallo de ventana no importa */ }
+  S.busy=false;
+}
+
+// Cada cierto tiempo, "cerramos" el parcial actual como final y vaciamos parte del buffer,
+// para que el texto no se quede reescribiéndose para siempre.
+let sinceCommit=0;
+setInterval(()=>{
+  if(!S.capturing) return;
+  sinceCommit++;
+  // cada ~4 s de audio estable, confirma el parcial y desliza la ventana
+  if(sinceCommit>=6 && S.lastPartial){
+    commitFinal(S.lastPartial); S.lastPartial=''; renderPartial('');
+    // vacía media ventana para dar paso a audio nuevo
+    const drop=Math.round((winSec()/2)*S.sampleRate); let dropped=0;
+    while(dropped<drop && S.ring.length>1){ const h=S.ring.shift(); S.ringLen-=h.length; dropped+=h.length; }
+    sinceCommit=0;
+  }
+}, 700);
+
+function commitFinal(text){
+  text=deHallucinate(text); if(!text) return;
+  S.finals.push(text);
+  renderFinals();
+  translateFinal(text, S.finals.length-1);
+}
+
+/* ---------------- render ---------------- */
+function esc(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function renderFinals(){
+  const html = S.finals.map(esc).join(' ');
+  origEl.innerHTML = (html?('<span class="final-txt">'+html+'</span> '):'') + (S._partialHtml||'');
+  origEl.scrollTop = origEl.scrollHeight;
+}
+function renderPartial(text){
+  S._partialHtml = text ? '<span class="partial">'+esc(text)+'</span>' : '';
+  renderFinals();
+}
+function renderEs(){
+  const html=S.finalsEs.map(x=>esc(x||'')).join(' ');
+  esEl.innerHTML = (html?('<span class="final-txt">'+html+'</span> '):'') + (S._partialEsHtml||'');
+  esEl.scrollTop=esEl.scrollHeight;
+}
+function renderPartialEs(text){ S._partialEsHtml = text?('<span class="partial">'+esc(text)+'</span>'):''; renderEs(); }
+
+/* ---------------- traducción en vivo ---------------- */
+async function getChromeTranslator(srcIso){
+  if(srcIso==='es') return null;
+  if(S.chromeTr && S.chromeTr._src===srcIso) return S.chromeTr;
+  try{
+    if('Translator' in self){
+      const tr=await self.Translator.create({ sourceLanguage:srcIso, targetLanguage:'es' });
+      tr._src=srcIso; S.chromeTr=tr; return tr;
+    }
+  }catch{}
+  return null;
+}
+async function getOpus(){
+  if(S.translator) return S.translator;
+  try{ S.translator = await pipeline('translation', 'Xenova/opus-mt-mul-en'); }catch{ S.translator=null; }
+  return S.translator; // (fallback muy básico; la vía principal es Chrome Translator)
+}
+function srcIso(){ const l=$('lang').value; const iso=LANG_ISO[l]; return (iso&&iso!=='auto')?iso:'en'; }
+
+async function translateText(text){
+  const iso=srcIso();
+  if(iso==='es') return text;
+  const tr=await getChromeTranslator(iso);
+  if(tr){ try{ return await tr.translate(text); }catch{} }
+  return null; // sin traductor disponible
+}
+
+let trBusy=false;
+async function translatePartial(text){
+  if(trBusy) return; trBusy=true;
+  const es=await translateText(text);
+  if(es!=null) renderPartialEs(es);
+  else renderPartialEs('');
+  trBusy=false;
+}
+async function translateFinal(text, idx){
+  const es=await translateText(text);
+  S.finalsEs[idx] = (es!=null)?es:'';
+  renderEs();
+  if(es==null && !S._trWarned){
+    S._trWarned=true;
+    banner('No hay traductor en vivo disponible. Activa la <b>API de traducción de Chrome</b> (Chrome/Edge recientes con la función de traducción integrada) para ver el español en tiempo real. La transcripción original sigue funcionando.','warn');
+  }
+}
+
+/* ---------------- medidor de audio ---------------- */
+function drawMeter(){
+  const cv=$('meter'); const dpr=devicePixelRatio||1;
+  cv.width=cv.clientWidth*dpr; cv.height=26*dpr;
+  const ctx=cv.getContext('2d'); const buf=new Uint8Array(S.analyser.frequencyBinCount);
+  const loop=()=>{
+    S.rafId=requestAnimationFrame(loop);
+    S.analyser.getByteFrequencyData(buf);
+    let sum=0; for(const v of buf) sum+=v; const avg=sum/buf.length/255;
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const w=cv.width*Math.min(1,avg*2.2);
+    const g=ctx.createLinearGradient(0,0,cv.width,0);
+    g.addColorStop(0,'#1f6b5c'); g.addColorStop(1,'#3ee6c4');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,cv.height);
+  };
+  loop();
+}
+
+/* ---------------- utilidades ---------------- */
+clearBtn.addEventListener('click', ()=>{
+  S.finals=[]; S.finalsEs=[]; S.lastPartial=''; S._partialHtml=''; S._partialEsHtml='';
+  origEl.innerHTML='<span class="ph">La transcripción en vivo aparecerá aquí…</span>';
+  esEl.innerHTML='<span class="ph">La traducción en vivo aparecerá aquí…</span>';
+});
+function fullText(){
+  let out='ORIGINAL ('+LANG_NAME[$('lang').value]+'):\n'+S.finals.join(' ')+'\n\n';
+  out+='TRADUCCIÓN (español):\n'+S.finalsEs.filter(Boolean).join(' ')+'\n';
+  return out;
+}
+copyBtn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(fullText()); copyBtn.textContent='Copiado ✓'; setTimeout(()=>copyBtn.textContent='Copiar',1200);}catch{} });
+mdBtn.addEventListener('click', ()=>{
+  const blob=new Blob([fullText()],{type:'text/plain'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='reunion-'+Date.now()+'.txt'; a.click(); URL.revokeObjectURL(a.href);
+});
+</script>
+</body>
+</html>
