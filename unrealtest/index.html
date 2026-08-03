@@ -8,244 +8,318 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#12131a; --bg2:#181a24; --panel:#1e2130; --panel2:#262a3b;
-    --line:#333849; --ink:#f2f3f7; --muted:#9aa0b4;
-    --accent:#29b6ff; --ok:#3ddc84; --bad:#ff5d5d; --gold:#ffb84d;
+    --bg:#12131a;--bg2:#181a24;--panel:#1e2130;--panel2:#262a3b;--line:#333849;
+    --ink:#f2f3f7;--muted:#9aa0b4;--accent:#29b6ff;--ok:#3ddc84;--bad:#ff5d5d;--gold:#ffb84d;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.5;padding:16px;padding-bottom:120px;}
+  body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.5;padding:16px;padding-bottom:130px;}
   .wrap{max-width:760px;margin:0 auto;}
-  header{text-align:center;padding:20px 0 10px;}
+  header{text-align:center;padding:18px 0 6px;}
   header h1{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;}
   header h1 .a{color:var(--accent);}
   header p{color:var(--muted);font-size:13px;margin-top:4px;font-family:'JetBrains Mono',monospace;}
 
+  /* selector de dificultad */
+  .start{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin:16px 0;}
+  .start h2{font-family:'Space Grotesk',sans-serif;font-size:17px;margin-bottom:4px;}
+  .start p{color:var(--muted);font-size:13px;margin-bottom:16px;}
+  .levels{display:flex;flex-direction:column;gap:10px;}
+  .lvl{background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .15s,transform .05s;}
+  .lvl:active{transform:scale(.99);}
+  .lvl:hover{border-color:var(--accent);}
+  .lvl .lname{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;display:flex;align-items:center;gap:8px;}
+  .lvl .badge{font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700;}
+  .lvl.easy .badge{background:rgba(61,220,132,.18);color:var(--ok);}
+  .lvl.real .badge{background:rgba(255,184,77,.18);color:var(--gold);}
+  .lvl.hard .badge{background:rgba(255,93,93,.18);color:var(--bad);}
+  .lvl .ldesc{color:var(--muted);font-size:12.5px;margin-top:5px;}
+  .lvl .lcount{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:6px;}
+
   .scorebar{position:sticky;top:0;z-index:20;background:rgba(18,19,26,.92);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;}
   .scorebar .stat{font-family:'JetBrains Mono',monospace;font-size:13px;}
   .scorebar .stat b{font-size:18px;}
-  .scorebar .ok b{color:var(--ok);} .scorebar .bad b{color:var(--bad);} .scorebar .pend b{color:var(--muted);}
-  .progress{flex:1;height:8px;background:var(--panel2);border-radius:4px;overflow:hidden;min-width:60px;}
+  .scorebar .ok b{color:var(--ok);}.scorebar .bad b{color:var(--bad);}.scorebar .pend b{color:var(--muted);}
+  .progress{flex:1;height:8px;background:var(--panel2);border-radius:4px;overflow:hidden;min-width:50px;}
   .progress .fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--ok));transition:width .3s;}
+  .curlvl{font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center;color:var(--muted);margin-bottom:8px;}
 
-  .modtitle{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin:26px 0 10px;padding-left:4px;border-left:3px solid var(--gold);padding:4px 0 4px 10px;}
-
+  .modtitle{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:24px 0 10px;border-left:3px solid var(--gold);padding:4px 0 4px 10px;}
   .q{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;margin-bottom:14px;}
-  .q .qh{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;}
+  .q .qh{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px;}
   .q .qnum{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);font-size:14px;flex:none;background:var(--panel2);border-radius:7px;padding:3px 8px;}
   .q .qtext{font-size:15px;font-weight:500;}
-  .q .tf{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 6px;margin-left:6px;white-space:nowrap;}
-
+  .q .tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 6px;margin-left:6px;white-space:nowrap;display:inline-block;}
+  .q .multinote{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);margin:0 0 10px 44px;}
   .opt{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border:1.5px solid transparent;border-radius:10px;padding:12px 13px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s;font-size:14.5px;}
   .opt:hover{border-color:var(--muted);}
   .opt .k{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--muted);flex:none;}
-  .opt.correct{border-color:var(--ok);background:rgba(61,220,132,.12);}
+  .opt.sel{border-color:var(--accent);background:rgba(41,182,255,.12);}
+  .opt.correct{border-color:var(--ok);background:rgba(61,220,132,.14);}
   .opt.correct .k{color:var(--ok);}
-  .opt.wrong{border-color:var(--bad);background:rgba(255,93,93,.1);}
+  .opt.wrong{border-color:var(--bad);background:rgba(255,93,93,.12);}
   .opt.wrong .k{color:var(--bad);}
   .opt.locked{cursor:default;}
-  .opt.locked:hover{border-color:transparent;}
-  .opt.locked.correct:hover{border-color:var(--ok);}
-  .opt.locked.wrong:hover{border-color:var(--bad);}
-
+  .submitm{background:var(--accent);color:#06222e;border:none;border-radius:9px;padding:9px 16px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;cursor:pointer;margin-top:2px;}
+  .submitm[disabled]{opacity:.4;cursor:default;}
   .expl{display:none;margin-top:10px;padding:12px 13px;border-radius:10px;background:rgba(41,182,255,.08);border:1px solid rgba(41,182,255,.3);font-size:13.5px;color:#d7dced;}
   .expl.show{display:block;}
-  .expl .lbl{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px;}
-  .expl.r-ok .lbl{color:var(--ok);}
-  .expl.r-bad .lbl{color:var(--bad);}
+  .expl .lbl{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:5px;}
+  .expl.r-ok .lbl{color:var(--ok);}.expl.r-bad .lbl{color:var(--bad);}
 
   .footer{position:fixed;bottom:0;left:0;right:0;background:rgba(18,19,26,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;justify-content:center;align-items:center;z-index:30;}
-  .footer button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 18px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;cursor:pointer;}
+  .footer button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 16px;font-family:'JetBrains Mono',monospace;font-size:12.5px;cursor:pointer;}
   .footer button:hover{border-color:var(--accent);color:var(--accent);}
-  .footer .result{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);}
+  .footer .result{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);}
   .footer .result b{color:var(--ink);font-size:16px;}
 
-  .finalcard{display:none;background:var(--panel);border:2px solid var(--accent);border-radius:16px;padding:24px;text-align:center;margin:20px 0;}
+  .finalcard{display:none;background:var(--panel);border:2px solid var(--accent);border-radius:16px;padding:24px;text-align:center;margin:16px 0;}
   .finalcard.show{display:block;}
-  .finalcard h2{font-family:'Space Grotesk',sans-serif;font-size:26px;margin-bottom:6px;}
-  .finalcard .pct{font-size:52px;font-weight:700;font-family:'Space Grotesk',sans-serif;}
-  .finalcard .verdict{font-family:'JetBrains Mono',monospace;font-size:15px;margin-top:8px;}
-  .finalcard .pass{color:var(--ok);} .finalcard .fail{color:var(--bad);}
-  .finalcard .breakdown{text-align:left;margin-top:18px;font-size:13px;color:var(--muted);font-family:'JetBrains Mono',monospace;line-height:1.9;}
+  .finalcard h2{font-family:'Space Grotesk',sans-serif;font-size:24px;margin-bottom:4px;}
+  .finalcard .pct{font-size:50px;font-weight:700;font-family:'Space Grotesk',sans-serif;}
+  .finalcard .verdict{font-family:'JetBrains Mono',monospace;font-size:14px;margin-top:6px;}
+  .finalcard .pass{color:var(--ok);}.finalcard .fail{color:var(--bad);}
+  .finalcard .breakdown{text-align:left;margin-top:18px;font-size:12.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;line-height:1.8;}
   .finalcard .breakdown .mrow{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:3px 0;}
+  .hidden{display:none;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>Simulacro <span class="a">UAI</span> · Game Development</h1>
-    <p>45 preguntas · 80% para aprobar (36/45)</p>
+    <p>80% para aprobar</p>
   </header>
 
-  <div class="scorebar">
-    <div class="stat ok">✓ <b id="sOk">0</b></div>
-    <div class="stat bad">✗ <b id="sBad">0</b></div>
-    <div class="progress"><div class="fill" id="pFill"></div></div>
-    <div class="stat pend"><b id="sPend">0</b>/45</div>
+  <!-- Pantalla de inicio: selector de dificultad -->
+  <div class="start" id="startScreen">
+    <h2>Elige el nivel de dificultad</h2>
+    <p>El examen real combina escenarios aplicados y distractores plausibles. Sube de nivel a medida que te sientas cómodo.</p>
+    <div class="levels">
+      <div class="lvl easy" data-lvl="easy">
+        <div class="lname">Fácil <span class="badge">REPASO</span></div>
+        <div class="ldesc">Conceptos base y terminología. Para calentar y afianzar fundamentos.</div>
+        <div class="lcount" id="cEasy"></div>
+      </div>
+      <div class="lvl real" data-lvl="real">
+        <div class="lname">Realista <span class="badge">NIVEL EXAMEN</span></div>
+        <div class="ldesc">Distractores plausibles (todas suenan bien) y terminología exacta. Tu termómetro real.</div>
+        <div class="lcount" id="cReal"></div>
+      </div>
+      <div class="lvl hard" data-lvl="hard">
+        <div class="lname">Difícil <span class="badge">EXTREMO</span></div>
+        <div class="ldesc">Escenarios aplicados, "cuál NO es" y multiple-select sin crédito parcial. El cruce peligroso.</div>
+        <div class="lcount" id="cHard"></div>
+      </div>
+    </div>
   </div>
 
-  <div class="finalcard" id="final">
-    <h2>Resultado</h2>
-    <div class="pct" id="finalPct">0%</div>
-    <div class="verdict" id="finalVerdict"></div>
-    <div class="breakdown" id="finalBreak"></div>
+  <div id="quizArea" class="hidden">
+    <div class="curlvl" id="curLvl"></div>
+    <div class="scorebar">
+      <div class="stat ok">✓ <b id="sOk">0</b></div>
+      <div class="stat bad">✗ <b id="sBad">0</b></div>
+      <div class="progress"><div class="fill" id="pFill"></div></div>
+      <div class="stat pend"><b id="sPend">0</b>/<span id="sTot">0</span></div>
+    </div>
+    <div class="finalcard" id="final">
+      <h2>Resultado</h2>
+      <div class="pct" id="finalPct">0%</div>
+      <div class="verdict" id="finalVerdict"></div>
+      <div class="breakdown" id="finalBreak"></div>
+    </div>
+    <div id="quiz"></div>
   </div>
-
-  <div id="quiz"></div>
 </div>
 
-<div class="footer">
-  <button id="btnReset">↻ Reiniciar</button>
-  <div class="result">Aciertos: <b id="fOk">0</b>/45</div>
+<div class="footer" id="footer" style="display:none;">
+  <button id="btnHome">← Niveles</button>
+  <div class="result">Aciertos: <b id="fOk">0</b>/<span id="fTot">0</span></div>
   <button id="btnResult">Ver resultado</button>
 </div>
 
 <script>
-const QUESTIONS = [
-{m:"Módulo 2 — Editor",tf:false,q:"¿Cuál de estos modos de juego corre la lógica del mundo en el viewport del editor SIN que controles un Pawn?",o:["Play in Editor (PIE)","Simulate in Editor (SIE)","Standalone Game","Launch"],a:1,e:"Simulate corre la simulación (física, IA, lógica) pero permaneces como observador con la cámara del editor, sin poseer un Pawn. PIE te da control del Pawn; Standalone lanza el juego en un proceso aparte."},
-{m:"Módulo 2 — Editor",tf:true,q:"El código C++ de un proyecto se guarda dentro de la carpeta Content.",o:["Verdadero","Falso"],a:1,e:"El C++ va en la carpeta Source. Content es solo para assets (.uasset, .umap). Config va en Config; Saved e Intermediate son regenerables."},
-{m:"Módulo 2 — Editor",tf:false,q:"¿Qué viewport view mode usarías para diagnosticar el costo de renderizado de los materiales/shaders en pantalla?",o:["Lightmap Density","Wireframe","Shader Complexity","Unlit"],a:2,e:"Shader Complexity colorea de verde (barato) a rojo (caro) el costo de shading por pixel. Lightmap Density es para iluminación estática; Wireframe muestra topología; Unlit quita la iluminación."},
-{m:"Módulo 2 — Editor",tf:true,q:"Un Component puede colocarse directamente en un nivel sin pertenecer a ningún Actor.",o:["Verdadero","Falso"],a:1,e:"Un Component siempre vive dentro de un Actor. Solo los Actors pueden colocarse o spawnearse en el nivel."},
-{m:"Módulo 2 — Editor",tf:false,q:"¿Cómo se llama el panel que lista todos los actores presentes en el nivel actual?",o:["Details","Outliner","Content Browser","Components"],a:1,e:"Outliner (antes World Outliner). Details muestra propiedades del actor seleccionado; Content Browser navega assets; Components es el árbol dentro de un Blueprint."},
+/* ===== BANCOS DE PREGUNTAS =====
+   type: 'single' | 'tf' | 'multi'
+   a: índice correcto (single/tf) o array de índices (multi) */
 
-{m:"Módulo 5 — Blueprint Visual Scripting",tf:false,q:"¿Cuál es la diferencia principal entre un Level Blueprint y un Blueprint Class?",o:["El Level Blueprint se reutiliza en varios niveles","El Blueprint Class es único por nivel","El Level Blueprint es específico de un nivel; el Blueprint Class es reutilizable y se instancia","No hay diferencia funcional"],a:2,e:"El Level Blueprint es único y ligado a su nivel. El Blueprint Class es una plantilla reutilizable que se instancia como actores en cualquier nivel."},
-{m:"Módulo 5 — Blueprint Visual Scripting",tf:true,q:"Una Macro de Blueprint puede contener nodos de latencia (Delay, Timelines) igual que una Function.",o:["Verdadero","Falso"],a:1,e:"Las Functions NO permiten nodos de latencia (Delay). Las Macros sí. Distinción clásica de examen."},
-{m:"Módulo 5 — Blueprint Visual Scripting",tf:false,q:"¿Qué nodo de Flow Control alterna entre sus salidas en llamadas sucesivas?",o:["Branch","Sequence","FlipFlop","Gate"],a:2,e:"FlipFlop alterna entre salida A y B en llamadas sucesivas. Sequence ejecuta todas en orden; Branch es un if; Gate abre/cierra el flujo."},
-{m:"Módulo 5 — Blueprint Visual Scripting",tf:false,q:"¿Cuál es el propósito de un nodo Gate en Flow Control?",o:["Comparar dos valores","Permitir o bloquear el paso del flujo según esté Open o Closed","Repetir un bucle N veces","Ejecutar en paralelo"],a:1,e:"El Gate deja pasar el Exec solo si está Open; se controla con Open/Close/Toggle."},
-{m:"Módulo 5 — Blueprint Visual Scripting",tf:true,q:"Las Functions de Blueprint pueden tener múltiples nodos de salida de EJECUCIÓN (múltiples exec output pins) como una Macro.",o:["Verdadero","Falso"],a:1,e:"Las Functions tienen un único punto de retorno de ejecución. Para múltiples rutas de exec se usan Macros. (Sí pueden tener múltiples valores de retorno de datos, pero no múltiples exec pins de salida.)"},
+const BANKS = {
+easy: [
+{m:"Editor",type:"single",q:"¿Qué modo corre la lógica del mundo en el viewport SIN que controles un Pawn?",o:["PIE","Simulate in Editor","Standalone","Launch"],a:1,e:"Simulate corre la simulación pero permaneces como observador, sin poseer Pawn. PIE controla el Pawn; Standalone es un proceso aparte."},
+{m:"Editor",type:"tf",q:"El código C++ del proyecto se guarda en la carpeta Content.",o:["Verdadero","Falso"],a:1,e:"El C++ va en Source. Content es solo assets."},
+{m:"Editor",type:"single",q:"¿Qué view mode diagnostica el costo de shaders en pantalla?",o:["Lightmap Density","Wireframe","Shader Complexity","Unlit"],a:2,e:"Shader Complexity: verde=barato, rojo=caro."},
+{m:"Blueprint",type:"tf",q:"Las Functions permiten nodos de latencia (Delay) igual que las Macros.",o:["Verdadero","Falso"],a:1,e:"Solo las Macros permiten latencia; las Functions no."},
+{m:"Blueprint",type:"single",q:"¿Qué nodo alterna entre sus salidas en llamadas sucesivas?",o:["Branch","Sequence","FlipFlop","Gate"],a:2,e:"FlipFlop alterna A/B."},
+{m:"Gameplay",type:"single",q:"¿Qué clase define las reglas del juego y solo existe en el servidor?",o:["Game State","Game Mode","Player State","Player Controller"],a:1,e:"Game Mode = reglas, solo servidor. Game State replica a clientes."},
+{m:"Gameplay",type:"single",q:"En GAS, ¿qué representa un valor como salud o maná?",o:["Ability","Effect","Attribute","Tag"],a:2,e:"Attribute (en AttributeSet). Effects lo modifican."},
+{m:"Physics",type:"single",q:"¿Qué sistema de UE5 maneja destrucción y fractura?",o:["APEX","Chaos","PhysX Legacy","Nanite"],a:1,e:"Chaos. Nanite es rendering."},
+{m:"Rendering",type:"single",q:"¿Qué técnica reduce el detalle de una malla a distancia?",o:["LOD","Lumen","MSAA","Bloom"],a:0,e:"LOD sustituye por versiones más simples según distancia."},
+{m:"Audio",type:"single",q:"¿Qué es MetaSounds?",o:["Un formato de archivo","Sistema de audio procedural basado en grafos","Un plugin con licencia","Subtítulos"],a:1,e:"Grafo de nodos para síntesis procedural y DSP."},
+{m:"Testing",type:"single",q:"¿Qué comando muestra el desglose game/render/GPU en ms?",o:["stat unit","open level","slomo 2","ce start"],a:0,e:"stat unit: Frame, Game, Draw, GPU."},
+{m:"User Interaction",type:"single",q:"¿Qué sistema moderno usa Input Actions y Mapping Contexts?",o:["Legacy Input","Enhanced Input","Slate Input","Force Feedback"],a:1,e:"Enhanced Input: Actions, Contexts, Triggers, Modifiers."}
+],
 
-{m:"Módulo 11 — Gameplay & Interactive Framework",tf:false,q:"¿Qué clase representa las reglas del juego (victoria, spawns, clases por defecto) y existe solo en el servidor?",o:["Game State","Game Mode","Player State","Player Controller"],a:1,e:"El Game Mode define las reglas y solo existe en el servidor (authority). El Game State replica el estado global a los clientes."},
-{m:"Módulo 11 — Gameplay & Interactive Framework",tf:false,q:"¿Cuál es la diferencia entre un Pawn y un Character?",o:["El Pawn no puede ser poseído por un Controller","El Character es un Pawn con CharacterMovementComponent y CapsuleComponent para locomoción","El Pawn solo sirve para IA","No hay diferencia"],a:1,e:"Character hereda de Pawn y añade Capsule, SkeletalMesh y CharacterMovementComponent. Un Pawn es más genérico (ej. un vehículo)."},
-{m:"Módulo 11 — Gameplay & Interactive Framework",tf:true,q:"Un Controller posee (possess) a un Pawn, y esa posesión puede transferirse a otro Pawn en runtime.",o:["Verdadero","Falso"],a:0,e:"Con Possess/UnPossess puedes cambiar qué Pawn controla el Controller en tiempo de ejecución (cambiar de personaje o vehículo)."},
-{m:"Módulo 11 — Gameplay & Interactive Framework",tf:false,q:"En GAS, ¿qué elemento representa un valor numérico (salud, maná) modificable por efectos?",o:["Gameplay Ability","Gameplay Effect","Attribute","Gameplay Tag"],a:2,e:"Los Attributes (en un AttributeSet) son los valores. Los Gameplay Effects los modifican; las Abilities son las acciones; los Tags etiquetan estados."},
-{m:"Módulo 11 — Gameplay & Interactive Framework",tf:false,q:"¿Para qué sirven los Gameplay Tags en GAS?",o:["Renderizar UI","Etiquetas jerárquicas para identificar estados y controlar bloqueos/cancelaciones de abilities","Guardar datos en disco","Compilar C++"],a:1,e:"Los Gameplay Tags (ej. State.Stunned) son etiquetas jerárquicas para identificar estados y controlar qué abilities se bloquean/cancelan, sin hardcodear referencias."},
-{m:"Módulo 11 — Gameplay & Interactive Framework",tf:false,q:"¿Qué Controller se usa para la IA de enemigos, sobre el cual corre el StateTree/Behavior Tree?",o:["Player Controller","AI Controller","Game Mode","Pawn"],a:1,e:"La IA corre en el AI Controller (que posee el Pawn enemigo). El StateTreeAIComponent corre sobre el AIController con el Pawn como contexto."},
-{m:"Módulo 11 — Gameplay & Interactive Framework",tf:true,q:"El Game State es el lugar recomendado para info global que todos los clientes necesitan (puntaje de equipo, tiempo restante).",o:["Verdadero","Falso"],a:0,e:"El Game State replica info global a todos los clientes. El Player State guarda info por jugador."},
-{m:"Módulo 11 — Gameplay & Interactive Framework",tf:false,q:"¿Qué método detecta si una línea entre dos puntos impacta algo (disparo, línea de visión)?",o:["Overlap Event","Line Trace (Raycast)","Timer","Tick"],a:1,e:"Un Line Trace lanza un rayo entre dos puntos y devuelve impactos según el canal de colisión. Base para disparos, line-of-sight, interacción."},
-{m:"Módulo 11 — Gameplay & Interactive Framework",tf:false,q:"¿Ventaja de usar Data Driven Gameplay Elements (Data Assets/Tables) vs hardcodear?",o:["Corren más rápido siempre","Separan datos de lógica: ajustes sin recompilar y reutilización por configuración","Reducen la build a la mitad","Eliminan la necesidad de Blueprints"],a:1,e:"Externalizan la configuración para ajustar sin tocar la lógica ni recompilar. Coincide con 'variables configurables sobre literales hardcodeados'."},
-{m:"Módulo 11 — Gameplay & Interactive Framework",tf:true,q:"Un Timer permite ejecutar una función tras un retraso o de forma repetida, sin usar el Tick cada frame.",o:["Verdadero","Falso"],a:0,e:"Los Timers ejecutan lógica tras un delay o en loop a intervalos, más eficientes que revisar en cada Tick."},
+real: [
+{m:"Gameplay",type:"single",q:"Sobre el ciclo de vida de las clases del framework, ¿cuál afirmación es EXACTA?",o:["El Player Controller existe tanto en servidor como en el cliente que lo posee, pero no en otros clientes","El Game Mode existe en todos los clientes para validar reglas localmente","El Player State solo existe en el servidor y nunca se replica","El Game State existe únicamente en el cliente host"],a:0,e:"El PlayerController vive en el servidor y en su cliente dueño (no en clientes ajenos). El Game Mode solo existe en el servidor (authority); el Player State SÍ se replica a todos; el Game State se replica a todos los clientes."},
+{m:"Gameplay",type:"single",q:"Necesitas datos por-jugador que TODOS los clientes puedan ver (ej. su nombre y puntaje). ¿Dónde van?",o:["Game Mode","Player State","Player Controller","Game Instance"],a:1,e:"El Player State guarda datos por jugador replicados a todos. El PlayerController no se replica a clientes ajenos; el Game Mode es server-only; el Game Instance persiste entre niveles pero no es por-jugador replicado."},
+{m:"Gameplay",type:"single",q:"En GAS, ¿cuál es la relación correcta entre Gameplay Effect y Attribute?",o:["El Effect es un valor y el Attribute lo modifica","El Attribute es el valor; el Effect lo modifica (instantáneo, con duración o infinito)","Ambos son etiquetas jerárquicas","El Effect solo puede leer Attributes, no modificarlos"],a:1,e:"El Attribute es el dato (Health). El Gameplay Effect lo modifica y puede ser Instant, Duration o Infinite. Los Tags son otra cosa (etiquetas)."},
+{m:"Blueprint",type:"single",q:"¿Cuál es una diferencia EXACTA entre Function y Macro?",o:["Las Functions pueden llamarse desde otros Blueprints; las Macros solo desde su propio grafo o librería","Las Macros pueden ser overridden en clases hijas; las Functions no","Las Functions permiten nodos de latencia; las Macros no","Las Macros aparecen en el Class Defaults; las Functions no"],a:0,e:"Las Functions son llamables externamente y pueden overridearse; las Macros se expanden en línea y no cruzan Blueprints (salvo Macro Libraries). Además, la latencia es al revés: Macros SÍ, Functions NO."},
+{m:"Editor",type:"single",q:"Sobre Content Drawer vs Content Browser, ¿cuál es correcto?",o:["Son sistemas distintos con diferentes assets","El Content Drawer es un acceso rápido temporal (Ctrl+Space) que se auto-oculta; el Browser es un panel dockable persistente","El Content Browser solo existe en C++ projects","El Drawer no permite abrir assets"],a:1,e:"Mismo contenido; el Drawer es acceso rápido que se cierra solo, el Browser es un panel fijo que puedes anclar."},
+{m:"Physics",type:"single",q:"Un actor debe DETECTAR cuando el jugador entra en su zona, pero SIN frenarlo físicamente. ¿Qué respuesta de colisión?",o:["Block en el canal del jugador","Overlap en el canal del jugador","Ignore en todos los canales","Block + Simulate Physics"],a:1,e:"Overlap deja pasar pero dispara Begin/End Overlap (triggers). Block frenaría al jugador; Ignore no dispararía eventos."},
+{m:"Rendering",type:"single",q:"Estás en VR y necesitas MSAA con buen rendimiento. ¿Qué renderer conviene y por qué?",o:["Deferred, porque soporta MSAA nativo","Forward, porque permite MSAA y es más liviano aunque limita algunas features","Deferred, porque Forward no soporta ninguna luz","Forward, porque no tiene limitaciones respecto a Deferred"],a:1,e:"Forward Shading permite MSAA y es común en VR por performance, a costa de limitar algunas features (menos luces dinámicas complejas, etc.). Deferred usa TAA/otras, no MSAA nativo."},
+{m:"Audio",type:"single",q:"¿Cuál afirmación sobre Sound Attenuation es EXACTA?",o:["Comprime el archivo de audio para ahorrar memoria","Controla el falloff del volumen y puede incluir spatialization y occlusion según la distancia al oyente","Solo funciona dentro de MetaSounds","Convierte audio mono en estéreo automáticamente"],a:1,e:"Attenuation define cómo caen volumen y otras propiedades con la distancia, y puede incluir spatialization/occlusion. No comprime ni convierte formatos."},
+{m:"Testing",type:"single",q:"El frame tarda mucho y 'stat unit' muestra 'Game' alto pero 'Draw' y 'GPU' bajos. ¿Dónde está el cuello de botella?",o:["En la GPU","En el render thread","En el game thread (lógica/CPU de gameplay)","En la memoria de texturas"],a:2,e:"'Game' alto = el game thread (lógica de gameplay) es el cuello de botella. Draw = render thread; GPU = tarjeta. Herramienta para profundizar: Unreal Insights / Timing Insights."},
+{m:"User Interaction",type:"single",q:"En Enhanced Input, ¿qué componente decide CUÁNDO se dispara una acción (Pressed/Hold/Tap)?",o:["Input Modifier","Input Trigger","Input Mapping Context","Input Action"],a:1,e:"El Trigger define la condición de disparo. El Modifier transforma el valor crudo; el Mapping Context agrupa; el Action es la acción abstracta."},
+{m:"Gameplay",type:"single",q:"¿Cuál es la forma correcta de cambiar qué Pawn controla un jugador en runtime?",o:["Destruir el Controller y crear otro","Usar Possess/UnPossess desde el Controller","Reasignar el Game Mode","Cambiar el Player State"],a:1,e:"El Controller usa Possess/UnPossess para tomar/soltar Pawns en runtime, sin destruirse."},
+{m:"Rendering",type:"single",q:"¿Cuál afirmación sobre Threaded Rendering es EXACTA?",o:["Todo el motor corre en un solo hilo por seguridad","El game thread y el render thread corren en paralelo, con el render thread un frame por detrás típicamente","El render thread ejecuta la lógica de gameplay","Threaded Rendering desactiva el RHI thread"],a:1,e:"Game thread y render thread corren en paralelo; el render suele ir ~1 frame detrás. El RHI thread envía comandos a la GPU. La lógica de gameplay vive en el game thread, no en el render."}
+],
 
-{m:"Módulo 14 — Physics",tf:false,q:"¿Diferencia entre una respuesta de colisión Overlap y una Block?",o:["Overlap detiene el movimiento; Block solo dispara evento","Block impide la penetración y genera Hit; Overlap deja pasar pero dispara eventos de solapamiento","Son idénticas","Overlap solo funciona en C++"],a:1,e:"Block impide que se atraviesen y genera Hit. Overlap permite el paso pero dispara Begin/End Overlap (triggers/zonas)."},
-{m:"Módulo 14 — Physics",tf:false,q:"¿Qué sistema de UE5 se usa para destrucción y fractura de objetos?",o:["APEX Destruction","Chaos","PhysX Legacy","Nanite"],a:1,e:"Chaos es el sistema de física/destrucción de UE5. Nanite es geometría virtualizada (rendering), no física."},
-{m:"Módulo 14 — Physics",tf:true,q:"Una Geometry Collection contiene la malla fracturada y su jerarquía de clusters para la destrucción con Chaos.",o:["Verdadero","Falso"],a:0,e:"La Geometry Collection almacena las piezas fracturadas (creadas en Fracture Mode) y su clustering, que define cómo se agrupan y rompen."},
-{m:"Módulo 14 — Physics",tf:false,q:"¿Qué son los Chaos Fields?",o:["Campos de texto para debug","Fuerzas/campos aplicados a las simulaciones de Chaos (empujar, anclar, activar fragmentos)","Un tipo de material","Configuración de red"],a:1,e:"Los Fields aplican fuerzas o estados (anchoring, activación, strain) sobre las Geometry Collections para controlar cómo se fracturan/mueven los fragmentos."},
-{m:"Módulo 14 — Physics",tf:true,q:"El Chaos Cloth simula telas y su comportamiento se ajusta con propiedades como stiffness y damping.",o:["Verdadero","Falso"],a:0,e:"Chaos Cloth simula telas; se configura con stiffness, damping, collision desde el Clothing Tool / Panel Cloth."},
+hard: [
+{m:"Gameplay",type:"multi",q:"Selecciona TODAS las afirmaciones VERDADERAS sobre el Gameplay Framework:",o:["El Game Mode solo existe en el servidor con authority","El Player State se replica a todos los clientes","El Player Controller de un jugador existe en todos los demás clientes","El Game State replica información global a todos los clientes"],a:[0,1,3],e:"Verdaderas: Game Mode server-only (0), Player State replicado a todos (1), Game State replica lo global (3). FALSA la 2: el PlayerController de un jugador existe en el servidor y en SU cliente dueño, no en clientes ajenos."},
+{m:"Gameplay",type:"single",q:"ESCENARIO: tienes stutters periódicos (hitches) y sospechas del Garbage Collection. Estás guardando referencias directas (Hard References) a muchos assets pesados en variables de Blueprint. ¿Cuál es la causa/solución MÁS correcta?",o:["El GC es aleatorio; no hay solución","Las Hard References cargan y mantienen en memoria todos esos assets; usar Soft References (TSoftObjectPtr) y cargar bajo demanda reduce el impacto","Aumentar el Tick rate soluciona el GC","Mover todo a Level Blueprint elimina el GC"],a:1,e:"Las Hard References fuerzan a cargar y mantener los assets referenciados en memoria, inflando el working set y los picos de GC. Soft References + carga asíncrona bajo demanda es la práctica correcta para aligerar memoria y hitches."},
+{m:"Blueprint",type:"multi",q:"¿Cuáles de las siguientes NO permiten nodos de latencia (Delay/Timeline)? (elige todas)",o:["Functions","Macros","Event Graph","Interface Functions"],a:[0,3],e:"NO permiten latencia: Functions (0) e Interface Functions (3), porque son funciones. SÍ permiten: Macros (1) y el Event Graph (2)."},
+{m:"Rendering",type:"single",q:"ESCENARIO: en el Shader Complexity viewmode ves grandes zonas en rojo/blanco sobre superficies con vegetación y vidrio superpuestos. ¿Cuál es la causa más probable?",o:["Demasiados triángulos (topología)","Overdraw por múltiples capas de materiales translúcidos/masked apilados","Falta de LODs en el terreno","Lightmaps de baja resolución"],a:1,e:"El costo alto de shading en zonas con translúcidos/masked apilados es overdraw: se sombrea el mismo pixel muchas veces. Es un problema de shading/overdraw, no de topología ni lightmaps."},
+{m:"Physics",type:"single",q:"ESCENARIO: una Geometry Collection se fractura al tocarla, pero quieres que ciertas piezas permanezcan fijas hasta recibir un impacto fuerte. ¿Qué usas?",o:["Un Physical Constraint en cada pieza","Un Anchor Field (Chaos Field) para anclar y controlar la activación por strain","Aumentar el Damping global","Desactivar las colisiones"],a:1,e:"Los Chaos Fields (ej. anchoring / activación por strain) controlan qué piezas quedan ancladas y cuándo se activan. Los Constraints son otra cosa; el damping no ancla."},
+{m:"Testing",type:"single",q:"ESCENARIO: 'stat unit' muestra GPU alto y Game/Draw bajos. Antes de tocar código, ¿cuál es el enfoque correcto?",o:["Optimizar la lógica de Blueprints","Perfilar la GPU (stat GPU / Insights) y revisar resolución, post-process, overdraw y complejidad de shaders","Reducir el número de actores con Tick","Subir el LOD bias de las mallas"],a:1,e:"GPU-bound → el trabajo está en la tarjeta: resolución, post-process, overdraw, shaders. Optimizar Blueprints (CPU/game thread) no ayudaría a un cuello de botella de GPU."},
+{m:"User Interaction",type:"multi",q:"Selecciona TODAS las afirmaciones VERDADERAS sobre Enhanced Input:",o:["Los Modifiers transforman el valor crudo (dead zone, negate, swizzle)","Los Triggers definen cuándo se activa la acción (Hold, Tap...)","Un Mapping Context puede añadirse/quitarse en runtime con prioridad","Las Input Actions almacenan directamente las teclas físicas"],a:[0,1,2],e:"Verdaderas 0,1,2. FALSA la 3: las Input Actions son abstractas (el 'qué'); las teclas físicas se asignan en el Input Mapping Context, no dentro de la Action."},
+{m:"Gameplay",type:"single",q:"ESCENARIO: un Gameplay Effect debe reducir la velocidad un 30% mientras dure un debuff, y revertirse solo al terminar. ¿Qué tipo de Effect y modificación?",o:["Instant, modificando el valor base","Duration, con un modificador que aplica y revierte automáticamente al expirar","Infinite, restando manualmente al terminar","Periodic Instant cada frame"],a:1,e:"Un Duration Effect aplica el modificador mientras dura y lo revierte al expirar (modificación no permanente del Current Value). Un Instant altera el Base Value permanentemente, lo que no se revierte solo."},
+{m:"Blueprint",type:"single",q:"¿Cuál de estas afirmaciones sobre el orden de ejecución del nodo Sequence es EXACTA?",o:["Ejecuta sus salidas en paralelo (multihilo)","Ejecuta cada salida completamente y en orden (Then 0, luego Then 1...) en el mismo frame","Ejecuta solo la primera salida","Alterna entre salidas en llamadas sucesivas"],a:1,e:"Sequence ejecuta cada pin Then en orden, uno tras otro completamente, en el mismo frame (no es paralelo real). Alternar es FlipFlop; una sola salida sería otra cosa."},
+{m:"Rendering",type:"multi",q:"¿Cuáles son formas válidas de REDUCIR draw calls? (elige todas)",o:["Usar HLOD / Proxy Geometry para combinar mallas a distancia","Instanced Static Meshes / ISM-HISM","Aumentar la resolución de las texturas","Combinar materiales y usar atlas de texturas"],a:[0,1,3],e:"Reducen draw calls: HLOD/Proxy (0), Instancing (1), combinar materiales/atlas (3). Subir la resolución de texturas (2) NO reduce draw calls (afecta memoria/bandwidth)."}
+]
+};
 
-{m:"Módulo 9 — Rendering",tf:false,q:"¿Diferencia principal entre Deferred Shading (default) y Forward Shading Renderer?",o:["Forward no soporta ninguna luz","Deferred maneja muchas luces vía G-Buffer; Forward es más liviano y útil para VR/MSAA pero con más límites","Son lo mismo","Forward solo funciona en móvil"],a:1,e:"Deferred escribe a un G-Buffer y escala con muchas luces. Forward renderiza directo, permite MSAA y es común en VR por performance, con algunas limitaciones de features."},
-{m:"Módulo 9 — Rendering",tf:true,q:"El Post Process Volume aplica efectos de imagen (bloom, tone mapping, exposición, color grading), global o acotado a un volumen.",o:["Verdadero","Falso"],a:0,e:"Con 'Unbound' afecta toda la escena, o limitado a su volumen con blend en los bordes."},
-{m:"Módulo 9 — Rendering",tf:false,q:"¿Qué hace la Exposure / Eye Adaptation?",o:["Ajusta la resolución dinámicamente","Simula la adaptación del ojo al brillo, ajustando la luminancia de la escena","Controla las colisiones","Compila shaders"],a:1,e:"Eye Adaptation (Auto Exposure) simula cómo el ojo se adapta a zonas claras/oscuras. Se puede fijar manualmente para control artístico."},
-{m:"Módulo 9 — Rendering",tf:false,q:"¿Qué técnica reduce el detalle de una malla a distancia para ahorrar rendimiento?",o:["LOD (Level of Detail)","Lumen","Nanite disabling","MSAA"],a:0,e:"Los LODs sustituyen la malla por versiones más simples según la distancia. Nanite gestiona el detalle de forma virtualizada como alternativa."},
-{m:"Módulo 9 — Rendering",tf:true,q:"El Threaded Rendering ejecuta el trabajo de renderizado en un hilo (render thread) separado del game thread.",o:["Verdadero","Falso"],a:0,e:"Unreal separa game thread (lógica), render thread (dibujado) y RHI thread, aprovechando múltiples núcleos."},
+/* ===== LÓGICA ===== */
+const startScreen=document.getElementById('startScreen');
+const quizArea=document.getElementById('quizArea');
+const quiz=document.getElementById('quiz');
+const footer=document.getElementById('footer');
+let current=[], answered=[], curLevelName="";
 
-{m:"Módulo 15 — Audio",tf:false,q:"¿Qué es MetaSounds en UE5?",o:["Un formato de archivo de audio","Un sistema de audio procedural basado en grafos (nodos) con control total de generación y DSP","Un plugin de música con licencia","El sistema de subtítulos"],a:1,e:"MetaSounds es el sistema moderno de audio de UE5: un grafo de nodos para síntesis procedural, DSP y lógica de sonido en runtime. Reemplaza en gran parte a los Sound Cues."},
-{m:"Módulo 15 — Audio",tf:false,q:"¿Para qué sirve el Sound Attenuation?",o:["Cambiar el idioma del audio","Controlar cómo el volumen y otras propiedades disminuyen con la distancia al oyente","Comprimir el archivo","Spatializar solo en VR"],a:1,e:"Attenuation define el falloff del sonido con la distancia (radios, curva) y puede incluir spatialization y occlusion. Base del audio 3D."},
-{m:"Módulo 15 — Audio",tf:true,q:"MetaSounds es la evolución moderna del Sound Cue, con control basado en grafo y DSP procedural.",o:["Verdadero","Falso"],a:0,e:"MetaSounds es más potente (síntesis procedural, control fino en runtime); Sound Cue es el sistema anterior más simple basado en nodos de mezcla."},
-{m:"Módulo 15 — Audio",tf:false,q:"¿Qué proporciona el sistema Quartz en el audio de UE5?",o:["Renderizado de partículas","Sincronización y cuantización de audio con precisión de sample, útil para música rítmica","Compresión de texturas","IA de enemigos"],a:1,e:"Quartz programa eventos de audio sincronizados al reloj musical con precisión de sample, ideal para música interactiva y mecánicas al ritmo."},
+document.getElementById('cEasy').textContent=BANKS.easy.length+' preguntas';
+document.getElementById('cReal').textContent=BANKS.real.length+' preguntas';
+document.getElementById('cHard').textContent=BANKS.hard.length+' preguntas';
 
-{m:"Módulo 16 — Testing & Optimization",tf:false,q:"¿Qué herramienta hace profiling detallado de CPU, GPU y memoria capturando trazas?",o:["Blueprint Debugger","Unreal Insights","Content Browser","Sequencer"],a:1,e:"Unreal Insights captura traces y los analiza en Timing Insights (CPU/GPU) y Memory Insights. Herramienta central de profiling."},
-{m:"Módulo 16 — Testing & Optimization",tf:false,q:"¿Qué comando de consola muestra el desglose de tiempo por game/render/GPU?",o:["stat unit","open level","slomo 2","ce start"],a:0,e:"'stat unit' muestra Frame, Game, Draw (render thread) y GPU en ms, para identificar el cuello de botella."},
-{m:"Módulo 16 — Testing & Optimization",tf:true,q:"El Visual Logger registra y reproduce visualmente en el tiempo eventos, estados y datos de IA/gameplay.",o:["Verdadero","Falso"],a:0,e:"Graba datos a lo largo del tiempo (posiciones, formas de debug, estados) y los reproduce en una timeline. Muy útil para debug de IA."},
-{m:"Módulo 16 — Testing & Optimization",tf:false,q:"¿Para qué sirve el Proxy Geometry Tool (HLOD / mesh proxy)?",o:["Crear materiales","Generar una malla simplificada que reemplace varias mallas a distancia, reduciendo draw calls","Grabar audio","Networking"],a:1,e:"Genera un proxy/HLOD que reemplaza grupos de mallas a distancia, bajando draw calls y triángulos. Clave para mundos grandes."},
-{m:"Módulo 16 — Testing & Optimization",tf:true,q:"RenderDoc permite capturar un frame y analizar cada draw call y el estado de la GPU.",o:["Verdadero","Falso"],a:0,e:"RenderDoc captura un frame para inspeccionar draw calls, texturas, buffers y el pipeline gráfico paso a paso."},
+const LVLNAMES={easy:"FÁCIL · Repaso",real:"REALISTA · Nivel examen",hard:"DIFÍCIL · Extremo"};
 
-{m:"Módulo 17 — User Interaction",tf:false,q:"¿Qué sistema moderno de input usa Input Actions e Input Mapping Contexts, con Triggers y Modifiers?",o:["Legacy Input (Action/Axis Mappings)","Enhanced Input","Slate Input","Force Feedback"],a:1,e:"Enhanced Input usa Input Actions (qué), Mapping Contexts (agrupaciones activables), Triggers (condiciones) y Modifiers (transformaciones). Reemplaza el legacy."},
-{m:"Módulo 17 — User Interaction",tf:true,q:"En Enhanced Input, un Input Mapping Context puede añadirse o quitarse en runtime para cambiar qué inputs están activos.",o:["Verdadero","Falso"],a:0,e:"Puedes agregar/remover Mapping Contexts dinámicamente y darles prioridad, cambiando el set de inputs según la situación (a pie vs conduciendo)."},
-{m:"Módulo 17 — User Interaction",tf:false,q:"En Enhanced Input, ¿qué es un Trigger?",o:["Un sonido al presionar un botón","La condición que determina cuándo un Input Action se activa (Pressed, Hold, Tap...)","Un tipo de colisión","Un nodo de material"],a:1,e:"Los Triggers definen la condición de activación (Down, Pressed, Released, Hold, Tap). Ej.: un Trigger 'Hold' para una acción de carga."},
-{m:"Módulo 17 — User Interaction",tf:true,q:"Los Modifiers en Enhanced Input transforman el valor de entrada crudo (invertir eje, dead zone, escalar, swizzle).",o:["Verdadero","Falso"],a:0,e:"Los Modifiers procesan el valor crudo (Dead Zone, Negate, Scalar, Swizzle) antes de pasarlo al Trigger/Action."},
-{m:"Módulo 17 — User Interaction",tf:false,q:"¿Qué es Live Link en Unreal?",o:["Un sistema de chat multijugador","Un framework para transmitir datos en tiempo real desde fuentes externas (mocap, cámaras, faciales)","Un material translúcido","Una herramienta de packaging"],a:1,e:"Live Link recibe datos en tiempo real (mocap, tracking facial, cámaras) desde apps/hardware externos. Relevante para producción virtual y animación."},
-{m:"Módulo 17 — User Interaction",tf:true,q:"Force Feedback se refiere a los patrones de vibración/haptics enviados a los mandos como respuesta a eventos de gameplay.",o:["Verdadero","Falso"],a:0,e:"Force Feedback define patrones de vibración (Force Feedback Effects) reproducidos en el gamepad para retroalimentación háptica."}
-];
-
-const quiz = document.getElementById('quiz');
-const answered = new Array(QUESTIONS.length).fill(null); // guarda índice elegido, o null
-let lastModule = "";
-
-QUESTIONS.forEach((item, qi)=>{
-  if(item.m !== lastModule){
-    const mt = document.createElement('div');
-    mt.className='modtitle'; mt.textContent=item.m;
-    quiz.appendChild(mt); lastModule=item.m;
-  }
-  const card = document.createElement('div');
-  card.className='q'; card.dataset.qi=qi;
-  const tf = item.tf ? '<span class="tf">V/F</span>' : '';
-  let optsHtml='';
-  item.o.forEach((txt,oi)=>{
-    const key = item.tf ? '' : `<span class="k">${String.fromCharCode(65+oi)}</span>`;
-    optsHtml += `<div class="opt" data-oi="${oi}">${key}<span>${txt}</span></div>`;
-  });
-  card.innerHTML = `
-    <div class="qh"><span class="qnum">${qi+1}</span><span class="qtext">${item.q}${tf}</span></div>
-    <div class="opts">${optsHtml}</div>
-    <div class="expl"><span class="lbl"></span><span class="etext">${item.e}</span></div>`;
-  quiz.appendChild(card);
+document.querySelectorAll('.lvl').forEach(el=>{
+  el.addEventListener('click',()=>startLevel(el.dataset.lvl));
 });
+
+function startLevel(lvl){
+  current=BANKS[lvl];
+  curLevelName=LVLNAMES[lvl];
+  answered=new Array(current.length).fill(null); // multi: array de seleccionados temporal; single: índice final
+  buildQuiz();
+  startScreen.classList.add('hidden');
+  quizArea.classList.remove('hidden');
+  footer.style.display='flex';
+  document.getElementById('curLvl').textContent='Nivel: '+curLevelName;
+  document.getElementById('sTot').textContent=current.length;
+  document.getElementById('fTot').textContent=current.length;
+  document.getElementById('final').classList.remove('show');
+  updateBar();
+  window.scrollTo(0,0);
+}
+
+function buildQuiz(){
+  quiz.innerHTML=''; let lastMod="";
+  current.forEach((item,qi)=>{
+    if(item.m!==lastMod){const mt=document.createElement('div');mt.className='modtitle';mt.textContent=item.m;quiz.appendChild(mt);lastMod=item.m;}
+    const card=document.createElement('div');card.className='q';card.dataset.qi=qi;
+    let tag = item.type==='tf'?'<span class="tag">V/F</span>':(item.type==='multi'?'<span class="tag">MULTI</span>':'');
+    let opts='';
+    item.o.forEach((txt,oi)=>{
+      const key=item.type==='tf'?'':`<span class="k">${String.fromCharCode(65+oi)}</span>`;
+      opts+=`<div class="opt" data-oi="${oi}">${key}<span>${txt}</span></div>`;
+    });
+    const multiNote = item.type==='multi'?`<div class="multinote">Elige TODAS las correctas · sin crédito parcial</div>`:'';
+    const submitBtn = item.type==='multi'?`<button class="submitm" data-qi="${qi}" disabled>Confirmar selección</button>`:'';
+    card.innerHTML=`<div class="qh"><span class="qnum">${qi+1}</span><span class="qtext">${item.q}${tag}</span></div>${multiNote}<div class="opts">${opts}</div>${submitBtn}<div class="expl"><span class="lbl"></span><span class="etext">${item.e}</span></div>`;
+    quiz.appendChild(card);
+  });
+}
+
+quiz.addEventListener('click',e=>{
+  const opt=e.target.closest('.opt');
+  const sub=e.target.closest('.submitm');
+  if(sub){ resolveMulti(+sub.dataset.qi); return; }
+  if(!opt) return;
+  const card=opt.closest('.q'); const qi=+card.dataset.qi; const item=current[qi];
+  if(card.classList.contains('done')) return;
+
+  if(item.type==='multi'){
+    opt.classList.toggle('sel');
+    const anySel=card.querySelectorAll('.opt.sel').length>0;
+    card.querySelector('.submitm').disabled=!anySel;
+    return;
+  }
+  // single / tf: resolver al toque
+  const sel=+opt.dataset.oi;
+  answered[qi]={sel, correct: sel===item.a};
+  lockSingle(card,item,sel);
+  updateBar();
+});
+
+function lockSingle(card,item,sel){
+  card.classList.add('done');
+  card.querySelectorAll('.opt').forEach((o,oi)=>{
+    o.classList.add('locked');
+    if(oi===item.a)o.classList.add('correct');
+    if(oi===sel&&sel!==item.a)o.classList.add('wrong');
+  });
+  showExpl(card,item,sel===item.a, item.type==='tf'?null:item.a);
+}
+
+function resolveMulti(qi){
+  const card=quiz.querySelector('.q[data-qi="'+qi+'"]');
+  if(card.classList.contains('done'))return;
+  const item=current[qi];
+  const sel=[...card.querySelectorAll('.opt.sel')].map(o=>+o.dataset.oi).sort();
+  const correctSet=[...item.a].sort();
+  const isCorrect = sel.length===correctSet.length && sel.every((v,i)=>v===correctSet[i]);
+  answered[qi]={sel,correct:isCorrect};
+  card.classList.add('done');
+  card.querySelector('.submitm').disabled=true;
+  card.querySelectorAll('.opt').forEach((o,oi)=>{
+    o.classList.add('locked'); o.classList.remove('sel');
+    if(item.a.includes(oi))o.classList.add('correct');
+    else if(sel.includes(oi))o.classList.add('wrong');
+  });
+  showExpl(card,isCorrect,null);
+}
+
+function showExpl(card,ok){
+  const expl=card.querySelector('.expl');const lbl=expl.querySelector('.lbl');
+  expl.classList.add('show');
+  if(ok){expl.classList.add('r-ok');lbl.textContent='✓ Correcto';}
+  else{expl.classList.add('r-bad');lbl.textContent='✗ Incorrecto';}
+}
 
 function updateBar(){
   let ok=0,bad=0,done=0;
-  answered.forEach((sel,qi)=>{
-    if(sel===null) return;
-    done++;
-    if(sel===QUESTIONS[qi].a) ok++; else bad++;
-  });
+  answered.forEach(a=>{if(a===null)return;done++;if(a.correct)ok++;else bad++;});
   document.getElementById('sOk').textContent=ok;
   document.getElementById('sBad').textContent=bad;
   document.getElementById('sPend').textContent=done;
   document.getElementById('fOk').textContent=ok;
-  document.getElementById('pFill').style.width=(done/QUESTIONS.length*100)+'%';
+  document.getElementById('pFill').style.width=(done/current.length*100)+'%';
 }
 
-quiz.addEventListener('click', e=>{
-  const opt = e.target.closest('.opt');
-  if(!opt) return;
-  const card = opt.closest('.q');
-  const qi = +card.dataset.qi;
-  if(answered[qi]!==null) return; // ya respondida, bloqueada
-  const sel = +opt.dataset.oi;
-  const correct = QUESTIONS[qi].a;
-  answered[qi]=sel;
-
-  const opts = card.querySelectorAll('.opt');
-  opts.forEach((o,oi)=>{
-    o.classList.add('locked');
-    if(oi===correct) o.classList.add('correct');
-    if(oi===sel && sel!==correct) o.classList.add('wrong');
-  });
-  const expl = card.querySelector('.expl');
-  const lbl = expl.querySelector('.lbl');
-  expl.classList.add('show');
-  if(sel===correct){ expl.classList.add('r-ok'); lbl.textContent='✓ Correcto'; }
-  else { expl.classList.add('r-bad'); lbl.textContent='✗ Incorrecto — Respuesta: '+(QUESTIONS[qi].tf?QUESTIONS[qi].o[correct]:String.fromCharCode(65+correct)); }
-  updateBar();
+document.getElementById('btnHome').addEventListener('click',()=>{
+  quizArea.classList.add('hidden');footer.style.display='none';
+  startScreen.classList.remove('hidden');window.scrollTo(0,0);
 });
-
-document.getElementById('btnReset').addEventListener('click', ()=>{
-  if(!confirm('¿Reiniciar el simulacro? Se borran tus respuestas.')) return;
-  location.reload();
-});
-
-document.getElementById('btnResult').addEventListener('click', ()=>{
-  let ok=0; const byMod={};
-  answered.forEach((sel,qi)=>{
-    const m=QUESTIONS[qi].m;
-    if(!byMod[m]) byMod[m]={ok:0,total:0};
-    byMod[m].total++;
-    if(sel===QUESTIONS[qi].a){ ok++; byMod[m].ok++; }
-  });
-  const pct=Math.round(ok/QUESTIONS.length*100);
-  const final=document.getElementById('final');
+document.getElementById('btnResult').addEventListener('click',()=>{
+  let ok=0;const byMod={};
+  answered.forEach((a,qi)=>{const m=current[qi].m;if(!byMod[m])byMod[m]={ok:0,total:0};byMod[m].total++;if(a&&a.correct){ok++;byMod[m].ok++;}});
+  const pct=Math.round(ok/current.length*100);
   document.getElementById('finalPct').textContent=pct+'%';
   const v=document.getElementById('finalVerdict');
-  if(pct>=80){ v.innerHTML='<span class="pass">APROBADO ('+ok+'/45) — sobre el 80% de referencia</span>'; }
-  else { v.innerHTML='<span class="fail">Bajo el 80% ('+ok+'/45) — refuerza y repite</span>'; }
-  let br='';
-  Object.keys(byMod).forEach(m=>{
-    const d=byMod[m];
-    const short=m.replace('Módulo ','M');
-    br+=`<div class="mrow"><span>${short}</span><span>${d.ok}/${d.total}</span></div>`;
-  });
+  if(pct>=80)v.innerHTML='<span class="pass">APROBADO ('+ok+'/'+current.length+') — sobre el 80%</span>';
+  else v.innerHTML='<span class="fail">Bajo el 80% ('+ok+'/'+current.length+') — refuerza y repite</span>';
+  let br='';Object.keys(byMod).forEach(m=>{const d=byMod[m];br+=`<div class="mrow"><span>${m}</span><span>${d.ok}/${d.total}</span></div>`;});
   document.getElementById('finalBreak').innerHTML=br;
-  final.classList.add('show');
-  final.scrollIntoView({behavior:'smooth'});
+  document.getElementById('final').classList.add('show');
+  document.getElementById('final').scrollIntoView({behavior:'smooth'});
 });
 </script>
 </body>
