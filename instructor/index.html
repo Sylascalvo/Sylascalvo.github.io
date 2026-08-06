@@ -13,6 +13,7 @@
     --line:#3c3c42; --grid:#333338; --ink:#ffffff; --muted:#9a9aa0;
     --accent:#29b6ff;   /* Unreal blue = State Tree (neón / flujo) */
     --bt:#ff9d42;       /* orange      = Behavior Tree (neón / flujo) */
+    --ok:#35c07a;       /* green       = outcome cumplido (recap) */
     --stage-w:1280px;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -41,6 +42,23 @@
   .cover .rule{width:0; height:2px; background:linear-gradient(90deg,transparent,#5a5a62,transparent); margin:30px auto 0; animation:ruleGrow .8s .8s forwards;}
   @keyframes ruleGrow{to{width:320px;}}
   .brand{position:absolute; bottom:26px; right:32px; font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.16em; color:var(--muted); opacity:0; animation:fadeIn .6s 1.1s forwards;}
+
+  /* ---- SLIDE LOs (nueva) ---- */
+  .lo-grid{display:grid; grid-template-columns:0.92fr 1.08fr; gap:34px; align-items:center; flex:1; margin-top:18px;}
+  .lo-list{display:flex; flex-direction:column; gap:13px;}
+  .lo-item{display:flex; gap:13px; align-items:flex-start; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; opacity:0; transform:translateY(14px);}
+  .lo-item.show{animation:fadeUp .5s forwards;}
+  .lo-num{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; color:var(--accent); background:#1f3646; border:1px solid var(--accent); border-radius:7px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; flex:none; box-shadow:0 0 12px rgba(41,182,255,.3);}
+  .lo-item p{font-size:14px; line-height:1.45; color:#e0e0e4;}
+  .lo-item p b{color:#fff;}
+  .video-wrap{display:flex; flex-direction:column; gap:9px; opacity:0; animation:fadeIn .6s .2s forwards;}
+  .video-frame{position:relative; width:100%; aspect-ratio:16/9; border-radius:10px; overflow:hidden; border:1px solid var(--accent); background:#0e0e10; box-shadow:0 0 30px rgba(41,182,255,.2);}
+  .video-frame iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
+  .video-cap{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:8px;}
+  .video-cap svg{flex:none;}
+  .video-placeholder{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6; padding:22px; background:repeating-linear-gradient(45deg,#161618,#161618 14px,#1a1a1d 14px,#1a1a1d 28px);}
+  .video-placeholder .pi{width:52px;height:52px;border-radius:50%;border:1.6px solid var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(41,182,255,.25);}
+  .video-placeholder code{color:var(--accent); background:rgba(41,182,255,.1); padding:2px 7px; border-radius:5px;}
 
   /* ---- SLIDE 1 ---- */
   .s1-cols{display:grid; grid-template-columns:1fr auto 1fr; gap:24px; align-items:center; flex:1; margin-top:22px;}
@@ -130,6 +148,17 @@
   .s3-foot{text-align:center; margin-top:20px; font-size:14px; color:var(--muted); opacity:0; animation:fadeIn .6s 1.2s forwards;}
   .s3-foot b{color:var(--accent);}
 
+  /* ---- SLIDE RECAP (nueva) ---- */
+  .recap-grid{flex:1; display:flex; flex-direction:column; gap:13px; margin-top:20px; justify-content:center;}
+  .recap-item{display:flex; gap:14px; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:15px 18px; opacity:0; transform:translateY(14px);}
+  .recap-item.show{animation:fadeUp .5s forwards;}
+  .recap-check{width:30px;height:30px;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;background:#123021;border:1px solid var(--ok);box-shadow:0 0 12px rgba(53,192,122,.3);}
+  .recap-item p{font-size:15px;color:#e6e6ea;}
+  .recap-item p b{color:#fff;}
+  .recap-foot{margin-top:20px; text-align:center; font-size:15px; color:var(--muted); opacity:0; animation:fadeIn .6s .95s forwards;}
+  .recap-foot .turn{font-family:'Space Grotesk',sans-serif; font-weight:600; color:#fff;}
+  .recap-foot b{color:var(--accent);}
+
   /* ---- controles ---- */
   .chrome{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:14px; background:rgba(32,32,36,.9); border:1px solid var(--line); border-radius:999px; padding:9px 16px; backdrop-filter:blur(8px); z-index:50; transition:opacity .25s;}
   .chrome button{background:var(--panel2); color:#fff; border:1px solid var(--line); border-radius:8px; padding:7px 13px; font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer;}
@@ -146,7 +175,7 @@
 <body>
 <div class="stage" id="stage">
 
-  <!-- SLIDE 0 -->
+  <!-- SLIDE 0 · Portada -->
   <section class="scene cover" data-scene="0">
     <span class="kick">Unreal Engine 5.6</span>
     <h1>STATE <span class="b">TREE</span></h1>
@@ -154,8 +183,37 @@
     <span class="sub">Introducción</span>
   </section>
 
-  <!-- SLIDE 1 -->
+  <!-- SLIDE 1 · Learning Outcomes + demo (NUEVA) -->
   <section class="scene" data-scene="1">
+    <h1 class="title">Al final vas a poder…</h1>
+    <p class="subtitle">Tres objetivos concretos. Y esto es exactamente lo que vas a construir de cero.</p>
+    <div class="lo-grid">
+      <div class="lo-list" id="loList">
+        <div class="lo-item">
+          <span class="lo-num">1</span>
+          <p><b>Distinguir</b> un State Tree de un Behavior Tree y una máquina de estados.</p>
+        </div>
+        <div class="lo-item">
+          <span class="lo-num">2</span>
+          <p><b>Crear</b> el asset con schema de IA y conectarlo con el StateTree AI Component.</p>
+        </div>
+        <div class="lo-item">
+          <span class="lo-num">3</span>
+          <p><b>Construir</b> estados, una task y transiciones: Idle ⇄ Chase.</p>
+        </div>
+      </div>
+      <div class="video-wrap">
+        <div class="video-cap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--accent)"><path d="M8 5v14l11-7z"/></svg>
+          Esto vas a construir — Demo: Idle → Chase
+        </div>
+        <div class="video-frame" id="demoVideo"><!-- iframe/placeholder inyectado por JS --></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2 · ¿Qué es un State Tree? -->
+  <section class="scene" data-scene="2">
     <h1 class="title">¿Qué es un <span class="accent">State Tree</span>?</h1>
     <p class="subtitle">Una máquina de estados jerárquica que combina lo mejor de dos sistemas que ya conocías.</p>
     <div class="s1-cols">
@@ -192,8 +250,8 @@
     </div>
   </section>
 
-  <!-- SLIDE 2 -->
-  <section class="scene" data-scene="2">
+  <!-- SLIDE 3 · ¿Cuánta lógica corre cada frame? -->
+  <section class="scene" data-scene="3">
     <h1 class="title">¿Cuánta lógica corre <span class="accent">cada frame</span>?</h1>
 
     <div class="sim">
@@ -253,8 +311,8 @@
     <p class="s2-caption"><b class="bt">Behavior Tree</b>: trabaja todos los frames. &nbsp;·&nbsp; <b class="st">State Tree</b>: descansa entre transiciones.</p>
   </section>
 
-  <!-- SLIDE 3 -->
-  <section class="scene" data-scene="3">
+  <!-- SLIDE 4 · ¿Dónde se usa? -->
+  <section class="scene" data-scene="4">
     <h1 class="title">¿Dónde se <span class="accent">usa</span>?</h1>
     <div class="s3-grid">
       <div class="use" data-i="0">
@@ -279,6 +337,27 @@
     <p class="s3-foot">Es una <b>máquina de estados de propósito general</b> — para cualquier lógica que cambie según la situación.</p>
   </section>
 
+  <!-- SLIDE 5 · Recap + tu turno (NUEVA) -->
+  <section class="scene" data-scene="5">
+    <h1 class="title">Lo que <span class="accent">lograste</span></h1>
+    <p class="subtitle">Partiste de cero y ahora tienes una IA funcional corriendo en State Tree.</p>
+    <div class="recap-grid" id="recapList">
+      <div class="recap-item">
+        <span class="recap-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>
+        <p><b>Distingues</b> un State Tree de un Behavior Tree y una máquina de estados.</p>
+      </div>
+      <div class="recap-item">
+        <span class="recap-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>
+        <p><b>Creaste</b> el asset con schema de IA y lo conectaste con el StateTree AI Component.</p>
+      </div>
+      <div class="recap-item">
+        <span class="recap-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>
+        <p><b>Construiste</b> Idle ⇄ Chase con una task y transiciones por condición.</p>
+      </div>
+    </div>
+    <p class="recap-foot"><span class="turn">Tu turno:</span> agrega un estado <b>Patrol</b> · o cambia el chequeo de distancia por <b>AI Perception</b>.</p>
+  </section>
+
 </div>
 
 <div class="chrome" id="chrome">
@@ -291,12 +370,35 @@
 
 <script>
 (function(){
+  /* ═══════════════════════════════════════════════════════════════
+     VIDEO DEMO — cuando subas tu grabación del cubo Idle→Chase a
+     YouTube, reemplaza VIDEO_ID_AQUI por el ID del video.
+     Ej: si la URL es https://youtu.be/62aRD42P7OU  →  YT_ID = '62aRD42P7OU'
+     Mientras esté sin setear, se muestra un placeholder.
+     ═══════════════════════════════════════════════════════════════ */
+  const YT_ID = 'VIDEO_ID_AQUI';
+
   const scenes = Array.from(document.querySelectorAll('.scene'));
   const dotsBox = document.getElementById('dots');
   let cur = 0, stTimer=null, stStep=0;
 
   scenes.forEach((_,i)=>{ const d=document.createElement('div'); d.className='d'; d.onclick=()=>go(i); dotsBox.appendChild(d); });
   const dots=Array.from(dotsBox.children);
+
+  /* ---- Video demo (autoplay muted + loop, estilo showreel) ---- */
+  function playVideo(){
+    const host=document.getElementById('demoVideo'); if(!host) return;
+    if(YT_ID==='VIDEO_ID_AQUI'){
+      host.innerHTML='<div class="video-placeholder">'
+        +'<span class="pi"><svg width="22" height="22" viewBox="0 0 24 24" fill="var(--accent)"><path d="M8 5v14l11-7z"/></svg></span>'
+        +'<div>Sube tu demo del cubo a YouTube<br>y pega el ID en <code>YT_ID</code> (arriba del script).</div>'
+        +'</div>';
+      return;
+    }
+    const src='https://www.youtube.com/embed/'+YT_ID+'?autoplay=1&mute=1&loop=1&playlist='+YT_ID+'&controls=1&rel=0&modestbranding=1&playsinline=1';
+    host.innerHTML='<iframe src="'+src+'" title="Demo: Idle → Chase" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+  }
+  function stopVideo(){ const host=document.getElementById('demoVideo'); if(host) host.innerHTML=''; }
 
   // ciclo que RESPETA las transiciones dibujadas:
   // Idle --VeJugador--> Chase --EnRango--> Attack --FueraRango--> Chase --NoVeJugador--> Idle
@@ -325,7 +427,26 @@
     uses.forEach(u=>{u.classList.remove('active'); u.style.animationDelay='';});
     uses.forEach((u,i)=>{u.style.animationDelay=(i*0.26)+'s'; void u.offsetWidth; u.classList.add('active');});
   }
-  function playScene(i){ stopST(); if(i===2) startST(); if(i===3) playUses(); }
+  function playLOs(){
+    const items=document.querySelectorAll('#loList .lo-item');
+    items.forEach(it=>{it.classList.remove('show'); it.style.animationDelay='';});
+    items.forEach((it,i)=>{it.style.animationDelay=(0.15+i*0.28)+'s'; void it.offsetWidth; it.classList.add('show');});
+  }
+  function playRecap(){
+    const items=document.querySelectorAll('#recapList .recap-item');
+    items.forEach(it=>{it.classList.remove('show'); it.style.animationDelay='';});
+    items.forEach((it,i)=>{it.style.animationDelay=(0.15+i*0.26)+'s'; void it.offsetWidth; it.classList.add('show');});
+  }
+
+  // Reproducción por CONTENIDO (no por índice) — robusto ante reordenar slides.
+  function playScene(i){
+    stopST(); stopVideo();
+    const s=scenes[i];
+    if(s.querySelector('#uetree')) startST();
+    else if(s.querySelector('.use')) playUses();
+    else if(s.querySelector('#loList')){ playLOs(); playVideo(); }
+    else if(s.querySelector('#recapList')) playRecap();
+  }
 
   function go(i){
     if(i<0||i>=scenes.length) return;
