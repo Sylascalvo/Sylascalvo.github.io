@@ -395,7 +395,7 @@
         +'</div>';
       return;
     }
-    const src='https://www.youtube.com/embed/'+YT_ID+'?autoplay=1&mute=1&loop=1&playlist='+YT_ID+'&controls=1&rel=0&modestbranding=1&playsinline=1';
+    const src='https://www.youtube.com/embed/'+YT_ID+'?autoplay=1&mute=1&loop=1&playlist='+YT_ID+'&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1&iv_load_policy=3&fs=0&playsinline=1';
     host.innerHTML='<iframe src="'+src+'" title="Demo: Idle → Chase" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
   }
   function stopVideo(){ const host=document.getElementById('demoVideo'); if(host) host.innerHTML=''; }
