@@ -387,21 +387,21 @@
     position: absolute;
     top: 0; bottom: 0; right: 0; left: auto;
     transform: none;
-    width: 56vw;
+    width: 66vw;
     height: 100%;
     overflow: hidden;
     pointer-events: none;
     z-index: 0;
     opacity: 0.9;
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 6%, #000 17%, #000 100%);
-            mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 6%, #000 17%, #000 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.55) 4%, #000 12%, #000 100%);
+            mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.55) 4%, #000 12%, #000 100%);
   }
   /* cover exacto de un 16:9 dentro de una caja de 66vw x 100vh, sin barras */
   .module--project .video-bg iframe {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: max(56vw, 178vh);
-    height: max(100%, 31.5vw);
+    width: max(66vw, 178vh);
+    height: max(100%, 37.2vw);
     min-width: 0; min-height: 0;
     border: none; opacity: 0;
     transition: opacity 1.1s var(--ease);
@@ -419,8 +419,8 @@
   /* ===== ANIMACIÓN: espejado. Texto a la derecha, video a la izquierda ===== */
   #animacion .video-bg {
     left: 0; right: auto;
-    -webkit-mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.5) 6%, #000 17%, #000 100%);
-            mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.5) 6%, #000 17%, #000 100%);
+    -webkit-mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.55) 4%, #000 12%, #000 100%);
+            mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.55) 4%, #000 12%, #000 100%);
   }
   #animacion .overlay {
     background:
@@ -435,10 +435,15 @@
     /* espejo exacto de Videojuegos: mismo margen que el borde izquierdo */
     padding-right: 60px;
   }
-  /* la línea divisoria también se espeja */
-  #animacion .carousel-rule {
-    background: linear-gradient(to left, rgba(255,255,255,0.18), rgba(255,255,255,0));
-  }
+  /* Alineado a la derecha real: el canto derecho de TODAS las líneas
+     cae en la misma vertical, como "alinear a la derecha" en un documento. */
+  #animacion .carousel-panel { text-align: right; }
+  #animacion .slide-name,
+  #animacion .slide-role,
+  #animacion .slide-desc { text-align: right; }
+  #animacion .slide-desc { margin-left: auto; margin-right: 0; }
+  #animacion .slide-tags { justify-content: flex-end; }
+  #animacion .carousel-actions { display: flex; justify-content: flex-end; }
 
   .carousel-stage {
     position: relative; z-index: 2;
@@ -492,19 +497,21 @@
     color: var(--text-dim);
   }
   .carousel-actions { margin-top: 30px; }
-  .carousel-rule {
-    margin-top: 38px; height: 1px;
-    background: linear-gradient(to right, rgba(255,255,255,0.18), rgba(255,255,255,0));
-  }
-  /* Fila inferior: puntos y contador a un lado, flechas al otro,
-     pegadas al canto donde arranca el video. En Animación se espeja. */
+
+  /* Controles: un solo grupo centrado en la parte baja de la sección,
+     con los puntos entre las dos flechas. Igual en Videojuegos y Animación. */
+  /* Barra de ancho completo con el contenido centrado.
+     NO usar translateX(-50%) para centrar: este elemento lleva la clase .reveal
+     y GSAP le escribe su propio transform al animarlo, lo que anularía el centrado. */
   .carousel-nav {
-    margin-top: 22px;
-    display: flex; align-items: center; gap: 20px;
+    position: absolute;
+    left: 0; right: 0; bottom: 54px;
+    z-index: 3;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    pointer-events: none;
   }
-  .carousel-arrows { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-  #animacion .carousel-arrows { margin-left: 0; margin-right: auto; order: -1; }
-  #animacion .carousel-nav { flex-direction: row; }
+  .carousel-nav-row { display: flex; align-items: center; gap: 26px; pointer-events: auto; }
+  .carousel-nav .slide-count { pointer-events: auto; }
   .slide-count {
     font-family: 'Oswald', sans-serif;
     font-size: 0.74rem; letter-spacing: 3px;
@@ -523,7 +530,7 @@
   }
   .c-arrow:hover { border-color: var(--accent); background: var(--accent-soft); transform: scale(1.08); }
   .c-arrow svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .carousel-dots { display: flex; gap: 9px; justify-content: flex-start; flex-wrap: wrap; }
+  .carousel-dots { display: flex; gap: 9px; justify-content: center; flex-wrap: wrap; }
   .c-dot {
     width: 8px; height: 8px; border-radius: 50%;
     border: 1.5px solid rgba(255,255,255,0.35);
@@ -759,17 +766,29 @@
               mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 60%, transparent 92%);
     }
     .module--project .video-bg iframe { width: max(100vw, 178vh); height: max(100%, 56.25vw); }
-    #animacion .carousel-stage { justify-content: flex-start; padding-right: 24px; }
+    #animacion .carousel-stage { padding-right: 24px; }
+    #animacion .carousel-panel { text-align: left; }
+    #animacion .slide-name, #animacion .slide-role, #animacion .slide-desc { text-align: left; }
+    #animacion .slide-desc { margin-left: 0; }
+    #animacion .slide-tags { justify-content: flex-start; }
+    #animacion .carousel-actions { justify-content: flex-start; }
     .module--project .overlay, #animacion .overlay {
       background: linear-gradient(to bottom, rgba(6,6,8,0.95) 0%, rgba(6,6,8,0.55) 18%, rgba(6,6,8,0.75) 55%, rgba(6,6,8,0.97) 88%);
     }
-    .carousel-stage { padding: calc(var(--nav-h) + 34px) 24px 56px; align-items: flex-start; }
+    .carousel-stage {
+      padding: calc(var(--nav-h) + 34px) 24px 56px;
+      flex-direction: column; align-items: stretch; justify-content: flex-start;
+    }
+    #animacion .carousel-stage { flex-direction: column; align-items: stretch; }
     .carousel-panel { max-width: none; }
+    .carousel-nav {
+      position: static;
+      margin-top: 30px; align-self: center;
+    }
     .carousel-panel .section-title { margin-bottom: 28px; }
     .slide-name { font-size: 1.28rem; letter-spacing: 2px; }
     .slide-desc { font-size: 0.86rem; -webkit-line-clamp: 6; }
     .slide-role { font-size: 0.66rem; letter-spacing: 2px; }
-    .carousel-rule { margin-top: 30px; }
     .carousel-nav { gap: 14px; }
     #bio .module-content { padding-left: 24px; }
     #bio .bio-block { margin-left: 0; }
@@ -843,15 +862,14 @@
         <div class="carousel-actions reveal">
           <a id="gamePlay" href="#" target="_blank" rel="noopener" class="btn solid sm" data-cursor="play"><span class="play-tri"></span> <span data-i18n="btnPlayVideo">Reproducir video</span></a>
         </div>
-        <div class="carousel-rule reveal"></div>
-        <div class="carousel-nav reveal">
+      </div>
+      <div class="carousel-nav reveal">
+        <div class="carousel-nav-row">
+          <button class="c-arrow" id="gamePrev" data-cursor="prev" aria-label="Anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
           <div class="carousel-dots" id="gameDots"></div>
-          <span class="slide-count" id="gameCount"></span>
-          <div class="carousel-arrows">
-            <button class="c-arrow" id="gamePrev" data-cursor="prev" aria-label="Anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-            <button class="c-arrow" id="gameNext" data-cursor="next" aria-label="Siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
-          </div>
+          <button class="c-arrow" id="gameNext" data-cursor="next" aria-label="Siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
         </div>
+        <span class="slide-count" id="gameCount"></span>
       </div>
     </div>
   </section>
@@ -871,15 +889,14 @@
         <div class="carousel-actions reveal">
           <a id="animPlay" href="#" target="_blank" rel="noopener" class="btn solid sm" data-cursor="play"><span class="play-tri"></span> <span data-i18n="btnPlayVideo">Reproducir video</span></a>
         </div>
-        <div class="carousel-rule reveal"></div>
-        <div class="carousel-nav reveal">
+      </div>
+      <div class="carousel-nav reveal">
+        <div class="carousel-nav-row">
+          <button class="c-arrow" id="animPrev" data-cursor="prev" aria-label="Anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
           <div class="carousel-dots" id="animDots"></div>
-          <span class="slide-count" id="animCount"></span>
-          <div class="carousel-arrows">
-            <button class="c-arrow" id="animPrev" data-cursor="prev" aria-label="Anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-            <button class="c-arrow" id="animNext" data-cursor="next" aria-label="Siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
-          </div>
+          <button class="c-arrow" id="animNext" data-cursor="next" aria-label="Siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
         </div>
+        <span class="slide-count" id="animCount"></span>
       </div>
     </div>
   </section>
