@@ -385,32 +385,39 @@
      ese es el que se difumina. Nada de rectángulo con las cuatro esquinas cortadas. */
   .module--project .video-bg {
     position: absolute;
-    top: 0; bottom: 0; right: 0; left: auto;
-    transform: none;
-    width: 66vw;
-    height: 100%;
+    top: 50%; right: 0; left: auto; bottom: auto;
+    transform: translateY(-50%);
+    /* Caja 16:9 exacta: el iframe entra completo, sin recorte.
+       El tope en vh evita que en pantallas bajas el video se coma toda la altura. */
+    width: min(72vw, 168vh);
+    aspect-ratio: 16 / 9;
+    height: auto;
     overflow: hidden;
     pointer-events: none;
     z-index: 0;
     opacity: 0.9;
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.55) 4%, #000 12%, #000 100%);
-            mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.55) 4%, #000 12%, #000 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.6) 3%, #000 9%, #000 100%);
+            mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.6) 3%, #000 9%, #000 100%);
   }
-  /* cover exacto de un 16:9 dentro de una caja de 66vw x 100vh, sin barras */
+  /* El iframe llena la caja 16:9 sin recorte. Lleva su propio degradado
+     vertical: la caja se encarga del canto interior y el iframe de arriba y abajo.
+     Se usan dos elementos con una máscara cada uno porque combinar dos capas
+     de mask en un mismo elemento (mask-composite) es inconsistente entre navegadores. */
   .module--project .video-bg iframe {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: max(66vw, 178vh);
-    height: max(100%, 37.2vw);
+    position: absolute; inset: 0;
+    transform: none;
+    width: 100%; height: 100%;
     min-width: 0; min-height: 0;
     border: none; opacity: 0;
     transition: opacity 1.1s var(--ease);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
   }
   .module--project .video-bg iframe.active { opacity: 1; }
   .module--project .overlay {
     background:
       linear-gradient(to right, rgba(6,6,8,0.96) 0%, rgba(6,6,8,0.88) 30%, rgba(6,6,8,0.4) 52%, rgba(6,6,8,0.1) 72%, rgba(6,6,8,0) 100%),
-      linear-gradient(to bottom, rgba(6,6,8,0.9) 0%, rgba(6,6,8,0) 16%, rgba(6,6,8,0) 84%, rgba(6,6,8,0.9) 100%);
+      linear-gradient(to bottom, rgba(6,6,8,0.92) 0%, rgba(6,6,8,0.38) 13%, rgba(6,6,8,0) 25%, rgba(6,6,8,0) 75%, rgba(6,6,8,0.38) 87%, rgba(6,6,8,0.92) 100%);
   }
   .module--project .vignette {
     background: radial-gradient(ellipse at 70% center, transparent 55%, rgba(6,6,8,0.4) 100%);
@@ -419,13 +426,13 @@
   /* ===== ANIMACIÓN: espejado. Texto a la derecha, video a la izquierda ===== */
   #animacion .video-bg {
     left: 0; right: auto;
-    -webkit-mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.55) 4%, #000 12%, #000 100%);
-            mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.55) 4%, #000 12%, #000 100%);
+    -webkit-mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.6) 3%, #000 9%, #000 100%);
+            mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.6) 3%, #000 9%, #000 100%);
   }
   #animacion .overlay {
     background:
       linear-gradient(to left, rgba(6,6,8,0.96) 0%, rgba(6,6,8,0.88) 30%, rgba(6,6,8,0.4) 52%, rgba(6,6,8,0.1) 72%, rgba(6,6,8,0) 100%),
-      linear-gradient(to bottom, rgba(6,6,8,0.9) 0%, rgba(6,6,8,0) 16%, rgba(6,6,8,0) 84%, rgba(6,6,8,0.9) 100%);
+      linear-gradient(to bottom, rgba(6,6,8,0.92) 0%, rgba(6,6,8,0.38) 13%, rgba(6,6,8,0) 25%, rgba(6,6,8,0) 75%, rgba(6,6,8,0.38) 87%, rgba(6,6,8,0.92) 100%);
   }
   #animacion .vignette {
     background: radial-gradient(ellipse at 30% center, transparent 55%, rgba(6,6,8,0.4) 100%);
@@ -761,11 +768,16 @@
     .module--project .video-bg, #animacion .video-bg {
       top: 0; right: 0; left: 0; transform: none;
       width: 100%; height: 100%;
+      aspect-ratio: auto;
       opacity: 0.4;
       -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 60%, transparent 92%);
               mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 60%, transparent 92%);
     }
-    .module--project .video-bg iframe { width: max(100vw, 178vh); height: max(100%, 56.25vw); }
+    .module--project .video-bg iframe {
+      inset: auto; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: max(100vw, 178vh); height: max(100%, 56.25vw);
+      -webkit-mask-image: none; mask-image: none;
+    }
     #animacion .carousel-stage { padding-right: 24px; }
     #animacion .carousel-panel { text-align: left; }
     #animacion .slide-name, #animacion .slide-role, #animacion .slide-desc { text-align: left; }
