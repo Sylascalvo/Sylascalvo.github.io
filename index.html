@@ -493,7 +493,19 @@
 
   /* ===== NUEVO: certificaciones ===== */
   .certs-wrap { margin-top: 36px; }
-  .certs-list { list-style: none; display: flex; flex-direction: column; gap: 12px; max-width: 620px; }
+  .certs-body { display: flex; gap: 28px; align-items: flex-start; }
+  .cert-badge {
+    flex: 0 0 auto; display: block; line-height: 0;
+    transition: transform 0.4s var(--ease);
+  }
+  .cert-badge img {
+    width: 124px; height: auto; display: block;
+    filter: drop-shadow(0 0 20px rgba(34,211,238,0.22));
+  }
+  .cert-badge:hover { transform: translateY(-5px); }
+  .certs-list { list-style: none; display: flex; flex-direction: column; gap: 12px; max-width: 560px; }
+  .certs-list a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(34,211,238,0.35); }
+  .certs-list a:hover { border-bottom-color: var(--accent); }
   .certs-list li {
     display: flex; gap: 12px; align-items: baseline;
     font-size: 0.95rem; color: var(--text-dim); line-height: 1.6;
@@ -505,6 +517,7 @@
     box-shadow: 0 0 8px var(--accent-glow);
   }
   .certs-list b { color: var(--text); font-weight: 500; }
+  .slide-desc a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(34,211,238,0.35); }
 
   /* ===== CONTACT ===== */
   #contacto { position: relative; min-height: 100vh; display: flex; flex-direction: column; }
@@ -594,6 +607,12 @@
   }
 
   /* ===== responsive ===== */
+  /* pantallas cortas: menos líneas de descripción para que nunca se solape */
+  @media (max-width: 820px) and (max-height: 720px) {
+    .slide-desc { -webkit-line-clamp: 4 !important; }
+    .slide-name { font-size: 1.02rem !important; }
+    .carousel-bottom { bottom: 26px !important; gap: 9px !important; }
+  }
   @media (max-width: 820px) {
     nav { padding: 0 20px; }
     .menu-toggle { display: flex; }
@@ -615,12 +634,14 @@
     .carousel-bottom { bottom: 40px; right: 24px; left: 24px; transform: none; width: auto; align-items: center; text-align: center; gap: 12px; }
     .carousel-dots { justify-content: center; }
     .slide-name { font-size: 1.15rem; letter-spacing: 2px; }
-    .slide-desc { font-size: 0.84rem; -webkit-line-clamp: 3; }
+    .slide-desc { font-size: 0.82rem; -webkit-line-clamp: 6; }
     .slide-role { font-size: 0.66rem; letter-spacing: 2px; }
     .carousel-bottom-row { gap: 14px; }
     #bio .module-content { padding-left: 24px; }
     #bio .bio-block { margin-left: 0; }
     #bio .section-title::before { left: -16px; }
+    .certs-body { flex-direction: column; gap: 20px; }
+    .cert-badge img { width: 104px; }
   }
 </style>
 </head>
@@ -633,8 +654,7 @@
 <div class="cursor-label" id="cLabel"></div>
 <!-- NAV -->
 <nav>
-  <!-- EDITABLE: si quieres que el logo diga tu nombre, cambia SYLASCALVO por ILIAN LEVIO -->
-  <a href="#home" class="logo" data-nav="home">SYLASCALVO</a>
+  <a href="#home" class="logo" data-nav="home">ILIAN LEVIO</a>
   <ul class="nav-links" id="navLinks">
     <li><button data-nav="home" class="active" data-i18n="navHome">Inicio</button></li>
     <li><button data-nav="videojuegos" data-i18n="navGames">Videojuegos</button></li>
@@ -734,10 +754,15 @@
           <p class="bio-p reveal" data-i18n="bioP2">Mi trabajo abarca desde sistemas de combate y mecánicas de movimiento en <span class="hl">C++ y Blueprints</span>, hasta pipelines de modelado, rigging y animación en 3D. Vengo de una formación técnica en telecomunicaciones, lo que me dio una base sólida en software.</p>
           <p class="bio-p reveal" data-i18n="bioP3">Además de desarrollar, enseño. He dado formación en Unreal Engine y me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.</p>
         </div>
-        <!-- NUEVO: certificaciones. VERIFICA los nombres exactos antes de publicar. -->
         <div class="certs-wrap reveal">
           <p class="skills-label" data-i18n="certsLabel">Formación &amp; Certificaciones</p>
-          <ul class="certs-list" id="certsList"></ul>
+          <div class="certs-body">
+            <!-- Insignia oficial. El archivo UEBadge.png debe estar en la raíz del repo. -->
+            <a class="cert-badge" href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener" data-cursor="open">
+              <img id="ueBadge" src="UEBadge.png" width="124" loading="lazy" alt="Insignia oficial de Unreal Authorized Instructor otorgada a Ilian Levio por Epic Games">
+            </a>
+            <ul class="certs-list" id="certsList"></ul>
+          </div>
         </div>
         <div class="skills-wrap reveal">
           <p class="skills-label" data-i18n="skillsLabel">Stack &amp; Herramientas</p>
@@ -760,7 +785,7 @@
         <a href="cv/Ilian-Levio-CV.pdf" download class="btn solid" data-cursor="open" data-i18n="btnCV">Descargar CV</a>
       </div>
     </div>
-    <footer data-i18n="footer">© 2026 Sylascalvo · Ilian Levio. Todos los derechos reservados.</footer>
+    <footer data-i18n="footer">© 2026 Ilian Levio. Todos los derechos reservados.</footer>
   </section>
 </div>
 <!-- ===== SCRIPTS ===== -->
@@ -791,12 +816,13 @@ const I18N = {
     bioP2: 'Mi trabajo abarca desde sistemas de combate y mecánicas de movimiento en <span class="hl">C++ y Blueprints</span>, hasta pipelines de modelado, rigging y animación en 3D. Vengo de una formación técnica en telecomunicaciones, lo que me dio una base sólida en software.',
     bioP3: 'Además de desarrollar, enseño. He dado formación en Unreal Engine y me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.',
     certsLabel: 'Formación &amp; Certificaciones',
+    badgeAlt: 'Insignia oficial de Unreal Authorized Instructor otorgada a Ilian Levio por Epic Games',
     skillsLabel: 'Stack &amp; Herramientas',
     contactIndex: '04 · Contacto',
     contactTitle: 'Hablemos',
     btnEmail: 'Email',
     btnCV: 'Descargar CV',
-    footer: '© 2026 Sylascalvo · Ilian Levio. Todos los derechos reservados.'
+    footer: '© 2026 Ilian Levio. Todos los derechos reservados.'
   },
   en: {
     pageTitle: 'Ilian Levio — Gameplay & Animation Programmer | Unreal Engine',
@@ -817,12 +843,13 @@ const I18N = {
     bioP2: 'My work runs from combat systems and movement mechanics in <span class="hl">C++ and Blueprints</span> to modeling, rigging and 3D animation pipelines. I come from a technical background in telecommunications, which gave me a solid software foundation.',
     bioP3: 'Besides building, I teach. I have delivered Unreal Engine training, and I enjoy turning complex concepts into something people can understand and actually apply.',
     certsLabel: 'Education &amp; Certifications',
+    badgeAlt: 'Official Unreal Authorized Instructor badge awarded to Ilian Levio by Epic Games',
     skillsLabel: 'Stack &amp; Tools',
     contactIndex: '04 · Contact',
     contactTitle: "Let's talk",
     btnEmail: 'Email',
     btnCV: 'Download CV',
-    footer: '© 2026 Sylascalvo · Ilian Levio. All rights reserved.'
+    footer: '© 2026 Ilian Levio. All rights reserved.'
   }
 };
 
@@ -880,19 +907,30 @@ const gameSlides = [
   {
     id: '835pa7-75Ig',
     title: { es: 'VR Video Volumétrico — Ithaca Company', en: 'VR Volumetric Video — Ithaca Company' },
-    /* PENDIENTE: mándame rol y contexto. Es el único que suena a cliente real,
-       así que este merece la descripción más detallada de todas. */
-    role: { es: '', en: '' },
-    desc: { es: '', en: '' },
-    tech: { es: ['Realidad Virtual'], en: ['Virtual Reality'] }
+    role: {
+      es: 'Programador VR · Implementación de video volumétrico',
+      en: 'VR Programmer · Volumetric video implementation'
+    },
+    desc: {
+      es: 'Proyecto para <a href="https://www.ithaca.eu/" target="_blank" rel="noopener">Ithaca</a>: realidad virtual integrada con su sistema de videovolumetría para simular entornos. El caso elegido fue la comunicación espacial mediante VR. Desarrollado en Unity; programé la capa de VR y la implementación de los videos volumétricos dentro del entorno.',
+      en: 'Project for <a href="https://www.ithaca.eu/" target="_blank" rel="noopener">Ithaca</a>: virtual reality integrated with their volumetric video system to simulate environments. The chosen case was space communication through VR. Built in Unity; I programmed the VR layer and the integration of volumetric video inside the environment.'
+    },
+    tech: { es: ['Unity', 'Realidad Virtual', 'Video volumétrico', 'Cliente: Ithaca'],
+             en: ['Unity', 'Virtual Reality', 'Volumetric video', 'Client: Ithaca'] }
   },
   {
     id: '1ws4OKBCApQ',
     title: { es: 'Escenario 360 — Unity', en: '360 Environment — Unity' },
-    /* PENDIENTE: rol + descripción */
-    role: { es: '', en: '' },
-    desc: { es: '', en: '' },
-    tech: { es: ['Unity', '360'], en: ['Unity', '360'] }
+    role: {
+      es: 'Level design · Post-proceso · Cámaras con dolly track',
+      en: 'Level design · Post-processing · Dolly track camera work'
+    },
+    desc: {
+      es: 'Test de video 360 para YouTube construido en Unity. El level design y el post-procesado son míos, además del trabajo de cámaras: dolly tracks para el movimiento y los ajustes de la toma.',
+      en: '360 video test for YouTube built in Unity. Level design and post-processing are mine, along with the camera work: dolly tracks driving the movement and the shot adjustments.'
+    },
+    tech: { es: ['Unity', '360', 'Level design', 'Post-proceso'],
+             en: ['Unity', '360', 'Level design', 'Post-processing'] }
   },
   {
     id: 'KZsPDzLAHuQ',
@@ -942,7 +980,10 @@ const animSlides = [
   {
     id: '_Al5tvHPh1Q',
     title: { es: 'Caminata con Parallax', en: 'Walk Cycle with Parallax' },
-    role: { es: '', en: '' }, /* PENDIENTE: rol */
+    role: {
+      es: 'Animación completa en Blender',
+      en: 'Full animation in Blender'
+    },
     desc: {
       es: 'Animación en Blender que cubre todo el proceso de planificación y ejecución de una caminata, acompañada de un efecto parallax diseñado desde cero.',
       en: 'Blender animation covering the full planning and execution of a walk cycle, paired with a parallax effect built from scratch.'
@@ -952,7 +993,10 @@ const animSlides = [
   {
     id: 'ZfHPRWWBAtE',
     title: { es: 'Animación de Fuerza y Peso', en: 'Force and Weight Animation' },
-    role: { es: '', en: '' }, /* PENDIENTE: rol */
+    role: {
+      es: 'Animación completa en Blender',
+      en: 'Full animation in Blender'
+    },
     desc: {
       es: 'Demostración de un escenario con luces y sombras usando principios de parallax, para ejemplificar técnicas avanzadas de animación: overlapping, aplastamiento y estiramiento, seguimiento de acción y acción secundaria, aplicadas a representar peso y fuerza en el movimiento.',
       en: 'Environment demo with lights and shadows using parallax principles, built to showcase advanced animation techniques: overlapping action, squash and stretch, follow-through and secondary action, all applied to convey weight and force in movement.'
@@ -962,7 +1006,10 @@ const animSlides = [
   {
     id: 'tEFwSOiEmTk',
     title: { es: 'Fuerza y Peso + HUD', en: 'Force and Weight + HUD' },
-    role: { es: '', en: '' }, /* PENDIENTE: rol */
+    role: {
+      es: 'Animación completa en Blender',
+      en: 'Full animation in Blender'
+    },
     desc: {
       es: 'Animación del lanzamiento de una piedra con un HUD que muestra la fuerza aplicada. Trabaja anticipación, arrastre, aplastamiento y estiramiento, y exageración de la pose clave para transmitir peso y fuerza — con un remate de humor en la escena.',
       en: 'Animation of a rock throw with a HUD displaying the applied force. Uses anticipation, drag, squash and stretch, and key-pose exaggeration to convey weight and force — with a comedic beat closing the scene.'
@@ -972,27 +1019,41 @@ const animSlides = [
   {
     id: 'NaXQp7j5xnw',
     title: { es: 'Levantamiento de Silla y Salto', en: 'Chair Lift and Jump' },
-    /* PENDIENTE: rol + descripción */
-    role: { es: '', en: '' },
-    desc: { es: '', en: '' },
+    role: {
+      es: 'Animación completa en Blender',
+      en: 'Full animation in Blender'
+    },
+    desc: {
+      es: 'Animación del levantamiento de una silla y de un salto, creada en Blender.',
+      en: 'Animation of a chair lift and a jump, created in Blender.'
+    },
     tech: { es: ['Blender'], en: ['Blender'] }
   },
   {
     id: 'J58cn4Nv3yA',
     title: { es: 'Patada de Taekwondo', en: 'Taekwondo Kick' },
-    /* PENDIENTE: rol + descripción */
-    role: { es: '', en: '' },
-    desc: { es: '', en: '' },
-    tech: { es: ['Blender'], en: ['Blender'] }
+    role: {
+      es: 'Animación completa en Blender',
+      en: 'Full animation in Blender'
+    },
+    desc: {
+      es: 'Animación de ataque creada en Blender a partir de videos de referencia.',
+      en: 'Attack animation created in Blender from reference video.'
+    },
+    tech: { es: ['Blender', 'Referencia en video'], en: ['Blender', 'Video reference'] }
   },
   {
     id: 'ituye4JSvRI',
     title: { es: 'Caminata + Escenario', en: 'Walk Cycle + Environment' },
-    /* PENDIENTE: rol + descripción. ¿Es distinto de "Caminata con Parallax"?
-       Si es el mismo trabajo, mejor borrar uno de los dos. */
-    role: { es: '', en: '' },
-    desc: { es: '', en: '' },
-    tech: { es: ['Blender'], en: ['Blender'] }
+    role: {
+      es: 'Animación completa en Blender',
+      en: 'Full animation in Blender'
+    },
+    desc: {
+      es: 'Ciclo de caminata aplicado a otro modelo y a un escenario distinto. Cada pieza de esta serie trabaja las mismas bases de animación —intención incluida— sobre un personaje y un contexto diferentes.',
+      en: 'Walk cycle applied to a different model and environment. Each piece in this series works the same animation fundamentals — intent included — on a different character and context.'
+    },
+    tech: { es: ['Blender', 'Escenario'], en: ['Blender', 'Environment'] }
   }
 ];
 
@@ -1007,8 +1068,8 @@ const certs = [
     en: '<b>Unreal Engine Fundamentals</b> — CRTIC'
   },
   {
-    es: '<b>Unreal Authorized Instructor (UAI) Silver</b> — Epic Games',
-    en: '<b>Unreal Authorized Instructor (UAI) Silver</b> — Epic Games'
+    es: '<b>Unreal Authorized Instructor</b> — Unreal Engine 5, Epic Games (2026) · <a href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener">verificar credencial</a>',
+    en: '<b>Unreal Authorized Instructor</b> — Unreal Engine 5, Epic Games (2026) · <a href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener">verify credential</a>'
   },
   {
     es: 'Formación técnica en <b>Telecomunicaciones</b>',
@@ -1050,6 +1111,8 @@ function applyLang(l) {
   document.querySelectorAll('.lang-opt').forEach(b => b.classList.toggle('active', b.dataset.lang === l));
   renderCerts();
   renderSkills();
+  const badgeImg = document.getElementById('ueBadge');
+  if (badgeImg && I18N[l].badgeAlt) badgeImg.alt = I18N[l].badgeAlt;
   carouselRenderers.forEach(fn => fn());
   try { localStorage.setItem('il_lang', l); } catch (e) {}
 }
@@ -1189,7 +1252,7 @@ function buildCarousel(cfg) {
     const desc = (s.desc && s.desc[lang]) || '';
     roleEl.textContent = role;
     roleEl.style.display = role ? '' : 'none';
-    descEl.textContent = desc;
+    descEl.innerHTML = desc;
     descEl.style.display = desc ? '' : 'none';
     tagsEl.innerHTML = '';
     const techList = (s.tech && (s.tech[lang] || s.tech.es)) || [];
