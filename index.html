@@ -90,7 +90,9 @@
     background: var(--bg);
     color: var(--text);
     font-family: 'Inter', sans-serif;
-    overflow-x: hidden;
+    /* clip en vez de hidden: recorta igual, pero no rompe position:sticky
+       (hidden crea un contenedor de scroll y anula el sticky de .cred-card) */
+    overflow-x: clip;
   }
   body.hub-locked { overflow: hidden; height: 100vh; }
   ::selection { background: var(--accent-glow); color: #fff; }
@@ -472,10 +474,57 @@
     align-items: flex-start;
     padding-left: 60px;
   }
-  #bio .bio-block {
-    max-width: 640px;
-    margin-left: 0;
+  /* dos columnas: contenido a la izquierda, credencial en el espacio vacio */
+  #bio .bio-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 640px) 300px;
+    gap: 90px;
+    align-items: start;
+    width: 100%;
+    margin-top: 34px;
   }
+  #bio .bio-block { max-width: 640px; margin-left: 0; }
+
+  /* ===== PLACA DE CREDENCIAL ===== */
+  .cred-card {
+    position: sticky;
+    top: calc(var(--nav-h) + 60px);
+    border: 1px solid rgba(34,211,238,0.26);
+    background: linear-gradient(160deg, rgba(34,211,238,0.075) 0%, rgba(255,255,255,0.016) 45%, rgba(255,255,255,0.008) 100%);
+    padding: 34px 26px 28px;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 0 70px rgba(34,211,238,0.07), inset 0 0 46px rgba(34,211,238,0.028);
+  }
+  .cred-card::before, .cred-card::after {
+    content: ''; position: absolute;
+    width: 16px; height: 16px;
+    border-color: var(--accent);
+    pointer-events: none;
+  }
+  .cred-card::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+  .cred-card::after { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+  .cred-badge { display: block; line-height: 0; transition: transform 0.45s var(--ease); }
+  .cred-badge img {
+    width: 152px; height: auto; display: block;
+    filter: drop-shadow(0 0 28px rgba(34,211,238,0.32));
+  }
+  .cred-badge:hover { transform: translateY(-6px) scale(1.03); }
+  .cred-kicker {
+    margin-top: 24px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.64rem; letter-spacing: 4px;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .cred-title {
+    margin-top: 11px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600; font-size: 1.14rem;
+    letter-spacing: 1.5px; line-height: 1.28;
+    text-transform: uppercase;
+  }
+  .cred-sub { margin-top: 9px; font-size: 0.83rem; color: var(--text-dim); letter-spacing: 0.5px; }
+  .cred-card .btn { margin-top: 26px; width: 100%; justify-content: center; padding: 13px 18px; font-size: 0.74rem; }
   #bio .section-title { position: relative; }
   #bio .section-title::before {
     content: '';
@@ -489,7 +538,7 @@
   .bio-p .hl { color: var(--text); }
   .bio-p a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(34,211,238,0.35); }
   .bio-p a:hover { border-bottom-color: var(--accent); }
-  .skills-wrap { margin-top: 40px; }
+  .skills-wrap { margin-top: 52px; }
   .skills-label { font-family:'Oswald',sans-serif; font-size:0.8rem; letter-spacing:5px; color:var(--accent); text-transform:uppercase; margin-bottom:20px; }
   .skills-grid { display: flex; flex-wrap: wrap; gap: 10px; max-width: 600px; }
   .skill {
@@ -503,8 +552,8 @@
   .skill:hover { border-color: var(--accent); color: #fff; background: var(--accent-soft); transform: translateY(-3px); }
 
   /* ===== NUEVO: docencia ===== */
-  .teach-wrap { margin-top: 36px; }
-  .teach-list { list-style: none; display: flex; flex-direction: column; gap: 14px; max-width: 620px; }
+  .teach-wrap { margin-top: 52px; }
+  .teach-list { list-style: none; display: flex; flex-direction: column; gap: 18px; max-width: 620px; }
   .teach-list li { position: relative; padding-left: 20px; }
   .teach-list li::before {
     content: '';
@@ -525,18 +574,8 @@
   .teach-meta { display: block; margin-top: 5px; font-size: 0.82rem; color: var(--text-dim); line-height: 1.55; }
 
   /* ===== NUEVO: certificaciones ===== */
-  .certs-wrap { margin-top: 36px; }
-  .certs-body { display: flex; gap: 28px; align-items: flex-start; }
-  .cert-badge {
-    flex: 0 0 auto; display: block; line-height: 0;
-    transition: transform 0.4s var(--ease);
-  }
-  .cert-badge img {
-    width: 124px; height: auto; display: block;
-    filter: drop-shadow(0 0 20px rgba(34,211,238,0.22));
-  }
-  .cert-badge:hover { transform: translateY(-5px); }
-  .certs-list { list-style: none; display: flex; flex-direction: column; gap: 12px; max-width: 560px; }
+  .certs-wrap { margin-top: 52px; }
+  .certs-list { list-style: none; display: flex; flex-direction: column; gap: 15px; max-width: 620px; }
   .certs-list a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(34,211,238,0.35); }
   .certs-list a:hover { border-bottom-color: var(--accent); }
   /* li en flujo normal: con flex, cada <b> se volvía una columna aparte */
@@ -676,8 +715,10 @@
     #bio .module-content { padding-left: 24px; }
     #bio .bio-block { margin-left: 0; }
     #bio .section-title::before { left: -16px; }
-    .certs-body { flex-direction: column; gap: 20px; }
-    .cert-badge img { width: 104px; }
+    /* una columna: la placa sube justo debajo del titulo */
+    #bio .bio-grid { grid-template-columns: 1fr; gap: 34px; margin-top: 26px; }
+    .cred-card { position: relative; top: auto; order: -1; max-width: 330px; align-self: flex-start; padding: 28px 22px 24px; }
+    .cred-badge img { width: 128px; }
     .teach-list a { font-size: 0.94rem; }
   }
 </style>
@@ -783,10 +824,11 @@
   <!-- ===== BIO ===== -->
   <section class="module" id="bio">
     <div class="module-content">
+      <p class="section-index reveal" data-i18n="bioIndex">03 · Sobre mí</p>
+      <h2 class="section-title reveal" data-i18n="bioTitle">Gameplay<br>&amp; animación</h2>
+      <div class="bio-grid">
       <div class="bio-block">
-        <p class="section-index reveal" data-i18n="bioIndex">03 · Sobre mí</p>
-        <h2 class="section-title reveal" data-i18n="bioTitle">Gameplay<br>&amp; animación</h2>
-        <div style="margin-top:30px;">
+        <div>
           <p class="bio-p reveal" data-i18n="bioP1">Soy <span class="hl">Ilian Levio</span>, Gameplay &amp; Animation Programmer en <a href="https://www.ouchgames.cl/" target="_blank" rel="noopener">Ouch Games</a>, donde desarrollo sistemas de gameplay en Unreal Engine 5.6 con C++ y Blueprints para <a href="https://store.steampowered.com/app/4708840/Atemporal_Silentium/" target="_blank" rel="noopener">Atemporal Silentium</a>, un Action RPG souls-like ya anunciado en Steam.</p>
           <p class="bio-p reveal" data-i18n="bioP2">Mi foco está en combate y personajes: arquitectura de <span class="hl">IA de combate</span> y comportamiento de jefes con State Tree, habilidades y daño con <span class="hl">Gameplay Ability System</span>, y sistemas de animación con Animation Blueprints, Blend Spaces, Motion Matching, IK y Control Rig. Antes fui Unreal Engine Programmer, Game &amp; Animation Developer en Madis Films, y fui ayudante de investigación en avatares y háptica viso-táctil junto a University College London y Université PSL.</p>
           <p class="bio-p reveal" data-i18n="bioP3">Además de desarrollar, enseño. Soy <span class="hl">Unreal Authorized Instructor</span> y technical trainer interno: dicto el taller “Unreal Engine 5.6: MetaHuman Pipeline” en la Universidad Bernardo O’Higgins y he capacitado equipos de UI/UX, Sound Design, 3D Art y Concept Art. Me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.</p>
@@ -797,18 +839,24 @@
         </div>
         <div class="certs-wrap reveal">
           <p class="skills-label" data-i18n="certsLabel">Formación, credenciales &amp; logros</p>
-          <div class="certs-body">
-            <!-- Insignia oficial. El archivo UEBadge.png debe estar en la raíz del repo. -->
-            <a class="cert-badge" href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener" data-cursor="open">
-              <img id="ueBadge" src="UEBadge.png" width="124" loading="lazy" alt="Insignia oficial de Unreal Authorized Instructor otorgada a Ilian Levio por Epic Games">
-            </a>
-            <ul class="certs-list" id="certsList"></ul>
-          </div>
+          <ul class="certs-list" id="certsList"></ul>
         </div>
         <div class="skills-wrap reveal">
           <p class="skills-label" data-i18n="skillsLabel">Stack &amp; Herramientas</p>
           <div class="skills-grid" id="skillsGrid"></div>
         </div>
+      </div>
+
+      <!-- PLACA DE CREDENCIAL. El archivo UEBadge.png va en la raíz del repo. -->
+      <aside class="cred-card reveal">
+        <a class="cred-badge" href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener" data-cursor="open">
+          <img id="ueBadge" src="UEBadge.png" width="152" loading="lazy" alt="Insignia oficial de Unreal Authorized Instructor otorgada a Ilian Levio por Epic Games">
+        </a>
+        <p class="cred-kicker" data-i18n="credKicker">Credencial verificable</p>
+        <p class="cred-title">Unreal Authorized<br>Instructor</p>
+        <p class="cred-sub" data-i18n="credSub">Silver · Epic Games · 2026</p>
+        <a class="btn" href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener" data-cursor="open" data-i18n="credBtn">Verificar credencial</a>
+      </aside>
       </div>
     </div>
   </section>
@@ -859,6 +907,9 @@ const I18N = {
     bioP2: 'Mi foco está en combate y personajes: arquitectura de <span class="hl">IA de combate</span> y comportamiento de jefes con State Tree, habilidades y daño con <span class="hl">Gameplay Ability System</span>, y sistemas de animación con Animation Blueprints, Blend Spaces, Motion Matching, IK y Control Rig. Antes fui Unreal Engine Programmer, Game &amp; Animation Developer en Madis Films, y fui ayudante de investigación en avatares y háptica viso-táctil junto a University College London y Université PSL.',
     bioP3: 'Además de desarrollar, enseño. Soy <span class="hl">Unreal Authorized Instructor</span> y technical trainer interno: dicto el taller “Unreal Engine 5.6: MetaHuman Pipeline” en la Universidad Bernardo O’Higgins y he capacitado equipos de UI/UX, Sound Design, 3D Art y Concept Art. Me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.',
     teachLabel: 'Docencia',
+    credKicker: 'Credencial verificable',
+    credSub: 'Silver · Epic Games · 2026',
+    credBtn: 'Verificar credencial',
     certsLabel: 'Formación, credenciales &amp; logros',
     badgeAlt: 'Insignia oficial de Unreal Authorized Instructor Silver otorgada a Ilian Levio por Epic Games',
     skillsLabel: 'Stack &amp; Herramientas',
@@ -887,6 +938,9 @@ const I18N = {
     bioP2: 'My focus is combat and characters: <span class="hl">combat AI</span> and boss behaviour architecture with State Tree, abilities and damage through <span class="hl">Gameplay Ability System</span>, and animation systems with Animation Blueprints, Blend Spaces, Motion Matching, IK and Control Rig. Before that I was Unreal Engine Programmer, Game &amp; Animation Developer at Madis Films, and was a research assistant on dissimilar avatars and visuo-tactile haptics alongside University College London and Université PSL.',
     bioP3: 'Besides building, I teach. I am an <span class="hl">Unreal Authorized Instructor</span> and internal technical trainer: I teach the “Unreal Engine 5.6: MetaHuman Pipeline” workshop at Universidad Bernardo O’Higgins and have trained UI/UX, Sound Design, 3D Art and Concept Art teams. I enjoy turning complex concepts into something people can understand and actually apply.',
     teachLabel: 'Teaching',
+    credKicker: 'Verifiable credential',
+    credSub: 'Silver · Epic Games · 2026',
+    credBtn: 'Verify credential',
     certsLabel: 'Education, credentials &amp; awards',
     badgeAlt: 'Official Unreal Authorized Instructor badge awarded to Ilian Levio by Epic Games',
     skillsLabel: 'Stack &amp; Tools',
@@ -1163,10 +1217,6 @@ const certs = [
   {
     es: '<b>Ingeniería en Realidad Virtual y Diseño de Juegos Digitales</b> · Licenciado en Ciencias de la Informática, Universidad Bernardo O’Higgins (titulado 2025)',
     en: '<b>Engineering in Virtual Reality and Digital Game Design</b> · B.Sc. in Computer Science, Universidad Bernardo O’Higgins (graduated 2025)'
-  },
-  {
-    es: '<b>Unreal Authorized Instructor · Silver</b>, Epic Games (2026) · <a href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener">verificar credencial</a>',
-    en: '<b>Unreal Authorized Instructor · Silver</b>, Epic Games (2026) · <a href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener">verify credential</a>'
   },
   {
     es: '<b>Unreal Engine Fundamentals · Especialidad Videojuegos</b>, Epic Games / CRTIC',
