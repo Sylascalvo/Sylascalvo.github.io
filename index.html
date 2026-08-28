@@ -8,10 +8,10 @@
      SEO  ·  EDITABLE: cambia el título/descripción si quieres otro
      enfoque. El nombre va PRIMERO a propósito: es lo que se busca.
 ============================================================ -->
-<title>Ilian Levio — Programador de Gameplay &amp; Animación | Unreal Engine</title>
-<meta name="description" content="Portafolio de Ilian Levio, programador de gameplay y animación. Sistemas de combate, movimiento e IA en Unreal Engine 5 y Unity, con pipeline de modelado, rigging y animación 3D.">
+<title>Ilian Levio | Programador de Gameplay y Animación | Unreal Engine</title>
+<meta name="description" content="Portafolio de Ilian Levio, Gameplay &amp; Animation Programmer en Ouch Games. Sistemas de combate, IA con State Tree y Gameplay Ability System en Unreal Engine 5, animación de personajes y docencia como Unreal Authorized Instructor.">
 <meta name="author" content="Ilian Levio">
-<meta name="keywords" content="Ilian Levio, gameplay programmer, Unreal Engine, Unity, C++, Blueprints, animación 3D, portafolio videojuegos, Chile">
+<meta name="keywords" content="Ilian Levio, gameplay programmer, Unreal Engine 5, Gameplay Ability System, State Tree, Motion Matching, C++, Blueprints, Unity, animación 3D, Unreal Authorized Instructor, portafolio videojuegos, Chile">
 <link rel="canonical" href="https://sylascalvo.github.io/">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#060608">
@@ -22,19 +22,19 @@
      Si subes una imagen propia 1200x630 al repo, cambia por: og.jpg
 ============================================================ -->
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Ilian Levio — Portafolio">
-<meta property="og:title" content="Ilian Levio — Programador de Gameplay &amp; Animación">
-<meta property="og:description" content="Sistemas de combate, movimiento e IA en Unreal Engine 5 y Unity. Modelado, rigging y animación 3D.">
+<meta property="og:site_name" content="Ilian Levio · Portafolio">
+<meta property="og:title" content="Ilian Levio · Gameplay &amp; Animation Programmer">
+<meta property="og:description" content="Sistemas de combate, IA y animación de personajes en Unreal Engine 5. Gameplay Ability System, State Tree, Motion Matching. Unreal Authorized Instructor.">
 <meta property="og:url" content="https://sylascalvo.github.io/">
 <meta property="og:image" content="https://i.ytimg.com/vi/1qD6E-9pze0/maxresdefault.jpg">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
-<meta property="og:image:alt" content="Senjiro no Tabi — proyecto de Ilian Levio">
+<meta property="og:image:alt" content="Senjiro no Tabi, proyecto de Ilian Levio">
 <meta property="og:locale" content="es_CL">
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Ilian Levio — Programador de Gameplay &amp; Animación">
-<meta name="twitter:description" content="Sistemas de combate, movimiento e IA en Unreal Engine 5 y Unity. Modelado, rigging y animación 3D.">
+<meta name="twitter:title" content="Ilian Levio · Gameplay &amp; Animation Programmer">
+<meta name="twitter:description" content="Sistemas de combate, IA y animación de personajes en Unreal Engine 5. Gameplay Ability System, State Tree, Motion Matching. Unreal Authorized Instructor.">
 <meta name="twitter:image" content="https://i.ytimg.com/vi/1qD6E-9pze0/maxresdefault.jpg">
 
 <!-- FAVICON (SVG inline, no necesitas subir archivo) -->
@@ -55,8 +55,17 @@
   "url": "https://sylascalvo.github.io/",
   "jobTitle": "Gameplay & Animation Programmer",
   "email": "mailto:levioilian@gmail.com",
-  "nationality": "Chile",
-  "knowsAbout": ["Unreal Engine 5", "Unity", "C++", "C#", "Blueprints", "Gameplay Programming", "Rigging", "Animación 3D", "Realidad Virtual"],
+  "address": { "@type": "PostalAddress", "addressLocality": "Santiago", "addressCountry": "CL" },
+  "worksFor": { "@type": "Organization", "name": "Ouch Games" },
+  "alumniOf": { "@type": "CollegeOrUniversity", "name": "Universidad Bernardo O'Higgins" },
+  "hasCredential": {
+    "@type": "EducationalOccupationalCredential",
+    "name": "Unreal Authorized Instructor",
+    "credentialCategory": "certification",
+    "recognizedBy": { "@type": "Organization", "name": "Epic Games" },
+    "url": "https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0"
+  },
+  "knowsAbout": ["Unreal Engine 5", "C++", "Blueprints", "Gameplay Ability System", "State Tree", "Motion Matching", "Animation Blueprints", "Control Rig", "MetaHuman", "Unity", "C#", "Python", "Blender", "Maya", "Realidad Virtual"],
   "sameAs": [
     "https://www.linkedin.com/in/ilianlevio",
     "https://www.youtube.com/@IlianLevio"
@@ -368,7 +377,7 @@
     text-transform: uppercase;
     margin-bottom: 10px;
   }
-  /* ===== PROJECTS CAROUSEL — corner layout ===== */
+  /* ===== PROJECTS CAROUSEL · corner layout ===== */
   .carousel-stage {
     position: relative; z-index: 2;
     height: 100vh;
@@ -478,6 +487,8 @@
   }
   .bio-p { font-size: 1.15rem; line-height: 1.95; color: var(--text-dim); margin-bottom: 24px; max-width: 620px; }
   .bio-p .hl { color: var(--text); }
+  .bio-p a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(34,211,238,0.35); }
+  .bio-p a:hover { border-bottom-color: var(--accent); }
   .skills-wrap { margin-top: 40px; }
   .skills-label { font-family:'Oswald',sans-serif; font-size:0.8rem; letter-spacing:5px; color:var(--accent); text-transform:uppercase; margin-bottom:20px; }
   .skills-grid { display: flex; flex-wrap: wrap; gap: 10px; max-width: 600px; }
@@ -506,13 +517,16 @@
   .certs-list { list-style: none; display: flex; flex-direction: column; gap: 12px; max-width: 560px; }
   .certs-list a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(34,211,238,0.35); }
   .certs-list a:hover { border-bottom-color: var(--accent); }
+  /* li en flujo normal: con flex, cada <b> se volvía una columna aparte */
   .certs-list li {
-    display: flex; gap: 12px; align-items: baseline;
-    font-size: 0.95rem; color: var(--text-dim); line-height: 1.6;
+    position: relative;
+    padding-left: 20px;
+    font-size: 0.94rem; color: var(--text-dim); line-height: 1.65;
   }
   .certs-list li::before {
-    content: ''; flex: 0 0 auto;
-    width: 6px; height: 6px; margin-top: 8px;
+    content: '';
+    position: absolute; left: 0; top: 0.6em;
+    width: 6px; height: 6px;
     background: var(--accent);
     box-shadow: 0 0 8px var(--accent-glow);
   }
@@ -687,7 +701,7 @@
     <div class="hero-inner">
       <p class="hero-kicker" id="heroKicker" data-i18n="heroKicker">Gameplay &amp; Animation</p>
       <h1 class="hero-title" id="heroTitle" data-text="ILIAN LEVIO">ILIAN LEVIO</h1>
-      <p class="hero-sub" id="heroSub" data-i18n="heroSub">Programador de Gameplay &amp; Animación · Unreal Engine 5 · Unity</p>
+      <p class="hero-sub" id="heroSub" data-i18n="heroSub">Gameplay &amp; Animation Programmer · Unreal Authorized Instructor · C++ &amp; Blueprints</p>
       <div class="hero-actions" id="heroActions">
         <a href="#" target="_blank" rel="noopener" id="heroPlay" class="btn solid" data-cursor="play"><span class="play-tri"></span> <span data-i18n="btnShowreel">Reproducir showreel</span></a>
         <button class="btn" data-nav="videojuegos" data-cursor="view" data-i18n="btnProjects">Ver proyectos</button>
@@ -748,14 +762,14 @@
     <div class="module-content">
       <div class="bio-block">
         <p class="section-index reveal" data-i18n="bioIndex">03 · Sobre mí</p>
-        <h2 class="section-title reveal" data-i18n="bioTitle">Creador digital<br>&amp; programador</h2>
+        <h2 class="section-title reveal" data-i18n="bioTitle">Gameplay<br>&amp; animación</h2>
         <div style="margin-top:30px;">
-          <p class="bio-p reveal" data-i18n="bioP1">Soy <span class="hl">Ilian Levio</span>, Ingeniero en Realidad Virtual y Diseño de Juegos Digitales, con experiencia en <span class="hl">Unreal Engine</span> y Unity.</p>
-          <p class="bio-p reveal" data-i18n="bioP2">Mi trabajo abarca desde sistemas de combate y mecánicas de movimiento en <span class="hl">C++ y Blueprints</span>, hasta pipelines de modelado, rigging y animación en 3D. Vengo de una formación técnica en telecomunicaciones, lo que me dio una base sólida en software.</p>
-          <p class="bio-p reveal" data-i18n="bioP3">Además de desarrollar, enseño. He dado formación en Unreal Engine y me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.</p>
+          <p class="bio-p reveal" data-i18n="bioP1">Soy <span class="hl">Ilian Levio</span>, Gameplay &amp; Animation Programmer en <a href="https://www.ouchgames.cl/" target="_blank" rel="noopener">Ouch Games</a>, donde desarrollo sistemas de gameplay en Unreal Engine 5.6 con C++ y Blueprints para <a href="https://store.steampowered.com/app/4708840/Atemporal_Silentium/" target="_blank" rel="noopener">Atemporal Silentium</a>, un Action RPG souls-like ya anunciado en Steam.</p>
+          <p class="bio-p reveal" data-i18n="bioP2">Mi foco está en combate y personajes: arquitectura de <span class="hl">IA de combate</span> y comportamiento de jefes con State Tree, habilidades y daño con <span class="hl">Gameplay Ability System</span>, y sistemas de animación con Animation Blueprints, Blend Spaces, Motion Matching, IK y Control Rig. Antes fui Unreal Engine Programmer, Game &amp; Animation Developer en Madis Films, y fui ayudante de investigación en avatares y háptica viso-táctil junto a University College London y Université PSL.</p>
+          <p class="bio-p reveal" data-i18n="bioP3">Además de desarrollar, enseño. Soy <span class="hl">Unreal Authorized Instructor</span> y technical trainer interno: dicté el workshop “Unreal Engine 5.6: MetaHuman Pipeline” en la Universidad Bernardo O’Higgins y he capacitado equipos de UI/UX, Sound Design, 3D Art y Concept Art. Me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.</p>
         </div>
         <div class="certs-wrap reveal">
-          <p class="skills-label" data-i18n="certsLabel">Formación &amp; Certificaciones</p>
+          <p class="skills-label" data-i18n="certsLabel">Formación, credenciales &amp; logros</p>
           <div class="certs-body">
             <!-- Insignia oficial. El archivo UEBadge.png debe estar en la raíz del repo. -->
             <a class="cert-badge" href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener" data-cursor="open">
@@ -781,8 +795,10 @@
         <a href="https://www.linkedin.com/in/ilianlevio" target="_blank" rel="noopener" class="btn" data-cursor="open">LinkedIn</a>
         <a href="https://www.youtube.com/@IlianLevio" target="_blank" rel="noopener" class="btn" data-cursor="open">YouTube</a>
         <a href="mailto:levioilian@gmail.com" class="btn" data-cursor="open" data-i18n="btnEmail">Email</a>
-        <!-- SUBE TU CV al repo en:  cv/Ilian-Levio-CV.pdf  (crea la carpeta "cv") -->
-        <a href="cv/Ilian-Levio-CV.pdf" download class="btn solid" data-cursor="open" data-i18n="btnCV">Descargar CV</a>
+        <!-- El archivo en el repo se llama Ilian-Levio-CV.pdf.pdf (.pdf duplicado).
+             El atributo download corrige el nombre con que llega al visitante.
+             Si lo renombras en GitHub a Ilian-Levio-CV.pdf, quita un ".pdf" del href. -->
+        <a href="Ilian-Levio-CV.pdf.pdf" download="Ilian-Levio-CV.pdf" class="btn solid" data-cursor="open" data-i18n="btnCV">Descargar CV</a>
       </div>
     </div>
     <footer data-i18n="footer">© 2026 Ilian Levio. Todos los derechos reservados.</footer>
@@ -798,10 +814,10 @@
 ============================================================ */
 const I18N = {
   es: {
-    pageTitle: 'Ilian Levio — Programador de Gameplay & Animación | Unreal Engine',
+    pageTitle: 'Ilian Levio | Programador de Gameplay y Animación | Unreal Engine',
     navHome: 'Inicio', navGames: 'Videojuegos', navAnim: 'Animación', navBio: 'Bio', navContact: 'Contacto',
     heroKicker: 'Gameplay &amp; Animation',
-    heroSub: 'Programador de Gameplay &amp; Animación · Unreal Engine 5 · Unity',
+    heroSub: 'Gameplay &amp; Animation Programmer · Unreal Authorized Instructor · C++ &amp; Blueprints',
     btnShowreel: 'Reproducir showreel',
     btnProjects: 'Ver proyectos',
     scroll: 'Scroll',
@@ -811,12 +827,12 @@ const I18N = {
     animTitle: 'Modelado / Animación',
     btnPlayVideo: 'Reproducir video',
     bioIndex: '03 · Sobre mí',
-    bioTitle: 'Creador digital<br>&amp; programador',
-    bioP1: 'Soy <span class="hl">Ilian Levio</span>, Ingeniero en Realidad Virtual y Diseño de Juegos Digitales, con experiencia en <span class="hl">Unreal Engine</span> y Unity.',
-    bioP2: 'Mi trabajo abarca desde sistemas de combate y mecánicas de movimiento en <span class="hl">C++ y Blueprints</span>, hasta pipelines de modelado, rigging y animación en 3D. Vengo de una formación técnica en telecomunicaciones, lo que me dio una base sólida en software.',
-    bioP3: 'Además de desarrollar, enseño. He dado formación en Unreal Engine y me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.',
-    certsLabel: 'Formación &amp; Certificaciones',
-    badgeAlt: 'Insignia oficial de Unreal Authorized Instructor otorgada a Ilian Levio por Epic Games',
+    bioTitle: 'Gameplay<br>&amp; animación',
+    bioP1: 'Soy <span class="hl">Ilian Levio</span>, Gameplay &amp; Animation Programmer en <a href="https://www.ouchgames.cl/" target="_blank" rel="noopener">Ouch Games</a>, donde desarrollo sistemas de gameplay en Unreal Engine 5.6 con C++ y Blueprints para <a href="https://store.steampowered.com/app/4708840/Atemporal_Silentium/" target="_blank" rel="noopener">Atemporal Silentium</a>, un Action RPG souls-like ya anunciado en Steam.',
+    bioP2: 'Mi foco está en combate y personajes: arquitectura de <span class="hl">IA de combate</span> y comportamiento de jefes con State Tree, habilidades y daño con <span class="hl">Gameplay Ability System</span>, y sistemas de animación con Animation Blueprints, Blend Spaces, Motion Matching, IK y Control Rig. Antes fui Unreal Engine Programmer, Game &amp; Animation Developer en Madis Films, y fui ayudante de investigación en avatares y háptica viso-táctil junto a University College London y Université PSL.',
+    bioP3: 'Además de desarrollar, enseño. Soy <span class="hl">Unreal Authorized Instructor</span> y technical trainer interno: dicté el workshop “Unreal Engine 5.6: MetaHuman Pipeline” en la Universidad Bernardo O’Higgins y he capacitado equipos de UI/UX, Sound Design, 3D Art y Concept Art. Me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.',
+    certsLabel: 'Formación, credenciales &amp; logros',
+    badgeAlt: 'Insignia oficial de Unreal Authorized Instructor Silver otorgada a Ilian Levio por Epic Games',
     skillsLabel: 'Stack &amp; Herramientas',
     contactIndex: '04 · Contacto',
     contactTitle: 'Hablemos',
@@ -825,10 +841,10 @@ const I18N = {
     footer: '© 2026 Ilian Levio. Todos los derechos reservados.'
   },
   en: {
-    pageTitle: 'Ilian Levio — Gameplay & Animation Programmer | Unreal Engine',
+    pageTitle: 'Ilian Levio | Gameplay & Animation Programmer | Unreal Engine',
     navHome: 'Home', navGames: 'Games', navAnim: 'Animation', navBio: 'About', navContact: 'Contact',
     heroKicker: 'Gameplay &amp; Animation',
-    heroSub: 'Gameplay &amp; Animation Programmer · Unreal Engine 5 · Unity',
+    heroSub: 'Gameplay &amp; Animation Programmer · Unreal Authorized Instructor · C++ &amp; Blueprints',
     btnShowreel: 'Play showreel',
     btnProjects: 'View projects',
     scroll: 'Scroll',
@@ -838,11 +854,11 @@ const I18N = {
     animTitle: 'Modeling / Animation',
     btnPlayVideo: 'Play video',
     bioIndex: '03 · About me',
-    bioTitle: 'Digital creator<br>&amp; programmer',
-    bioP1: 'I am <span class="hl">Ilian Levio</span>, an engineer in Virtual Reality and Digital Game Design, working with <span class="hl">Unreal Engine</span> and Unity.',
-    bioP2: 'My work runs from combat systems and movement mechanics in <span class="hl">C++ and Blueprints</span> to modeling, rigging and 3D animation pipelines. I come from a technical background in telecommunications, which gave me a solid software foundation.',
-    bioP3: 'Besides building, I teach. I have delivered Unreal Engine training, and I enjoy turning complex concepts into something people can understand and actually apply.',
-    certsLabel: 'Education &amp; Certifications',
+    bioTitle: 'Gameplay<br>&amp; animation',
+    bioP1: 'I am <span class="hl">Ilian Levio</span>, Gameplay &amp; Animation Programmer at <a href="https://www.ouchgames.cl/" target="_blank" rel="noopener">Ouch Games</a>, building gameplay systems in Unreal Engine 5.6 with C++ and Blueprints for <a href="https://store.steampowered.com/app/4708840/Atemporal_Silentium/" target="_blank" rel="noopener">Atemporal Silentium</a>, a souls-like Action RPG already announced on Steam.',
+    bioP2: 'My focus is combat and characters: <span class="hl">combat AI</span> and boss behaviour architecture with State Tree, abilities and damage through <span class="hl">Gameplay Ability System</span>, and animation systems with Animation Blueprints, Blend Spaces, Motion Matching, IK and Control Rig. Before that I was Unreal Engine Programmer, Game &amp; Animation Developer at Madis Films, and was a research assistant on dissimilar avatars and visuo-tactile haptics alongside University College London and Université PSL.',
+    bioP3: 'Besides building, I teach. I am an <span class="hl">Unreal Authorized Instructor</span> and internal technical trainer: I ran the “Unreal Engine 5.6: MetaHuman Pipeline” workshop at Universidad Bernardo O’Higgins and have trained UI/UX, Sound Design, 3D Art and Concept Art teams. I enjoy turning complex concepts into something people can understand and actually apply.',
+    certsLabel: 'Education, credentials &amp; awards',
     badgeAlt: 'Official Unreal Authorized Instructor badge awarded to Ilian Levio by Epic Games',
     skillsLabel: 'Stack &amp; Tools',
     contactIndex: '04 · Contact',
@@ -854,7 +870,7 @@ const I18N = {
 };
 
 /* ============================================================
-   DATA — PROYECTOS
+   DATA · PROYECTOS
    role: tu aporte concreto. desc: qué es el proyecto.
    tech: chips que se muestran bajo la descripción.
    Deja '' en role/desc para que ese bloque no se muestre.
@@ -864,21 +880,21 @@ const YT = 'autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&modestbranding=
 const gameSlides = [
   {
     id: '1qD6E-9pze0',
-    title: { es: 'Senjiro no Tabi — Trailer', en: 'Senjiro no Tabi — Trailer' },
+    title: { es: 'Senjiro no Tabi · Trailer', en: 'Senjiro no Tabi · Trailer' },
     role: {
       es: 'Programador · Mecánicas, movimiento e IA · Animación · Level design (parcial)',
       en: 'Programmer · Mechanics, movement & enemy AI · Animation · Level design (partial)'
     },
     desc: {
       es: 'Acción-aventura en el año 9524, un mundo cyberpunk postapocalíptico donde Senjiro, un samurái retirado, busca venganza. Programé las mecánicas y el movimiento del personaje y la IA enemiga; el level design lo compartí con el equipo. El tráiler también es Unity: monté la cinemática y adapté las animaciones.',
-      en: 'Action-adventure set in 9524, a post-apocalyptic cyberpunk world where Senjiro, a retired samurai, seeks revenge. I programmed the character mechanics, movement and enemy AI; level design was shared with the team. The trailer is Unity too — I built the cinematic and reworked the animations.'
+      en: 'Action-adventure set in 9524, a post-apocalyptic cyberpunk world where Senjiro, a retired samurai, seeks revenge. I programmed the character mechanics, movement and enemy AI; level design was shared with the team. The trailer is Unity too: I built the cinematic and reworked the animations.'
     },
     tech: { es: ['Unity', 'C#', 'Equipo: Bobis Assemble', 'Trailer + Juego'],
              en: ['Unity', 'C#', 'Team: Bobis Assemble', 'Trailer + Game'] }
   },
   {
     id: 'CF7nloSvmls',
-    title: { es: 'Hikari no Samurai — Gameplay', en: 'Hikari no Samurai — Gameplay' },
+    title: { es: 'Hikari no Samurai · Gameplay', en: 'Hikari no Samurai · Gameplay' },
     role: {
       es: 'Desarrollo completo · Programación, combate, IA y animación',
       en: 'Full development · Programming, combat, AI and animation'
@@ -892,7 +908,7 @@ const gameSlides = [
   },
   {
     id: '3H3O5QOmq4w',
-    title: { es: 'Soulless Odyssey — Gameplay', en: 'Soulless Odyssey — Gameplay' },
+    title: { es: 'Soulless Odyssey · Gameplay', en: 'Soulless Odyssey · Gameplay' },
     role: {
       es: 'Solo dev · Programación, IA enemiga, animación y UI (todo excepto modelado)',
       en: 'Solo dev · Programming, enemy AI, animation and UI (everything but modeling)'
@@ -906,7 +922,7 @@ const gameSlides = [
   },
   {
     id: '835pa7-75Ig',
-    title: { es: 'VR Video Volumétrico — Ithaca Company', en: 'VR Volumetric Video — Ithaca Company' },
+    title: { es: 'VR Video Volumétrico · Ithaca Company', en: 'VR Volumetric Video · Ithaca Company' },
     role: {
       es: 'Programador VR · Implementación de video volumétrico',
       en: 'VR Programmer · Volumetric video implementation'
@@ -920,7 +936,7 @@ const gameSlides = [
   },
   {
     id: '1ws4OKBCApQ',
-    title: { es: 'Escenario 360 — Unity', en: '360 Environment — Unity' },
+    title: { es: 'Escenario 360 · Unity', en: '360 Environment · Unity' },
     role: {
       es: 'Level design · Post-proceso · Cámaras con dolly track',
       en: 'Level design · Post-processing · Dolly track camera work'
@@ -934,7 +950,7 @@ const gameSlides = [
   },
   {
     id: 'KZsPDzLAHuQ',
-    title: { es: 'Mars — Gameplay', en: 'Mars — Gameplay' },
+    title: { es: 'Mars · Gameplay', en: 'Mars · Gameplay' },
     role: {
       es: 'Solo dev · Programación, animación y level design (todo excepto modelado)',
       en: 'Solo dev · Programming, animation and level design (everything but modeling)'
@@ -948,7 +964,7 @@ const gameSlides = [
   },
   {
     id: '0zqIrI-tG4o',
-    title: { es: 'The Escape — Gameplay', en: 'The Escape — Gameplay' },
+    title: { es: 'The Escape · Gameplay', en: 'The Escape · Gameplay' },
     role: {
       es: 'Solo dev · Programación, animación y level design (todo excepto modelado)',
       en: 'Solo dev · Programming, animation and level design (everything but modeling)'
@@ -961,8 +977,21 @@ const gameSlides = [
              en: ['Unity', 'C#', 'Pixel art', 'Solo dev'] }
   },
   {
+    id: '__ife1mQqgM',
+    title: { es: 'Amoong · Gameplay', en: 'Amoong · Gameplay' },
+    /* FALTA TU ROL: es el único proyecto sin rol declarado.
+       Rellena role.es y role.en y aparece solo. */
+    role: { es: '', en: '' },
+    desc: {
+      es: 'Shooter 2D en pixel art, parodia de Among Us, hecho en Unity. El protagonista aterriza forzosamente en un planeta lleno de trampas y astronautas infectados, y debe esquivar impostores para llegar a la nave de rescate. Fue mi primer proyecto en equipo como desarrollador de videojuegos.',
+      en: '2D pixel-art shooter, a parody of Among Us, built in Unity. The protagonist crash-lands on a planet full of traps and infected astronauts and has to dodge impostors to reach the rescue ship. It was my first team project as a game developer.'
+    },
+    tech: { es: ['Unity', 'C#', 'Pixel art', 'Primer proyecto en equipo'],
+             en: ['Unity', 'C#', 'Pixel art', 'First team project'] }
+  },
+  {
     id: 'o0qoxlBNPdA',
-    title: { es: 'Escenario Minecraft — Unity', en: 'Minecraft Environment — Unity' },
+    title: { es: 'Escenario Minecraft · Unity', en: 'Minecraft Environment · Unity' },
     role: {
       es: 'Level design · Iluminación y post-proceso · Cámaras cinemáticas',
       en: 'Level design · Lighting and post-processing · Cinematic cameras'
@@ -1011,8 +1040,8 @@ const animSlides = [
       en: 'Full animation in Blender'
     },
     desc: {
-      es: 'Animación del lanzamiento de una piedra con un HUD que muestra la fuerza aplicada. Trabaja anticipación, arrastre, aplastamiento y estiramiento, y exageración de la pose clave para transmitir peso y fuerza — con un remate de humor en la escena.',
-      en: 'Animation of a rock throw with a HUD displaying the applied force. Uses anticipation, drag, squash and stretch, and key-pose exaggeration to convey weight and force — with a comedic beat closing the scene.'
+      es: 'Animación del lanzamiento de una piedra con un HUD que muestra la fuerza aplicada. Trabaja anticipación, arrastre, aplastamiento y estiramiento, y exageración de la pose clave para transmitir peso y fuerza, con un remate de humor que cierra la escena.',
+      en: 'Animation of a rock throw with a HUD displaying the applied force. Uses anticipation, drag, squash and stretch, and key-pose exaggeration to convey weight and force, with a comedic beat closing the scene.'
     },
     tech: { es: ['Blender', 'HUD', '12 principios'], en: ['Blender', 'HUD', '12 principles'] }
   },
@@ -1050,36 +1079,44 @@ const animSlides = [
       en: 'Full animation in Blender'
     },
     desc: {
-      es: 'Ciclo de caminata aplicado a otro modelo y a un escenario distinto. Cada pieza de esta serie trabaja las mismas bases de animación —intención incluida— sobre un personaje y un contexto diferentes.',
-      en: 'Walk cycle applied to a different model and environment. Each piece in this series works the same animation fundamentals — intent included — on a different character and context.'
+      es: 'Ciclo de caminata aplicado a otro modelo y a un escenario distinto. Cada pieza de esta serie trabaja las mismas bases de animación, intención incluida, sobre un personaje y un contexto diferentes.',
+      en: 'Walk cycle applied to a different model and environment. Each piece in this series works the same animation fundamentals, intent included, on a different character and context.'
     },
     tech: { es: ['Blender', 'Escenario'], en: ['Blender', 'Environment'] }
   }
 ];
 
-/* ===== CERTIFICACIONES  ·  VERIFICA los nombres exactos ===== */
+/* ===== FORMACIÓN, https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0ENCIALES Y LOGROS (datos tomados de tu CV) ===== */
 const certs = [
   {
-    es: '<b>Ingeniería en Realidad Virtual y Diseño de Juegos Digitales</b>',
-    en: '<b>Engineering in Virtual Reality and Digital Game Design</b>'
+    es: '<b>Ingeniería en Realidad Virtual y Diseño de Juegos Digitales</b> · Licenciado en Ciencias de la Informática, Universidad Bernardo O’Higgins (titulado 2025)',
+    en: '<b>Engineering in Virtual Reality and Digital Game Design</b> · B.Sc. in Computer Science, Universidad Bernardo O’Higgins (graduated 2025)'
   },
   {
-    es: '<b>Unreal Engine Fundamentals</b> — CRTIC',
-    en: '<b>Unreal Engine Fundamentals</b> — CRTIC'
+    es: '<b>Unreal Authorized Instructor · Silver</b>, Epic Games (2026) · <a href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener">verificar credencial</a>',
+    en: '<b>Unreal Authorized Instructor · Silver</b>, Epic Games (2026) · <a href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener">verify credential</a>'
   },
   {
-    es: '<b>Unreal Authorized Instructor</b> — Unreal Engine 5, Epic Games (2026) · <a href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener">verificar credencial</a>',
-    en: '<b>Unreal Authorized Instructor</b> — Unreal Engine 5, Epic Games (2026) · <a href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener">verify credential</a>'
+    es: '<b>Unreal Engine Fundamentals · Especialidad Videojuegos</b>, Epic Games / CRTIC',
+    en: '<b>Unreal Engine Fundamentals · Games Specialty</b>, Epic Games / CRTIC'
   },
   {
-    es: 'Formación técnica en <b>Telecomunicaciones</b>',
-    en: 'Technical training in <b>Telecommunications</b>'
+    es: '<b>Masterclass Virtual Production</b> (ICVFX)',
+    en: '<b>Virtual Production Masterclass</b> (ICVFX)'
+  },
+  {
+    es: '<b>Instructor</b> del curso “Introduction to Unreal Engine 5.6 · MetaHuman Pipeline: Creation and Integration of Custom Characters”, Universidad Bernardo O’Higgins (12 sesiones, 2026)',
+    en: '<b>Instructor</b> of “Introduction to Unreal Engine 5.6 · MetaHuman Pipeline: Creation and Integration of Custom Characters”, Universidad Bernardo O’Higgins (12 sessions, 2026)'
+  },
+  {
+    es: '<b>2.º lugar internacional</b> en la 44.ª FETIN (Inatel, Brasil) con <b>VRBOT</b>: un robot físico operado en tiempo real desde realidad virtual, con Unity y Arduino, representando a Chile y a la Universidad Bernardo O’Higgins',
+    en: '<b>2nd place internationally</b> at the 44th FETIN (Inatel, Brazil) with <b>VRBOT</b>: a physical robot operated in real time from virtual reality, using Unity and Arduino, representing Chile and Universidad Bernardo O’Higgins'
   }
 ];
 
 const skillsByLang = {
-  es: ['Unreal Engine 5','Unity','C++','C#','Blueprints','Gameplay Programming','IA de enemigos','Animación','Rigging','Modelado 3D','Blender','Realidad Virtual','Python'],
-  en: ['Unreal Engine 5','Unity','C++','C#','Blueprints','Gameplay Programming','Enemy AI','Animation','Rigging','3D Modeling','Blender','Virtual Reality','Python']
+  es: ['Unreal Engine 5','C++','Blueprints','Gameplay Ability System','State Tree','Motion Matching','Animation Blueprints','Control Rig','MetaHuman','Niagara','Chaos Physics','Unity','C#','Python','Blender','Maya','Perforce / Git','Motion Capture','Realidad Virtual'],
+  en: ['Unreal Engine 5','C++','Blueprints','Gameplay Ability System','State Tree','Motion Matching','Animation Blueprints','Control Rig','MetaHuman','Niagara','Chaos Physics','Unity','C#','Python','Blender','Maya','Perforce / Git','Motion Capture','Virtual Reality']
 };
 
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -1188,7 +1225,7 @@ if (!isMobile) {
   window._bindCursor = bindCursor;
 }
 /* ============================================================
-   HERO — random showreel + title animation
+   HERO · random showreel + title animation
 ============================================================ */
 const heroRandom = gameSlides[Math.floor(Math.random() * gameSlides.length)];
 const heroBg = document.getElementById('heroBg');
@@ -1336,7 +1373,7 @@ renderCerts();
 
 if (window._bindCursor) window._bindCursor();
 /* ============================================================
-   NAV — smooth scroll between modules
+   NAV · smooth scroll between modules
 ============================================================ */
 const modules = ['home','videojuegos','animacion','bio','contacto'];
 function goToModule(id) {
@@ -1402,7 +1439,7 @@ const spy = new IntersectionObserver((entries) => {
 }, { threshold: 0.4 });
 modules.forEach(id => spy.observe(document.getElementById(id)));
 /* ============================================================
-   CONTACT PARTICLES — puntitos cyan flotando (desktop only)
+   CONTACT PARTICLES · puntitos cyan flotando (desktop only)
 ============================================================ */
 if (!isMobile) {
   const canvas = document.getElementById('contactParticles');
