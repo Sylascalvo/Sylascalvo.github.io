@@ -502,6 +502,28 @@
   }
   .skill:hover { border-color: var(--accent); color: #fff; background: var(--accent-soft); transform: translateY(-3px); }
 
+  /* ===== NUEVO: docencia ===== */
+  .teach-wrap { margin-top: 36px; }
+  .teach-list { list-style: none; display: flex; flex-direction: column; gap: 14px; max-width: 620px; }
+  .teach-list li { position: relative; padding-left: 20px; }
+  .teach-list li::before {
+    content: '';
+    position: absolute; left: 0; top: 0.55em;
+    width: 0; height: 0;
+    border-left: 7px solid var(--accent);
+    border-top: 4.5px solid transparent;
+    border-bottom: 4.5px solid transparent;
+    filter: drop-shadow(0 0 6px var(--accent-glow));
+  }
+  .teach-list a {
+    color: var(--text); text-decoration: none;
+    font-size: 1rem; line-height: 1.5;
+    border-bottom: 1px solid rgba(255,255,255,0.18);
+    transition: color 0.3s var(--ease), border-color 0.3s var(--ease);
+  }
+  .teach-list a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .teach-meta { display: block; margin-top: 5px; font-size: 0.82rem; color: var(--text-dim); line-height: 1.55; }
+
   /* ===== NUEVO: certificaciones ===== */
   .certs-wrap { margin-top: 36px; }
   .certs-body { display: flex; gap: 28px; align-items: flex-start; }
@@ -656,6 +678,7 @@
     #bio .section-title::before { left: -16px; }
     .certs-body { flex-direction: column; gap: 20px; }
     .cert-badge img { width: 104px; }
+    .teach-list a { font-size: 0.94rem; }
   }
 </style>
 </head>
@@ -766,7 +789,11 @@
         <div style="margin-top:30px;">
           <p class="bio-p reveal" data-i18n="bioP1">Soy <span class="hl">Ilian Levio</span>, Gameplay &amp; Animation Programmer en <a href="https://www.ouchgames.cl/" target="_blank" rel="noopener">Ouch Games</a>, donde desarrollo sistemas de gameplay en Unreal Engine 5.6 con C++ y Blueprints para <a href="https://store.steampowered.com/app/4708840/Atemporal_Silentium/" target="_blank" rel="noopener">Atemporal Silentium</a>, un Action RPG souls-like ya anunciado en Steam.</p>
           <p class="bio-p reveal" data-i18n="bioP2">Mi foco está en combate y personajes: arquitectura de <span class="hl">IA de combate</span> y comportamiento de jefes con State Tree, habilidades y daño con <span class="hl">Gameplay Ability System</span>, y sistemas de animación con Animation Blueprints, Blend Spaces, Motion Matching, IK y Control Rig. Antes fui Unreal Engine Programmer, Game &amp; Animation Developer en Madis Films, y fui ayudante de investigación en avatares y háptica viso-táctil junto a University College London y Université PSL.</p>
-          <p class="bio-p reveal" data-i18n="bioP3">Además de desarrollar, enseño. Soy <span class="hl">Unreal Authorized Instructor</span> y technical trainer interno: dicté el workshop “Unreal Engine 5.6: MetaHuman Pipeline” en la Universidad Bernardo O’Higgins y he capacitado equipos de UI/UX, Sound Design, 3D Art y Concept Art. Me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.</p>
+          <p class="bio-p reveal" data-i18n="bioP3">Además de desarrollar, enseño. Soy <span class="hl">Unreal Authorized Instructor</span> y technical trainer interno: dicto el taller “Unreal Engine 5.6: MetaHuman Pipeline” en la Universidad Bernardo O’Higgins, cuyas sesiones publico como serie y he capacitado equipos de UI/UX, Sound Design, 3D Art y Concept Art. Me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.</p>
+        </div>
+        <div class="teach-wrap reveal">
+          <p class="skills-label" data-i18n="teachLabel">Docencia</p>
+          <ul class="teach-list" id="teachList"></ul>
         </div>
         <div class="certs-wrap reveal">
           <p class="skills-label" data-i18n="certsLabel">Formación, credenciales &amp; logros</p>
@@ -830,7 +857,8 @@ const I18N = {
     bioTitle: 'Gameplay<br>&amp; animación',
     bioP1: 'Soy <span class="hl">Ilian Levio</span>, Gameplay &amp; Animation Programmer en <a href="https://www.ouchgames.cl/" target="_blank" rel="noopener">Ouch Games</a>, donde desarrollo sistemas de gameplay en Unreal Engine 5.6 con C++ y Blueprints para <a href="https://store.steampowered.com/app/4708840/Atemporal_Silentium/" target="_blank" rel="noopener">Atemporal Silentium</a>, un Action RPG souls-like ya anunciado en Steam.',
     bioP2: 'Mi foco está en combate y personajes: arquitectura de <span class="hl">IA de combate</span> y comportamiento de jefes con State Tree, habilidades y daño con <span class="hl">Gameplay Ability System</span>, y sistemas de animación con Animation Blueprints, Blend Spaces, Motion Matching, IK y Control Rig. Antes fui Unreal Engine Programmer, Game &amp; Animation Developer en Madis Films, y fui ayudante de investigación en avatares y háptica viso-táctil junto a University College London y Université PSL.',
-    bioP3: 'Además de desarrollar, enseño. Soy <span class="hl">Unreal Authorized Instructor</span> y technical trainer interno: dicté el workshop “Unreal Engine 5.6: MetaHuman Pipeline” en la Universidad Bernardo O’Higgins y he capacitado equipos de UI/UX, Sound Design, 3D Art y Concept Art. Me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.',
+    bioP3: 'Además de desarrollar, enseño. Soy <span class="hl">Unreal Authorized Instructor</span> y technical trainer interno: dicto el taller “Unreal Engine 5.6: MetaHuman Pipeline” en la Universidad Bernardo O’Higgins, cuyas sesiones publico como serie y he capacitado equipos de UI/UX, Sound Design, 3D Art y Concept Art. Me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.',
+    teachLabel: 'Docencia',
     certsLabel: 'Formación, credenciales &amp; logros',
     badgeAlt: 'Insignia oficial de Unreal Authorized Instructor Silver otorgada a Ilian Levio por Epic Games',
     skillsLabel: 'Stack &amp; Herramientas',
@@ -857,7 +885,8 @@ const I18N = {
     bioTitle: 'Gameplay<br>&amp; animation',
     bioP1: 'I am <span class="hl">Ilian Levio</span>, Gameplay &amp; Animation Programmer at <a href="https://www.ouchgames.cl/" target="_blank" rel="noopener">Ouch Games</a>, building gameplay systems in Unreal Engine 5.6 with C++ and Blueprints for <a href="https://store.steampowered.com/app/4708840/Atemporal_Silentium/" target="_blank" rel="noopener">Atemporal Silentium</a>, a souls-like Action RPG already announced on Steam.',
     bioP2: 'My focus is combat and characters: <span class="hl">combat AI</span> and boss behaviour architecture with State Tree, abilities and damage through <span class="hl">Gameplay Ability System</span>, and animation systems with Animation Blueprints, Blend Spaces, Motion Matching, IK and Control Rig. Before that I was Unreal Engine Programmer, Game &amp; Animation Developer at Madis Films, and was a research assistant on dissimilar avatars and visuo-tactile haptics alongside University College London and Université PSL.',
-    bioP3: 'Besides building, I teach. I am an <span class="hl">Unreal Authorized Instructor</span> and internal technical trainer: I ran the “Unreal Engine 5.6: MetaHuman Pipeline” workshop at Universidad Bernardo O’Higgins and have trained UI/UX, Sound Design, 3D Art and Concept Art teams. I enjoy turning complex concepts into something people can understand and actually apply.',
+    bioP3: 'Besides building, I teach. I am an <span class="hl">Unreal Authorized Instructor</span> and internal technical trainer: I teach the “Unreal Engine 5.6: MetaHuman Pipeline” workshop at Universidad Bernardo O’Higgins and publish its sessions as a series and have trained UI/UX, Sound Design, 3D Art and Concept Art teams. I enjoy turning complex concepts into something people can understand and actually apply.',
+    teachLabel: 'Teaching',
     certsLabel: 'Education, credentials &amp; awards',
     badgeAlt: 'Official Unreal Authorized Instructor badge awarded to Ilian Levio by Epic Games',
     skillsLabel: 'Stack &amp; Tools',
@@ -1087,7 +1116,49 @@ const animSlides = [
   }
 ];
 
-/* ===== FORMACIÓN, https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0ENCIALES Y LOGROS (datos tomados de tu CV) ===== */
+/* ============================================================
+   DOCENCIA
+   Enlaza al VIDEO, no al canal: que lleguen al contenido.
+   Para agregar otro tutorial, copia un bloque y cambia los datos.
+   Titula por lo que ENSENA, no por el formato.
+============================================================ */
+const teaching = [
+  {
+    url: 'https://www.youtube.com/watch?v=Ezu99jvFxag',
+    title: {
+      es: 'MetaHuman Identity: creación de personajes personalizados en UE 5.6',
+      en: 'MetaHuman Identity: building custom characters in UE 5.6'
+    },
+    meta: {
+      es: '21 min · primer video de la serie del taller que dicto en la Universidad Bernardo O’Higgins',
+      en: '21 min · first video of the series from the workshop I teach at Universidad Bernardo O’Higgins'
+    }
+  },
+  {
+    url: 'https://www.youtube.com/watch?v=62aRD42P7OU',
+    title: {
+      es: 'Introducción a State Tree en Unreal Engine 5.6',
+      en: 'Introduction to State Tree in Unreal Engine 5.6'
+    },
+    meta: {
+      es: '18 min · qué es, por qué existe y en qué se diferencia de los Behavior Trees',
+      en: '18 min · what it is, why it exists and how it differs from Behavior Trees'
+    }
+  },
+  {
+    url: 'https://www.youtube.com/watch?v=NoerEZQi5JM',
+    title: {
+      es: 'State Tree en Unreal Engine 5.6: montar la IA de un enemigo desde cero',
+      en: 'State Tree in Unreal Engine 5.6: building enemy AI from scratch'
+    },
+    meta: {
+      es: '23 min · el mismo sistema con el que arquitecturo la IA de jefes en Atemporal Silentium',
+      en: '23 min · the same system I use to architect boss AI on Atemporal Silentium'
+    }
+  }
+];
+
+/* ===== FORMACION, CREDENCIALES Y LOGROS (datos tomados de tu CV) ===== */
 const certs = [
   {
     es: '<b>Ingeniería en Realidad Virtual y Diseño de Juegos Digitales</b> · Licenciado en Ciencias de la Informática, Universidad Bernardo O’Higgins (titulado 2025)',
@@ -1147,6 +1218,7 @@ function applyLang(l) {
     if (I18N[l][k] !== undefined) el.innerHTML = I18N[l][k];
   });
   document.querySelectorAll('.lang-opt').forEach(b => b.classList.toggle('active', b.dataset.lang === l));
+  renderTeaching();
   renderCerts();
   renderSkills();
   const badgeImg = document.getElementById('ueBadge');
@@ -1361,6 +1433,26 @@ function renderSkills() {
 }
 renderSkills();
 
+function renderTeaching() {
+  const tl = document.getElementById('teachList');
+  if (!tl) return;
+  tl.innerHTML = '';
+  teaching.forEach(t => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = t.url; a.target = '_blank'; a.rel = 'noopener';
+    a.dataset.cursor = 'play';
+    a.textContent = t.title[lang] || t.title.es;
+    li.appendChild(a);
+    const m = document.createElement('span');
+    m.className = 'teach-meta';
+    m.textContent = t.meta[lang] || t.meta.es;
+    li.appendChild(m);
+    tl.appendChild(li);
+  });
+  if (window._bindCursor) window._bindCursor();
+}
+
 function renderCerts() {
   const cl = document.getElementById('certsList');
   cl.innerHTML = '';
@@ -1370,6 +1462,7 @@ function renderCerts() {
     cl.appendChild(li);
   });
 }
+renderTeaching();
 renderCerts();
 
 if (window._bindCursor) window._bindCursor();
