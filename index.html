@@ -380,41 +380,64 @@
   /* ===== PROJECTS · panel de texto a la izquierda, video a la derecha =====
      El hero (#home) conserva el video a pantalla completa: eso no cambia.
      Estas reglas aplican solo a las secciones marcadas .module--project. */
+  /* El video ocupa el lado derecho completo (de borde a borde vertical y hasta
+     el borde derecho de la ventana), así que el ÚNICO canto visible es el izquierdo:
+     ese es el que se difumina. Nada de rectángulo con las cuatro esquinas cortadas. */
   .module--project .video-bg {
     position: absolute;
-    top: 50%; right: 3vw; left: auto; bottom: auto;
-    transform: translateY(-50%);
-    /* 16:9 real, limitado por ancho y por alto de pantalla (136vh = 76.5vh de alto) */
-    width: min(60vw, 1080px, 136vh);
-    aspect-ratio: 16 / 9;
-    height: auto;
+    top: 0; bottom: 0; right: 0; left: auto;
+    transform: none;
+    width: 66vw;
+    height: 100%;
     overflow: hidden;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.84;
-    /* difumina los bordes para que se funda con el fondo en vez de ser un rectángulo.
-       Los radios (56%/62%) van por debajo del 100% a propósito: si son mayores que
-       la caja, el degradado termina fuera de ella y no se ve ninguna transición. */
-    -webkit-mask-image: radial-gradient(ellipse 56% 62% at 58% 50%, #000 0%, #000 30%, rgba(0,0,0,0.55) 60%, transparent 88%);
-            mask-image: radial-gradient(ellipse 56% 62% at 58% 50%, #000 0%, #000 30%, rgba(0,0,0,0.55) 60%, transparent 88%);
+    opacity: 0.9;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 14%, #000 34%, #000 100%);
+            mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 14%, #000 34%, #000 100%);
   }
+  /* cover exacto de un 16:9 dentro de una caja de 66vw x 100vh, sin barras */
   .module--project .video-bg iframe {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(66vw, 178vh);
+    height: max(100%, 37.2vw);
     min-width: 0; min-height: 0;
-    transform: none;
     border: none; opacity: 0;
     transition: opacity 1.1s var(--ease);
   }
   .module--project .video-bg iframe.active { opacity: 1; }
-  /* oscurece la zona del texto y los bordes superior e inferior */
   .module--project .overlay {
     background:
-      linear-gradient(to right, rgba(6,6,8,0.97) 0%, rgba(6,6,8,0.9) 28%, rgba(6,6,8,0.5) 50%, rgba(6,6,8,0.14) 72%, rgba(6,6,8,0) 100%),
-      linear-gradient(to bottom, rgba(6,6,8,0.92) 0%, rgba(6,6,8,0) 15%, rgba(6,6,8,0) 85%, rgba(6,6,8,0.92) 100%);
+      linear-gradient(to right, rgba(6,6,8,0.98) 0%, rgba(6,6,8,0.95) 26%, rgba(6,6,8,0.6) 46%, rgba(6,6,8,0.18) 68%, rgba(6,6,8,0) 100%),
+      linear-gradient(to bottom, rgba(6,6,8,0.9) 0%, rgba(6,6,8,0) 16%, rgba(6,6,8,0) 84%, rgba(6,6,8,0.9) 100%);
   }
   .module--project .vignette {
-    background: radial-gradient(ellipse at 62% center, transparent 50%, rgba(6,6,8,0.42) 100%);
+    background: radial-gradient(ellipse at 70% center, transparent 55%, rgba(6,6,8,0.4) 100%);
+  }
+
+  /* ===== ANIMACIÓN: espejado. Texto a la derecha, video a la izquierda ===== */
+  #animacion .video-bg {
+    left: 0; right: auto;
+    -webkit-mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.35) 14%, #000 34%, #000 100%);
+            mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.35) 14%, #000 34%, #000 100%);
+  }
+  #animacion .overlay {
+    background:
+      linear-gradient(to left, rgba(6,6,8,0.98) 0%, rgba(6,6,8,0.95) 26%, rgba(6,6,8,0.6) 46%, rgba(6,6,8,0.18) 68%, rgba(6,6,8,0) 100%),
+      linear-gradient(to bottom, rgba(6,6,8,0.9) 0%, rgba(6,6,8,0) 16%, rgba(6,6,8,0) 84%, rgba(6,6,8,0.9) 100%);
+  }
+  #animacion .vignette {
+    background: radial-gradient(ellipse at 30% center, transparent 55%, rgba(6,6,8,0.4) 100%);
+  }
+  #animacion .carousel-stage {
+    justify-content: flex-end;
+    /* deja libre la franja de la navegación lateral, que vive en el borde derecho */
+    padding-right: 190px;
+  }
+  /* la línea divisoria también se espeja */
+  #animacion .carousel-rule {
+    background: linear-gradient(to left, rgba(255,255,255,0.18), rgba(255,255,255,0));
   }
 
   .carousel-stage {
@@ -532,9 +555,33 @@
   }
   .skill:hover { border-color: var(--accent); color: #fff; background: var(--accent-soft); transform: translateY(-3px); }
 
-  /* ===== NUEVO: docencia ===== */
-  .teach-wrap { margin-top: 52px; }
-  .teach-list { list-style: none; display: flex; flex-direction: column; gap: 18px; max-width: 620px; }
+  /* ===== NUEVO: docencia (acordeón, cerrado por defecto) ===== */
+  .teach-wrap { margin-top: 52px; max-width: 620px; }
+  .teach-wrap summary {
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; list-style: none;
+    padding: 12px 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .teach-wrap summary::-webkit-details-marker { display: none; }
+  .teach-wrap summary .skills-label { margin-bottom: 0; }
+  .teach-count {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.7rem; letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+  .teach-chevron {
+    margin-left: auto;
+    width: 10px; height: 10px;
+    border-right: 1.5px solid var(--accent);
+    border-bottom: 1.5px solid var(--accent);
+    transform: rotate(45deg);
+    transition: transform 0.35s var(--ease);
+  }
+  .teach-wrap[open] summary .teach-chevron { transform: rotate(225deg); }
+  .teach-wrap summary:hover .teach-chevron { border-color: #fff; }
+  .teach-list { list-style: none; display: flex; flex-direction: column; gap: 18px; max-width: 620px; padding: 22px 0 6px; }
   .teach-list li { position: relative; padding-left: 20px; }
   .teach-list li::before {
     content: '';
@@ -563,7 +610,7 @@
   /* ===== CREDENCIAL DESTACADA ===== */
   .cred-side {
     padding-top: 30px;
-    border-top: 1px solid rgba(34,211,238,0.22);
+    border-top: 1px solid rgba(255,255,255,0.1);
     max-width: 250px;
   }
   /* dos columnas solo si de verdad cabe: lista a la izquierda,
@@ -572,11 +619,13 @@
     .certs-body { grid-template-columns: minmax(0, 620px) 1fr; gap: 40px; }
     .cred-side {
       justify-self: end;
-      padding-top: 0; padding-left: 36px;
-      border-top: none;
-      border-left: 1px solid rgba(34,211,238,0.22);
-      /* separada del extremo derecho para no chocar con la navegación lateral */
-      margin-right: clamp(40px, 10vw, 200px);
+      padding-top: 0; padding-left: 0;
+      border-top: none; border-left: none;
+      /* Empujada lo más a la derecha posible sin chocar con la navegación lateral,
+         que ocupa unos 186px desde el borde de la ventana. El contenedor ya aporta
+         parte de esa distancia (su propio margen + padding), así que solo se
+         compensa el resto; en pantallas anchas el mínimo de 20px la lleva al tope. */
+      margin-right: max(20px, calc(186px - (100vw - min(100vw, 1400px)) / 2 - 60px));
     }
   }
   .cred-badge { display: block; line-height: 0; transition: transform 0.4s var(--ease); }
@@ -737,17 +786,17 @@
     .video-bg iframe { width: 300vw; height: 100vh; }
     .hero-actions { flex-direction: column; align-items: center; }
     .bio-p { font-size: 1.05rem; }
-    /* móvil: el video vuelve a cubrir la sección, muy atenuado y difuminado */
-    .module--project .video-bg {
-      top: 0; right: 0; transform: none;
+    /* móvil: el video cubre la sección, muy atenuado, con degradado vertical */
+    .module--project .video-bg, #animacion .video-bg {
+      top: 0; right: 0; left: 0; transform: none;
       width: 100%; height: 100%;
-      aspect-ratio: auto;
       opacity: 0.4;
       -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 60%, transparent 92%);
               mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 60%, transparent 92%);
     }
-    .module--project .video-bg iframe { width: 300vw; height: 100%; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-    .module--project .overlay {
+    .module--project .video-bg iframe { width: max(100vw, 178vh); height: max(100%, 56.25vw); }
+    #animacion .carousel-stage { justify-content: flex-start; padding-right: 24px; }
+    .module--project .overlay, #animacion .overlay {
       background: linear-gradient(to bottom, rgba(6,6,8,0.95) 0%, rgba(6,6,8,0.55) 18%, rgba(6,6,8,0.75) 55%, rgba(6,6,8,0.97) 88%);
     }
     .carousel-stage { padding: calc(var(--nav-h) + 34px) 24px 56px; align-items: flex-start; }
@@ -879,10 +928,14 @@
           <p class="bio-p reveal" data-i18n="bioP2">Mi foco está en combate y personajes: arquitectura de <span class="hl">IA de combate</span> y comportamiento de jefes con State Tree, habilidades y daño con <span class="hl">Gameplay Ability System</span>, y sistemas de animación con Animation Blueprints, Blend Spaces, Motion Matching, IK y Control Rig. Antes fui Unreal Engine Programmer, Game &amp; Animation Developer en Madis Films, y fui ayudante de investigación en avatares y háptica viso-táctil junto a University College London y Université PSL.</p>
           <p class="bio-p reveal" data-i18n="bioP3">Además de desarrollar, enseño. Soy <span class="hl">Unreal Authorized Instructor</span> y technical trainer interno: dicto el taller “Unreal Engine 5.6: MetaHuman Pipeline” en la Universidad Bernardo O’Higgins y he capacitado equipos de UI/UX, Sound Design, 3D Art y Concept Art. Me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.</p>
         </div>
-        <div class="teach-wrap reveal">
-          <p class="skills-label" data-i18n="teachLabel">Docencia</p>
+        <details class="teach-wrap reveal">
+          <summary>
+            <span class="skills-label" data-i18n="teachLabel">Docencia</span>
+            <span class="teach-count" id="teachCount"></span>
+            <span class="teach-chevron" aria-hidden="true"></span>
+          </summary>
           <ul class="teach-list" id="teachList"></ul>
-        </div>
+        </details>
         <div class="certs-wrap reveal">
           <p class="skills-label" data-i18n="certsLabel">Formación, credenciales &amp; logros</p>
           <div class="certs-body">
@@ -1555,6 +1608,8 @@ function renderTeaching() {
     li.appendChild(m);
     tl.appendChild(li);
   });
+  const tc = document.getElementById('teachCount');
+  if (tc) tc.textContent = '(' + teaching.length + ')';
   if (window._bindCursor) window._bindCursor();
 }
 
