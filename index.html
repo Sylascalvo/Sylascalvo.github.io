@@ -90,9 +90,7 @@
     background: var(--bg);
     color: var(--text);
     font-family: 'Inter', sans-serif;
-    /* clip en vez de hidden: recorta igual, pero no rompe position:sticky
-       (hidden crea un contenedor de scroll y anula el sticky de .cred-card) */
-    overflow-x: clip;
+    overflow-x: hidden;
   }
   body.hub-locked { overflow: hidden; height: 100vh; }
   ::selection { background: var(--accent-glow); color: #fff; }
@@ -474,66 +472,9 @@
     align-items: flex-start;
     padding-left: 60px;
   }
-  /* dos columnas: contenido a la izquierda, credencial en el espacio vacio */
-  #bio .bio-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 640px) 300px;
-    gap: 90px;
-    align-items: start;
-    width: 100%;
-    margin-top: 34px;
-  }
-  #bio .bio-block { max-width: 640px; margin-left: 0; }
+  /* el bloque es ancho, pero cada elemento de texto mantiene su medida corta */
+  #bio .bio-block { max-width: 1060px; margin-left: 0; }
 
-  /* ===== PLACA DE CREDENCIAL ===== */
-  .cred-card {
-    position: sticky;
-    top: calc(var(--nav-h) + 60px);
-    border: 1px solid rgba(34,211,238,0.26);
-    background: linear-gradient(160deg, rgba(34,211,238,0.075) 0%, rgba(255,255,255,0.016) 45%, rgba(255,255,255,0.008) 100%);
-    padding: 34px 26px 28px;
-    text-align: center;
-    display: flex; flex-direction: column; align-items: center;
-    box-shadow: 0 0 70px rgba(34,211,238,0.07), inset 0 0 46px rgba(34,211,238,0.028);
-  }
-  .cred-card::before, .cred-card::after {
-    content: ''; position: absolute;
-    width: 16px; height: 16px;
-    border-color: var(--accent);
-    pointer-events: none;
-  }
-  .cred-card::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
-  .cred-card::after { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
-  .cred-badge { display: block; line-height: 0; transition: transform 0.45s var(--ease); }
-  .cred-badge img {
-    width: 152px; height: auto; display: block;
-    filter: drop-shadow(0 0 28px rgba(34,211,238,0.32));
-  }
-  .cred-badge:hover { transform: translateY(-6px) scale(1.03); }
-  .cred-kicker {
-    margin-top: 24px;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.64rem; letter-spacing: 4px;
-    text-transform: uppercase; color: var(--accent);
-  }
-  .cred-title {
-    margin-top: 11px;
-    font-family: 'Oswald', sans-serif;
-    font-weight: 600; font-size: 1.14rem;
-    letter-spacing: 1.5px; line-height: 1.28;
-    text-transform: uppercase;
-  }
-  .cred-sub { margin-top: 9px; font-size: 0.83rem; color: var(--text-dim); letter-spacing: 0.5px; }
-  .cred-card .btn { margin-top: 26px; width: 100%; justify-content: center; padding: 13px 18px; font-size: 0.74rem; }
-  #bio .section-title { position: relative; }
-  #bio .section-title::before {
-    content: '';
-    position: absolute;
-    left: -30px; top: 8px; bottom: 8px;
-    width: 3px;
-    background: var(--accent);
-    box-shadow: 0 0 14px var(--accent-glow);
-  }
   .bio-p { font-size: 1.15rem; line-height: 1.95; color: var(--text-dim); margin-bottom: 24px; max-width: 620px; }
   .bio-p .hl { color: var(--text); }
   .bio-p a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(34,211,238,0.35); }
@@ -575,7 +516,52 @@
 
   /* ===== NUEVO: certificaciones ===== */
   .certs-wrap { margin-top: 52px; }
-  .certs-list { list-style: none; display: flex; flex-direction: column; gap: 15px; max-width: 620px; }
+  /* la lista a la izquierda, la credencial extendida hacia la derecha */
+  .certs-body {
+    display: grid;
+    grid-template-columns: minmax(0, 620px) 250px;
+    gap: 64px;
+    align-items: start;
+  }
+  .certs-list { list-style: none; display: flex; flex-direction: column; gap: 15px; }
+
+  /* ===== CREDENCIAL DESTACADA (columna derecha de Formación) ===== */
+  .cred-side {
+    padding-left: 36px;
+    border-left: 1px solid rgba(34,211,238,0.22);
+  }
+  .cred-badge { display: block; line-height: 0; transition: transform 0.4s var(--ease); }
+  .cred-badge img {
+    width: 138px; height: auto; display: block;
+    filter: drop-shadow(0 0 24px rgba(34,211,238,0.26));
+  }
+  .cred-badge:hover { transform: translateY(-5px); }
+  .cred-kicker {
+    margin-top: 22px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.62rem; letter-spacing: 3.5px;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .cred-title {
+    margin-top: 9px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600; font-size: 1.04rem;
+    letter-spacing: 1.4px; line-height: 1.3;
+    text-transform: uppercase;
+  }
+  .cred-sub { margin-top: 7px; font-size: 0.82rem; color: var(--text-dim); letter-spacing: 0.4px; }
+  .cred-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 18px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent); text-decoration: none;
+    border-bottom: 1px solid rgba(34,211,238,0.4);
+    padding-bottom: 3px;
+    transition: border-color 0.3s var(--ease);
+  }
+  .cred-link:hover { border-bottom-color: var(--accent); }
+  .cred-link::after { content: '\2197'; font-size: 0.85rem; line-height: 1; }
   .certs-list a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(34,211,238,0.35); }
   .certs-list a:hover { border-bottom-color: var(--accent); }
   /* li en flujo normal: con flex, cada <b> se volvía una columna aparte */
@@ -715,10 +701,10 @@
     #bio .module-content { padding-left: 24px; }
     #bio .bio-block { margin-left: 0; }
     #bio .section-title::before { left: -16px; }
-    /* una columna: la placa sube justo debajo del titulo */
-    #bio .bio-grid { grid-template-columns: 1fr; gap: 34px; margin-top: 26px; }
-    .cred-card { position: relative; top: auto; order: -1; max-width: 330px; align-self: flex-start; padding: 28px 22px 24px; }
-    .cred-badge img { width: 128px; }
+    /* una columna: la credencial pasa debajo de la lista, con separador arriba */
+    .certs-body { grid-template-columns: 1fr; gap: 30px; }
+    .cred-side { padding-left: 0; padding-top: 30px; border-left: none; border-top: 1px solid rgba(34,211,238,0.22); }
+    .cred-badge img { width: 120px; }
     .teach-list a { font-size: 0.94rem; }
   }
 </style>
@@ -824,11 +810,10 @@
   <!-- ===== BIO ===== -->
   <section class="module" id="bio">
     <div class="module-content">
-      <p class="section-index reveal" data-i18n="bioIndex">03 · Sobre mí</p>
-      <h2 class="section-title reveal" data-i18n="bioTitle">Gameplay<br>&amp; animación</h2>
-      <div class="bio-grid">
       <div class="bio-block">
-        <div>
+        <p class="section-index reveal" data-i18n="bioIndex">03 · Sobre mí</p>
+        <h2 class="section-title reveal" data-i18n="bioTitle">Gameplay<br>&amp; animación</h2>
+        <div style="margin-top:30px;">
           <p class="bio-p reveal" data-i18n="bioP1">Soy <span class="hl">Ilian Levio</span>, Gameplay &amp; Animation Programmer en <a href="https://www.ouchgames.cl/" target="_blank" rel="noopener">Ouch Games</a>, donde desarrollo sistemas de gameplay en Unreal Engine 5.6 con C++ y Blueprints para <a href="https://store.steampowered.com/app/4708840/Atemporal_Silentium/" target="_blank" rel="noopener">Atemporal Silentium</a>, un Action RPG souls-like ya anunciado en Steam.</p>
           <p class="bio-p reveal" data-i18n="bioP2">Mi foco está en combate y personajes: arquitectura de <span class="hl">IA de combate</span> y comportamiento de jefes con State Tree, habilidades y daño con <span class="hl">Gameplay Ability System</span>, y sistemas de animación con Animation Blueprints, Blend Spaces, Motion Matching, IK y Control Rig. Antes fui Unreal Engine Programmer, Game &amp; Animation Developer en Madis Films, y fui ayudante de investigación en avatares y háptica viso-táctil junto a University College London y Université PSL.</p>
           <p class="bio-p reveal" data-i18n="bioP3">Además de desarrollar, enseño. Soy <span class="hl">Unreal Authorized Instructor</span> y technical trainer interno: dicto el taller “Unreal Engine 5.6: MetaHuman Pipeline” en la Universidad Bernardo O’Higgins y he capacitado equipos de UI/UX, Sound Design, 3D Art y Concept Art. Me gusta traducir conceptos complejos en algo que se entienda y se pueda aplicar.</p>
@@ -839,7 +824,20 @@
         </div>
         <div class="certs-wrap reveal">
           <p class="skills-label" data-i18n="certsLabel">Formación, credenciales &amp; logros</p>
-          <ul class="certs-list" id="certsList"></ul>
+          <div class="certs-body">
+            <ul class="certs-list" id="certsList"></ul>
+
+            <!-- Credencial destacada. UEBadge.png va en la raíz del repo. -->
+            <div class="cred-side reveal">
+              <a class="cred-badge" href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener" data-cursor="open">
+                <img id="ueBadge" src="UEBadge.png" width="138" loading="lazy" alt="Insignia oficial de Unreal Authorized Instructor otorgada a Ilian Levio por Epic Games">
+              </a>
+              <p class="cred-kicker" data-i18n="credKicker">Credencial verificable</p>
+              <p class="cred-title">Unreal Authorized<br>Instructor</p>
+              <p class="cred-sub" data-i18n="credSub">Silver · Epic Games · 2026</p>
+              <a class="cred-link" href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener" data-cursor="open" data-i18n="credBtn">Verificar credencial</a>
+            </div>
+          </div>
         </div>
         <div class="skills-wrap reveal">
           <p class="skills-label" data-i18n="skillsLabel">Stack &amp; Herramientas</p>
@@ -847,17 +845,7 @@
         </div>
       </div>
 
-      <!-- PLACA DE CREDENCIAL. El archivo UEBadge.png va en la raíz del repo. -->
-      <aside class="cred-card reveal">
-        <a class="cred-badge" href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener" data-cursor="open">
-          <img id="ueBadge" src="UEBadge.png" width="152" loading="lazy" alt="Insignia oficial de Unreal Authorized Instructor otorgada a Ilian Levio por Epic Games">
-        </a>
-        <p class="cred-kicker" data-i18n="credKicker">Credencial verificable</p>
-        <p class="cred-title">Unreal Authorized<br>Instructor</p>
-        <p class="cred-sub" data-i18n="credSub">Silver · Epic Games · 2026</p>
-        <a class="btn" href="https://credential.unrealengine.com/9b8db486-1364-45b4-bd63-2e0951f10ec0" target="_blank" rel="noopener" data-cursor="open" data-i18n="credBtn">Verificar credencial</a>
-      </aside>
-      </div>
+
     </div>
   </section>
   <!-- ===== CONTACTO ===== -->
