@@ -104,14 +104,14 @@
     transform: translate(-50%, -50%);
     mix-blend-mode: difference;
   }
-  .cursor-dot { width: 6px; height: 6px; background: #fff; transition: transform 0.15s var(--ease); }
+  .cursor-dot { width: 5px; height: 5px; background: #fff; transition: transform 0.15s var(--ease); }
   .cursor-ring {
-    width: 34px; height: 34px;
+    width: 25px; height: 25px;
     border: 1px solid rgba(255,255,255,0.5);
     transition: width 0.3s var(--ease), height 0.3s var(--ease), border-color 0.3s;
   }
   .cursor-ring.hovering {
-    width: 64px; height: 64px;
+    width: 46px; height: 46px;
     border-color: var(--accent);
     background: var(--accent-soft);
   }
@@ -472,8 +472,9 @@
     align-items: flex-start;
     padding-left: 60px;
   }
-  /* el bloque es ancho, pero cada elemento de texto mantiene su medida corta */
-  #bio .bio-block { max-width: 1060px; margin-left: 0; }
+  /* el bloque ocupa todo el contenedor; cada elemento de texto mantiene
+     su propia medida corta (bio-p, teach-list, certs-list, skills-grid) */
+  #bio .bio-block { max-width: none; width: 100%; margin-left: 0; }
 
   .bio-p { font-size: 1.15rem; line-height: 1.95; color: var(--text-dim); margin-bottom: 24px; max-width: 620px; }
   .bio-p .hl { color: var(--text); }
@@ -516,19 +517,28 @@
 
   /* ===== NUEVO: certificaciones ===== */
   .certs-wrap { margin-top: 52px; }
-  /* la lista a la izquierda, la credencial extendida hacia la derecha */
-  .certs-body {
-    display: grid;
-    grid-template-columns: minmax(0, 620px) 250px;
-    gap: 64px;
-    align-items: start;
-  }
-  .certs-list { list-style: none; display: flex; flex-direction: column; gap: 15px; }
+  /* por defecto una columna; la credencial va debajo con separador arriba */
+  .certs-body { display: grid; grid-template-columns: 1fr; gap: 30px; align-items: start; }
+  .certs-list { list-style: none; display: flex; flex-direction: column; gap: 15px; max-width: 620px; }
 
-  /* ===== CREDENCIAL DESTACADA (columna derecha de Formación) ===== */
+  /* ===== CREDENCIAL DESTACADA ===== */
   .cred-side {
-    padding-left: 36px;
-    border-left: 1px solid rgba(34,211,238,0.22);
+    padding-top: 30px;
+    border-top: 1px solid rgba(34,211,238,0.22);
+    max-width: 250px;
+  }
+  /* dos columnas solo si de verdad cabe: lista a la izquierda,
+     credencial empujada al extremo derecho del contenedor */
+  @media (min-width: 1280px) {
+    .certs-body { grid-template-columns: minmax(0, 620px) 1fr; gap: 40px; }
+    .cred-side {
+      justify-self: end;
+      padding-top: 0; padding-left: 36px;
+      border-top: none;
+      border-left: 1px solid rgba(34,211,238,0.22);
+      /* separada del extremo derecho para no chocar con la navegación lateral */
+      margin-right: clamp(40px, 10vw, 200px);
+    }
   }
   .cred-badge { display: block; line-height: 0; transition: transform 0.4s var(--ease); }
   .cred-badge img {
@@ -701,9 +711,6 @@
     #bio .module-content { padding-left: 24px; }
     #bio .bio-block { margin-left: 0; }
     #bio .section-title::before { left: -16px; }
-    /* una columna: la credencial pasa debajo de la lista, con separador arriba */
-    .certs-body { grid-template-columns: 1fr; gap: 30px; }
-    .cred-side { padding-left: 0; padding-top: 30px; border-left: none; border-top: 1px solid rgba(34,211,238,0.22); }
     .cred-badge img { width: 120px; }
     .teach-list a { font-size: 0.94rem; }
   }
