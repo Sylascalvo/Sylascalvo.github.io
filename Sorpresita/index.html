@@ -116,13 +116,24 @@ body{
 .brote{transform:translateY(var(--sube))}
 .abierto .brote{animation:brota 1.15s cubic-bezier(.24,.72,.24,1) forwards;animation-delay:var(--d)}
 @keyframes brota{from{transform:translateY(var(--sube))}to{transform:translateY(0)}}
-.secundaria{opacity:.68}
+.secundaria{opacity:.82}
+.pluma{transform-box:fill-box;transform-origin:50% 100%;transform:scale(.3,.06);opacity:0}
+.abierto .pluma{animation:abrePluma 1.25s cubic-bezier(.2,1.1,.3,1) forwards;animation-delay:var(--d)}
+@keyframes abrePluma{0%{transform:scale(.3,.06);opacity:0}30%{opacity:1}100%{transform:scale(1,1);opacity:1}}
+.brizna{stroke-dasharray:100 102;stroke-dashoffset:101}
+.abierto .brizna{animation:creceBrizna 1.35s cubic-bezier(.24,.8,.24,1) forwards;animation-delay:var(--d)}
+@keyframes creceBrizna{to{stroke-dashoffset:0}}
+.roseta,.mataPasto{transform-box:fill-box;transform-origin:50% 100%;animation:brisa 8.2s ease-in-out infinite}
+.mataPasto:nth-of-type(even){animation-duration:6.8s;animation-delay:-3s}
 .luminosa .lampara{animation:pulsoLuz 4.2s ease-in-out infinite 4.6s}
 @keyframes pulsoLuz{0%,100%{opacity:1}50%{opacity:.72}}
 .jardin,.suelo,.hierba{pointer-events:none}
 .listo .escena{cursor:pointer}
-.chispa{opacity:0;transition:opacity .45s ease}
-.mata.brilla .chispa{opacity:1}
+.chispa{opacity:0;transition:opacity .5s ease}
+.listo .mata:not(.vista) .chispa{animation:latidoChispa 2.6s ease-in-out infinite}
+@keyframes latidoChispa{0%,100%{opacity:.12}50%{opacity:.52}}
+.mata.vista .chispa{opacity:.12;animation:none}
+.mata.brilla .chispa{opacity:1;animation:none}
 .mata.brilla .rebote{animation:saluda 1s ease}
 @keyframes saluda{0%,100%{transform:translateY(0)}32%{transform:translateY(-7px)}}
 .mata:focus{outline:none}
@@ -161,7 +172,7 @@ body{
   height:100%;
   display:flex;flex-direction:column;align-items:center;
   justify-content:flex-start;
-  padding:clamp(28px,7vh,72px) 20px 0;
+  padding:clamp(24px,6vh,62px) 20px 0;
   text-align:center;
   pointer-events:none;
 }
@@ -198,8 +209,9 @@ body{
 
 .contenido .mensaje{pointer-events:none;transition:opacity .5s ease}
 .mensaje{
-  position:absolute;top:0;left:0;right:0;
-  padding:clamp(34px,8vh,80px) 26px 0;
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:clamp(24px,6vh,62px) 26px 0;
   opacity:0;visibility:hidden;
 }
 .abierto .mensaje{visibility:visible;animation:entra 2s 2.5s ease forwards}
@@ -243,8 +255,8 @@ body{
   position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
   transform:translateX(-50%);
   z-index:6;
-  font-family:var(--ui);font-weight:300;font-size:.74rem;letter-spacing:.26em;
-  color:#f3d9c4;text-transform:lowercase;white-space:nowrap;
+  font-family:var(--ui);font-weight:300;font-size:.72rem;letter-spacing:.16em;
+  color:#f7e2cf;text-transform:lowercase;white-space:nowrap;
   opacity:0;transition:opacity 1.2s ease;
   text-shadow:0 1px 10px rgba(20,8,30,.7);
   pointer-events:none;
@@ -323,6 +335,24 @@ body{
         <stop offset="55%" stop-color="rgba(255,226,140,.2)"/>
         <stop offset="100%" stop-color="rgba(255,220,120,0)"/>
       </radialGradient>
+      <linearGradient id="rosetaA0" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#10403f"/><stop offset="100%" stop-color="#1d6b63"/>
+      </linearGradient>
+      <linearGradient id="rosetaA1" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#15504b"/><stop offset="100%" stop-color="#268275"/>
+      </linearGradient>
+      <linearGradient id="rosetaA2" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#1b5f52"/><stop offset="100%" stop-color="#2f9a83"/>
+      </linearGradient>
+      <linearGradient id="rosetaB0" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#0e3a39"/><stop offset="100%" stop-color="#1a5f58"/>
+      </linearGradient>
+      <linearGradient id="rosetaB1" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#134944"/><stop offset="100%" stop-color="#23786b"/>
+      </linearGradient>
+      <linearGradient id="gPasto" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#1f5c2e"/><stop offset="55%" stop-color="#3d8e3c"/><stop offset="100%" stop-color="#5fb84a"/>
+      </linearGradient>
       <radialGradient id="cCafe"><stop offset="0%" stop-color="#a55d27"/><stop offset="70%" stop-color="#7d4419"/><stop offset="100%" stop-color="#5d3011"/></radialGradient>
       <radialGradient id="cAmbar"><stop offset="0%" stop-color="#ffd06a"/><stop offset="100%" stop-color="#d9892a"/></radialGradient>
       <radialGradient id="cCrema"><stop offset="0%" stop-color="#fff3cf"/><stop offset="100%" stop-color="#e9b45f"/></radialGradient>
@@ -334,332 +364,452 @@ body{
       </radialGradient>
     </defs>
     <!-- pasto de fondo -->
-    <g class="pasto-grupo">
-      <path class="pasto mecer" d="M18 240 C 16 220 24 208 34 198"/>
-      <path class="pasto mecer b" d="M40 240 C 44 218 38 206 30 194"/>
-      <path class="pasto mecer c" d="M70 241 C 74 222 68 212 60 202"/>
-      <path class="pasto mecer" d="M150 238 C 144 220 148 210 140 200"/>
-      <path class="pasto mecer c" d="M172 238 C 176 220 172 210 180 200"/>
-      <path class="pasto mecer b" d="M246 239 C 252 220 246 210 254 200"/>
-      <path class="pasto mecer" d="M266 240 C 262 222 268 212 276 204"/>
-      <path class="pasto mecer c" d="M336 240 C 340 220 334 208 326 198"/>
-      <path class="pasto mecer b" d="M360 241 C 356 222 364 210 374 200"/>
-      <path class="pasto mecer" d="M388 240 C 392 222 386 212 380 204"/>
-    </g>
 
-    <!-- flores: nacen bajo la linea del suelo -->
-<g class="mata m3 secundaria" data-razon="9" tabindex="-1" role="button">
-  <path class="tallo" pathLength="100" style="--d:2.80s" d="M104 316 C 110 243 98 215 104 196"/>
-  <g transform="rotate(-24 104 253)"><path class="hoja" style="--d:3.51s" d="M104 253 C 138 237 162 244 168 256 C 146 269 116 265 104 253 Z" transform-origin="104 253"/></g>
-  <g class="brote" style="--d:2.80s;--sube:104px">
+
+    <!-- la mata crece primero, despues las flores -->
+<g class="roseta">
+  <g transform="translate(200 240) rotate(-108.0)"><path class="pluma f0" style="--d:0.32s" d="M0 0 C -27 -42 -22 -102 0 -124 C 22 -102 27 -42 0 0 Z" fill="url(#rosetaA0)"/></g>
+  <g transform="translate(200 240) rotate(-81.0)"><path class="pluma f0" style="--d:0.28s" d="M0 0 C -27 -42 -22 -102 0 -124 C 22 -102 27 -42 0 0 Z" fill="url(#rosetaA0)"/></g>
+  <g transform="translate(200 240) rotate(-54.0)"><path class="pluma f0" style="--d:0.23s" d="M0 0 C -27 -42 -22 -102 0 -124 C 22 -102 27 -42 0 0 Z" fill="url(#rosetaA0)"/></g>
+  <g transform="translate(200 240) rotate(-27.0)"><path class="pluma f0" style="--d:0.19s" d="M0 0 C -27 -42 -22 -102 0 -124 C 22 -102 27 -42 0 0 Z" fill="url(#rosetaA0)"/></g>
+  <g transform="translate(200 240) rotate(0.0)"><path class="pluma f0" style="--d:0.15s" d="M0 0 C -27 -42 -22 -102 0 -124 C 22 -102 27 -42 0 0 Z" fill="url(#rosetaA0)"/></g>
+  <g transform="translate(200 240) rotate(27.0)"><path class="pluma f0" style="--d:0.21s" d="M0 0 C -27 -42 -22 -102 0 -124 C 22 -102 27 -42 0 0 Z" fill="url(#rosetaA0)"/></g>
+  <g transform="translate(200 240) rotate(54.0)"><path class="pluma f0" style="--d:0.28s" d="M0 0 C -27 -42 -22 -102 0 -124 C 22 -102 27 -42 0 0 Z" fill="url(#rosetaA0)"/></g>
+  <g transform="translate(200 240) rotate(81.0)"><path class="pluma f0" style="--d:0.35s" d="M0 0 C -27 -42 -22 -102 0 -124 C 22 -102 27 -42 0 0 Z" fill="url(#rosetaA0)"/></g>
+  <g transform="translate(200 240) rotate(108.0)"><path class="pluma f0" style="--d:0.42s" d="M0 0 C -27 -42 -22 -102 0 -124 C 22 -102 27 -42 0 0 Z" fill="url(#rosetaA0)"/></g>
+  <g transform="translate(200 240) rotate(-92.0)"><path class="pluma f1" style="--d:0.38s" d="M0 0 C -22 -31 -18 -75 0 -92 C 18 -75 22 -31 0 0 Z" fill="url(#rosetaA1)"/></g>
+  <g transform="translate(200 240) rotate(-61.3)"><path class="pluma f1" style="--d:0.32s" d="M0 0 C -22 -31 -18 -75 0 -92 C 18 -75 22 -31 0 0 Z" fill="url(#rosetaA1)"/></g>
+  <g transform="translate(200 240) rotate(-30.7)"><path class="pluma f1" style="--d:0.26s" d="M0 0 C -22 -31 -18 -75 0 -92 C 18 -75 22 -31 0 0 Z" fill="url(#rosetaA1)"/></g>
+  <g transform="translate(200 240) rotate(0.0)"><path class="pluma f1" style="--d:0.20s" d="M0 0 C -22 -31 -18 -75 0 -92 C 18 -75 22 -31 0 0 Z" fill="url(#rosetaA1)"/></g>
+  <g transform="translate(200 240) rotate(30.7)"><path class="pluma f1" style="--d:0.28s" d="M0 0 C -22 -31 -18 -75 0 -92 C 18 -75 22 -31 0 0 Z" fill="url(#rosetaA1)"/></g>
+  <g transform="translate(200 240) rotate(61.3)"><path class="pluma f1" style="--d:0.37s" d="M0 0 C -22 -31 -18 -75 0 -92 C 18 -75 22 -31 0 0 Z" fill="url(#rosetaA1)"/></g>
+  <g transform="translate(200 240) rotate(92.0)"><path class="pluma f1" style="--d:0.45s" d="M0 0 C -22 -31 -18 -75 0 -92 C 18 -75 22 -31 0 0 Z" fill="url(#rosetaA1)"/></g>
+  <g transform="translate(200 240) rotate(-76.0)"><path class="pluma f2" style="--d:0.44s" d="M0 0 C -18 -20 -14 -49 0 -60 C 14 -49 18 -20 0 0 Z" fill="url(#rosetaA2)"/></g>
+  <g transform="translate(200 240) rotate(-38.0)"><path class="pluma f2" style="--d:0.34s" d="M0 0 C -18 -20 -14 -49 0 -60 C 14 -49 18 -20 0 0 Z" fill="url(#rosetaA2)"/></g>
+  <g transform="translate(200 240) rotate(0.0)"><path class="pluma f2" style="--d:0.24s" d="M0 0 C -18 -20 -14 -49 0 -60 C 14 -49 18 -20 0 0 Z" fill="url(#rosetaA2)"/></g>
+  <g transform="translate(200 240) rotate(38.0)"><path class="pluma f2" style="--d:0.37s" d="M0 0 C -18 -20 -14 -49 0 -60 C 14 -49 18 -20 0 0 Z" fill="url(#rosetaA2)"/></g>
+  <g transform="translate(200 240) rotate(76.0)"><path class="pluma f2" style="--d:0.49s" d="M0 0 C -18 -20 -14 -49 0 -60 C 14 -49 18 -20 0 0 Z" fill="url(#rosetaA2)"/></g>
+</g>
+<g class="roseta">
+  <g transform="translate(108 246) rotate(-108.0)"><path class="pluma f0" style="--d:0.52s" d="M0 0 C -21 -33 -17 -79 0 -96 C 17 -79 21 -33 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(108 246) rotate(-81.0)"><path class="pluma f0" style="--d:0.48s" d="M0 0 C -21 -33 -17 -79 0 -96 C 17 -79 21 -33 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(108 246) rotate(-54.0)"><path class="pluma f0" style="--d:0.43s" d="M0 0 C -21 -33 -17 -79 0 -96 C 17 -79 21 -33 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(108 246) rotate(-27.0)"><path class="pluma f0" style="--d:0.39s" d="M0 0 C -21 -33 -17 -79 0 -96 C 17 -79 21 -33 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(108 246) rotate(0.0)"><path class="pluma f0" style="--d:0.35s" d="M0 0 C -21 -33 -17 -79 0 -96 C 17 -79 21 -33 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(108 246) rotate(27.0)"><path class="pluma f0" style="--d:0.41s" d="M0 0 C -21 -33 -17 -79 0 -96 C 17 -79 21 -33 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(108 246) rotate(54.0)"><path class="pluma f0" style="--d:0.48s" d="M0 0 C -21 -33 -17 -79 0 -96 C 17 -79 21 -33 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(108 246) rotate(81.0)"><path class="pluma f0" style="--d:0.55s" d="M0 0 C -21 -33 -17 -79 0 -96 C 17 -79 21 -33 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(108 246) rotate(108.0)"><path class="pluma f0" style="--d:0.62s" d="M0 0 C -21 -33 -17 -79 0 -96 C 17 -79 21 -33 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(108 246) rotate(-92.0)"><path class="pluma f1" style="--d:0.58s" d="M0 0 C -17 -24 -14 -58 0 -71 C 14 -58 17 -24 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(108 246) rotate(-61.3)"><path class="pluma f1" style="--d:0.52s" d="M0 0 C -17 -24 -14 -58 0 -71 C 14 -58 17 -24 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(108 246) rotate(-30.7)"><path class="pluma f1" style="--d:0.46s" d="M0 0 C -17 -24 -14 -58 0 -71 C 14 -58 17 -24 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(108 246) rotate(0.0)"><path class="pluma f1" style="--d:0.40s" d="M0 0 C -17 -24 -14 -58 0 -71 C 14 -58 17 -24 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(108 246) rotate(30.7)"><path class="pluma f1" style="--d:0.48s" d="M0 0 C -17 -24 -14 -58 0 -71 C 14 -58 17 -24 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(108 246) rotate(61.3)"><path class="pluma f1" style="--d:0.57s" d="M0 0 C -17 -24 -14 -58 0 -71 C 14 -58 17 -24 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(108 246) rotate(92.0)"><path class="pluma f1" style="--d:0.65s" d="M0 0 C -17 -24 -14 -58 0 -71 C 14 -58 17 -24 0 0 Z" fill="url(#rosetaB1)"/></g>
+</g>
+<g class="roseta">
+  <g transform="translate(294 244) rotate(-108.0)"><path class="pluma f0" style="--d:0.64s" d="M0 0 C -22 -34 -18 -82 0 -100 C 18 -82 22 -34 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(294 244) rotate(-81.0)"><path class="pluma f0" style="--d:0.60s" d="M0 0 C -22 -34 -18 -82 0 -100 C 18 -82 22 -34 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(294 244) rotate(-54.0)"><path class="pluma f0" style="--d:0.55s" d="M0 0 C -22 -34 -18 -82 0 -100 C 18 -82 22 -34 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(294 244) rotate(-27.0)"><path class="pluma f0" style="--d:0.51s" d="M0 0 C -22 -34 -18 -82 0 -100 C 18 -82 22 -34 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(294 244) rotate(0.0)"><path class="pluma f0" style="--d:0.47s" d="M0 0 C -22 -34 -18 -82 0 -100 C 18 -82 22 -34 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(294 244) rotate(27.0)"><path class="pluma f0" style="--d:0.53s" d="M0 0 C -22 -34 -18 -82 0 -100 C 18 -82 22 -34 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(294 244) rotate(54.0)"><path class="pluma f0" style="--d:0.60s" d="M0 0 C -22 -34 -18 -82 0 -100 C 18 -82 22 -34 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(294 244) rotate(81.0)"><path class="pluma f0" style="--d:0.67s" d="M0 0 C -22 -34 -18 -82 0 -100 C 18 -82 22 -34 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(294 244) rotate(108.0)"><path class="pluma f0" style="--d:0.74s" d="M0 0 C -22 -34 -18 -82 0 -100 C 18 -82 22 -34 0 0 Z" fill="url(#rosetaB0)"/></g>
+  <g transform="translate(294 244) rotate(-92.0)"><path class="pluma f1" style="--d:0.70s" d="M0 0 C -18 -25 -15 -61 0 -74 C 15 -61 18 -25 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(294 244) rotate(-61.3)"><path class="pluma f1" style="--d:0.64s" d="M0 0 C -18 -25 -15 -61 0 -74 C 15 -61 18 -25 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(294 244) rotate(-30.7)"><path class="pluma f1" style="--d:0.58s" d="M0 0 C -18 -25 -15 -61 0 -74 C 15 -61 18 -25 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(294 244) rotate(0.0)"><path class="pluma f1" style="--d:0.52s" d="M0 0 C -18 -25 -15 -61 0 -74 C 15 -61 18 -25 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(294 244) rotate(30.7)"><path class="pluma f1" style="--d:0.60s" d="M0 0 C -18 -25 -15 -61 0 -74 C 15 -61 18 -25 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(294 244) rotate(61.3)"><path class="pluma f1" style="--d:0.69s" d="M0 0 C -18 -25 -15 -61 0 -74 C 15 -61 18 -25 0 0 Z" fill="url(#rosetaB1)"/></g>
+  <g transform="translate(294 244) rotate(92.0)"><path class="pluma f1" style="--d:0.77s" d="M0 0 C -18 -25 -15 -61 0 -74 C 15 -61 18 -25 0 0 Z" fill="url(#rosetaB1)"/></g>
+</g>
+<g class="mataPasto">
+  <g transform="translate(46 258) rotate(-38.0)"><path class="brizna" style="--d:0.16s;--largo:164" pathLength="100" d="M0 0 C -1.2 -50 -2.2 -92 -4.1 -124" stroke="url(#gPasto)" stroke-width="4.9" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(46 258) rotate(-0.5)"><path class="brizna" style="--d:0.21s;--largo:144" pathLength="100" d="M0 0 C 1.3 -42 2.4 -77 4.5 -104" stroke="url(#gPasto)" stroke-width="4.6" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(46 258) rotate(-42.2)"><path class="brizna" style="--d:0.26s;--largo:123" pathLength="100" d="M0 0 C -0.3 -33 -0.6 -62 -1.2 -83" stroke="url(#gPasto)" stroke-width="5.0" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(46 258) rotate(27.3)"><path class="brizna" style="--d:0.31s;--largo:122" pathLength="100" d="M0 0 C 0.9 -33 1.7 -61 3.1 -82" stroke="url(#gPasto)" stroke-width="4.2" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(46 258) rotate(-28.2)"><path class="brizna" style="--d:0.36s;--largo:169" pathLength="100" d="M0 0 C -2.4 -52 -4.4 -96 -8.3 -129" stroke="url(#gPasto)" stroke-width="5.2" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(46 258) rotate(-49.4)"><path class="brizna" style="--d:0.41s;--largo:149" pathLength="100" d="M0 0 C -0.6 -44 -1.1 -81 -2.1 -109" stroke="url(#gPasto)" stroke-width="5.3" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(46 258) rotate(-29.5)"><path class="brizna" style="--d:0.46s;--largo:143" pathLength="100" d="M0 0 C -0.9 -41 -1.6 -76 -3.1 -103" stroke="url(#gPasto)" stroke-width="3.3" stroke-linecap="round" fill="none"/></g>
+</g>
+<g class="mataPasto">
+  <g transform="translate(82 260) rotate(47.4)"><path class="brizna" style="--d:0.26s;--largo:144" pathLength="100" d="M0 0 C -1.4 -42 -2.5 -77 -4.7 -104" stroke="url(#gPasto)" stroke-width="3.3" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(82 260) rotate(34.9)"><path class="brizna" style="--d:0.31s;--largo:135" pathLength="100" d="M0 0 C -0.9 -38 -1.6 -71 -3.0 -95" stroke="url(#gPasto)" stroke-width="4.7" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(82 260) rotate(11.0)"><path class="brizna" style="--d:0.36s;--largo:130" pathLength="100" d="M0 0 C -1.5 -36 -2.8 -67 -5.2 -90" stroke="url(#gPasto)" stroke-width="4.5" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(82 260) rotate(-7.2)"><path class="brizna" style="--d:0.41s;--largo:122" pathLength="100" d="M0 0 C 2.4 -33 4.3 -60 8.1 -82" stroke="url(#gPasto)" stroke-width="4.8" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(82 260) rotate(46.7)"><path class="brizna" style="--d:0.46s;--largo:128" pathLength="100" d="M0 0 C -1.0 -35 -1.7 -65 -3.3 -88" stroke="url(#gPasto)" stroke-width="4.2" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(82 260) rotate(-48.3)"><path class="brizna" style="--d:0.51s;--largo:107" pathLength="100" d="M0 0 C -0.8 -27 -1.4 -49 -2.6 -67" stroke="url(#gPasto)" stroke-width="4.2" stroke-linecap="round" fill="none"/></g>
+</g>
+<g class="mataPasto">
+  <g transform="translate(136 262) rotate(-27.3)"><path class="brizna" style="--d:0.34s;--largo:119" pathLength="100" d="M0 0 C 0.4 -32 0.8 -59 1.4 -79" stroke="url(#gPasto)" stroke-width="4.0" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(136 262) rotate(13.1)"><path class="brizna" style="--d:0.39s;--largo:102" pathLength="100" d="M0 0 C 1.1 -25 2.0 -46 3.7 -62" stroke="url(#gPasto)" stroke-width="3.2" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(136 262) rotate(-25.0)"><path class="brizna" style="--d:0.44s;--largo:108" pathLength="100" d="M0 0 C -0.2 -27 -0.3 -50 -0.5 -68" stroke="url(#gPasto)" stroke-width="5.4" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(136 262) rotate(35.0)"><path class="brizna" style="--d:0.49s;--largo:117" pathLength="100" d="M0 0 C -1.6 -31 -2.9 -57 -5.5 -77" stroke="url(#gPasto)" stroke-width="4.6" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(136 262) rotate(14.0)"><path class="brizna" style="--d:0.54s;--largo:131" pathLength="100" d="M0 0 C 1.0 -36 1.9 -67 3.6 -91" stroke="url(#gPasto)" stroke-width="4.4" stroke-linecap="round" fill="none"/></g>
+</g>
+<g class="mataPasto">
+  <g transform="translate(196 264) rotate(-27.5)"><path class="brizna" style="--d:0.40s;--largo:98" pathLength="100" d="M0 0 C -1.4 -23 -2.5 -43 -4.8 -58" stroke="url(#gPasto)" stroke-width="4.1" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(196 264) rotate(-45.1)"><path class="brizna" style="--d:0.45s;--largo:108" pathLength="100" d="M0 0 C 1.6 -27 2.8 -50 5.3 -68" stroke="url(#gPasto)" stroke-width="5.2" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(196 264) rotate(27.6)"><path class="brizna" style="--d:0.50s;--largo:102" pathLength="100" d="M0 0 C -1.0 -25 -1.8 -46 -3.3 -62" stroke="url(#gPasto)" stroke-width="4.4" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(196 264) rotate(-34.0)"><path class="brizna" style="--d:0.55s;--largo:98" pathLength="100" d="M0 0 C 1.6 -23 2.8 -43 5.3 -58" stroke="url(#gPasto)" stroke-width="3.7" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(196 264) rotate(34.2)"><path class="brizna" style="--d:0.60s;--largo:122" pathLength="100" d="M0 0 C -1.5 -33 -2.7 -60 -5.2 -82" stroke="url(#gPasto)" stroke-width="5.0" stroke-linecap="round" fill="none"/></g>
+</g>
+<g class="mataPasto">
+  <g transform="translate(258 262) rotate(12.8)"><path class="brizna" style="--d:0.30s;--largo:134" pathLength="100" d="M0 0 C 2.2 -38 3.9 -69 7.4 -94" stroke="url(#gPasto)" stroke-width="4.9" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(258 262) rotate(24.9)"><path class="brizna" style="--d:0.35s;--largo:141" pathLength="100" d="M0 0 C -0.1 -40 -0.2 -75 -0.4 -101" stroke="url(#gPasto)" stroke-width="3.3" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(258 262) rotate(46.1)"><path class="brizna" style="--d:0.40s;--largo:130" pathLength="100" d="M0 0 C -2.0 -36 -3.6 -67 -6.8 -90" stroke="url(#gPasto)" stroke-width="5.2" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(258 262) rotate(-3.2)"><path class="brizna" style="--d:0.45s;--largo:114" pathLength="100" d="M0 0 C 0.3 -30 0.6 -55 1.1 -74" stroke="url(#gPasto)" stroke-width="4.4" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(258 262) rotate(-50.6)"><path class="brizna" style="--d:0.50s;--largo:113" pathLength="100" d="M0 0 C 1.6 -29 2.9 -54 5.4 -73" stroke="url(#gPasto)" stroke-width="3.8" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(258 262) rotate(27.6)"><path class="brizna" style="--d:0.55s;--largo:111" pathLength="100" d="M0 0 C -1.8 -28 -3.2 -52 -6.1 -71" stroke="url(#gPasto)" stroke-width="5.0" stroke-linecap="round" fill="none"/></g>
+</g>
+<g class="mataPasto">
+  <g transform="translate(318 258) rotate(30.5)"><path class="brizna" style="--d:0.20s;--largo:159" pathLength="100" d="M0 0 C -1.0 -48 -1.8 -88 -3.5 -119" stroke="url(#gPasto)" stroke-width="4.3" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(318 258) rotate(-52.0)"><path class="brizna" style="--d:0.25s;--largo:152" pathLength="100" d="M0 0 C 1.1 -45 2.0 -83 3.7 -112" stroke="url(#gPasto)" stroke-width="4.2" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(318 258) rotate(-13.2)"><path class="brizna" style="--d:0.30s;--largo:157" pathLength="100" d="M0 0 C 1.1 -47 2.1 -86 3.9 -117" stroke="url(#gPasto)" stroke-width="3.8" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(318 258) rotate(23.9)"><path class="brizna" style="--d:0.35s;--largo:139" pathLength="100" d="M0 0 C 0.8 -40 1.4 -74 2.7 -99" stroke="url(#gPasto)" stroke-width="4.4" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(318 258) rotate(-31.9)"><path class="brizna" style="--d:0.40s;--largo:146" pathLength="100" d="M0 0 C -1.2 -43 -2.1 -79 -4.0 -106" stroke="url(#gPasto)" stroke-width="5.0" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(318 258) rotate(31.5)"><path class="brizna" style="--d:0.45s;--largo:153" pathLength="100" d="M0 0 C -0.8 -45 -1.5 -83 -2.8 -113" stroke="url(#gPasto)" stroke-width="5.1" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(318 258) rotate(-42.3)"><path class="brizna" style="--d:0.50s;--largo:158" pathLength="100" d="M0 0 C -0.3 -47 -0.5 -88 -0.9 -118" stroke="url(#gPasto)" stroke-width="5.0" stroke-linecap="round" fill="none"/></g>
+</g>
+<g class="mataPasto">
+  <g transform="translate(356 260) rotate(-18.3)"><path class="brizna" style="--d:0.24s;--largo:116" pathLength="100" d="M0 0 C -2.0 -30 -3.6 -56 -6.7 -76" stroke="url(#gPasto)" stroke-width="4.6" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(356 260) rotate(3.7)"><path class="brizna" style="--d:0.29s;--largo:125" pathLength="100" d="M0 0 C 0.0 -34 0.0 -63 0.1 -85" stroke="url(#gPasto)" stroke-width="3.3" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(356 260) rotate(-48.1)"><path class="brizna" style="--d:0.34s;--largo:128" pathLength="100" d="M0 0 C -1.4 -35 -2.5 -65 -4.7 -88" stroke="url(#gPasto)" stroke-width="3.4" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(356 260) rotate(-7.9)"><path class="brizna" style="--d:0.39s;--largo:145" pathLength="100" d="M0 0 C -1.0 -42 -1.7 -77 -3.3 -105" stroke="url(#gPasto)" stroke-width="3.5" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(356 260) rotate(13.3)"><path class="brizna" style="--d:0.44s;--largo:150" pathLength="100" d="M0 0 C -0.5 -44 -0.8 -81 -1.6 -110" stroke="url(#gPasto)" stroke-width="4.5" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(356 260) rotate(49.5)"><path class="brizna" style="--d:0.49s;--largo:111" pathLength="100" d="M0 0 C -1.1 -29 -1.9 -53 -3.6 -71" stroke="url(#gPasto)" stroke-width="5.1" stroke-linecap="round" fill="none"/></g>
+</g>
+<g class="mata m3 secundaria" data-razon="7" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:2.42s" d="M240 316 C 246 227 234 192 240 168"/>
+  <g transform="rotate(24 240 241)"><path class="hoja" style="--d:3.13s" d="M240 241 C 206 225 182 232 176 244 C 198 257 228 253 240 241 Z" transform-origin="240 241"/></g>
+  <g class="brote" style="--d:2.42s;--sube:132px">
     <g class="rebote">
-    <g class="cabeza" transform="translate(104 196) scale(0.3)">
-      <circle class="halo" style="--d:4.24s" r="60" fill="url(#brilloFlor)"/>
+    <g class="cabeza" transform="translate(240 168) scale(0.54)">
+      <circle class="halo" style="--d:3.86s" r="60" fill="url(#brilloFlor)"/>
       <circle class="chispa" r="46" fill="url(#gChispa)"/>
-      <circle class="zona" r="127" fill="transparent"/>
-      <path class="lam" style="--d:3.84s" d="M0 0 C -17 -8 -18 -32 -6 -46 C -2 -34 -2 -14 0 0 Z" fill="url(#gTulipanA)"/>
-      <path class="lam" style="--d:3.93s" d="M0 0 C 17 -8 18 -32 6 -46 C 2 -34 2 -14 0 0 Z" fill="url(#gTulipanA)"/>
-      <path class="lam" style="--d:4.02s" d="M0 0 C -12 -10 -12 -36 0 -50 C 12 -36 12 -10 0 0 Z" fill="url(#gTulipanB)"/>
-      <ellipse class="capullo" style="--d:3.74s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:3.74s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+      <circle class="zona" r="70" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:3.36s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(24.0)"><path class="lam" style="--d:3.40s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(48.0)"><path class="lam" style="--d:3.43s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(72.0)"><path class="lam" style="--d:3.47s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(96.0)"><path class="lam" style="--d:3.51s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(120.0)"><path class="lam" style="--d:3.54s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(144.0)"><path class="lam" style="--d:3.58s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(168.0)"><path class="lam" style="--d:3.61s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(192.0)"><path class="lam" style="--d:3.65s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(216.0)"><path class="lam" style="--d:3.69s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(240.0)"><path class="lam" style="--d:3.72s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(264.0)"><path class="lam" style="--d:3.76s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(288.0)"><path class="lam" style="--d:3.79s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(312.0)"><path class="lam" style="--d:3.83s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(336.0)"><path class="lam" style="--d:3.87s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <circle class="corazon" style="--d:3.86s" r="11" fill="url(#cAmbar)"/>
+      <ellipse class="capullo" style="--d:3.36s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:3.36s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
     </g>
   </g>
 </g>
 <g class="mata m2 secundaria" data-razon="8" tabindex="-1" role="button">
-  <path class="tallo" pathLength="100" style="--d:2.56s" d="M292 316 C 298 240 286 210 292 190"/>
-  <g transform="rotate(24 292 250)"><path class="hoja" style="--d:3.27s" d="M292 250 C 258 234 234 242 228 254 C 250 266 280 262 292 250 Z" transform-origin="292 250"/></g>
-  <g class="brote" style="--d:2.56s;--sube:110px">
+  <path class="tallo" pathLength="100" style="--d:2.68s" d="M96 316 C 102 232 90 198 96 176"/>
+  <g transform="rotate(-24 96 244)"><path class="hoja" style="--d:3.39s" d="M96 244 C 130 228 154 235 160 247 C 138 260 108 256 96 244 Z" transform-origin="96 244"/></g>
+  <g class="brote" style="--d:2.68s;--sube:124px">
     <g class="rebote">
-    <g class="cabeza" transform="translate(292 190) scale(0.32)">
-      <circle class="halo" style="--d:4.00s" r="60" fill="url(#brilloFlor)"/>
+    <g class="cabeza" transform="translate(96 176) scale(0.54)">
+      <circle class="halo" style="--d:4.12s" r="60" fill="url(#brilloFlor)"/>
       <circle class="chispa" r="46" fill="url(#gChispa)"/>
-      <circle class="zona" r="119" fill="transparent"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:3.50s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(45.0)"><path class="lam" style="--d:3.56s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(90.0)"><path class="lam" style="--d:3.61s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(135.0)"><path class="lam" style="--d:3.67s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(180.0)"><path class="lam" style="--d:3.72s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(225.0)"><path class="lam" style="--d:3.78s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(270.0)"><path class="lam" style="--d:3.83s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(315.0)"><path class="lam" style="--d:3.89s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <circle class="corazon" style="--d:3.92s" r="8" fill="url(#cCrema)"/>
-      <ellipse class="capullo" style="--d:3.50s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:3.50s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+      <circle class="zona" r="70" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:3.62s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(45.0)"><path class="lam" style="--d:3.68s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:3.73s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(135.0)"><path class="lam" style="--d:3.79s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:3.84s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(225.0)"><path class="lam" style="--d:3.90s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:3.95s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(315.0)"><path class="lam" style="--d:4.01s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <circle class="corazon" style="--d:4.04s" r="8" fill="url(#cCrema)"/>
+      <ellipse class="capullo" style="--d:3.62s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:3.62s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
     </g>
   </g>
 </g>
-<g class="mata m1 secundaria" data-razon="7" tabindex="-1" role="button">
-  <path class="tallo" pathLength="100" style="--d:2.30s" d="M158 316 C 155 238 161 208 158 188"/>
-  <g transform="rotate(-24 158 250)"><path class="hoja" style="--d:3.01s" d="M158 250 C 192 234 216 241 222 253 C 200 266 170 262 158 250 Z" transform-origin="158 250"/></g>
-  <g class="brote" style="--d:2.30s;--sube:112px">
+<g class="mata m1 secundaria" data-razon="9" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:2.92s" d="M306 316 C 303 230 309 195 306 172"/>
+  <g transform="rotate(24 306 242)"><path class="hoja" style="--d:3.63s" d="M306 242 C 272 226 248 233 242 245 C 264 258 294 254 306 242 Z" transform-origin="306 242"/></g>
+  <g class="brote" style="--d:2.92s;--sube:128px">
     <g class="rebote">
-    <g class="cabeza" transform="translate(158 188) scale(0.34)">
-      <circle class="halo" style="--d:3.74s" r="60" fill="url(#brilloFlor)"/>
+    <g class="cabeza" transform="translate(306 172) scale(0.54)">
+      <circle class="halo" style="--d:4.36s" r="60" fill="url(#brilloFlor)"/>
       <circle class="chispa" r="46" fill="url(#gChispa)"/>
-      <circle class="zona" r="112" fill="transparent"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:3.24s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(24.0)"><path class="lam" style="--d:3.28s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(48.0)"><path class="lam" style="--d:3.31s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(72.0)"><path class="lam" style="--d:3.35s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(96.0)"><path class="lam" style="--d:3.39s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(120.0)"><path class="lam" style="--d:3.42s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(144.0)"><path class="lam" style="--d:3.46s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(168.0)"><path class="lam" style="--d:3.49s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(192.0)"><path class="lam" style="--d:3.53s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(216.0)"><path class="lam" style="--d:3.57s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(240.0)"><path class="lam" style="--d:3.60s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(264.0)"><path class="lam" style="--d:3.64s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(288.0)"><path class="lam" style="--d:3.67s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(312.0)"><path class="lam" style="--d:3.71s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(336.0)"><path class="lam" style="--d:3.75s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <circle class="corazon" style="--d:3.74s" r="11" fill="url(#cAmbar)"/>
-      <ellipse class="capullo" style="--d:3.24s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:3.24s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+      <circle class="zona" r="70" fill="transparent"/>
+      <path class="lam" style="--d:3.96s" d="M0 0 C -17 -8 -18 -32 -6 -46 C -2 -34 -2 -14 0 0 Z" fill="url(#gTulipanA)"/>
+      <path class="lam" style="--d:4.05s" d="M0 0 C 17 -8 18 -32 6 -46 C 2 -34 2 -14 0 0 Z" fill="url(#gTulipanA)"/>
+      <path class="lam" style="--d:4.14s" d="M0 0 C -12 -10 -12 -36 0 -50 C 12 -36 12 -10 0 0 Z" fill="url(#gTulipanB)"/>
+      <ellipse class="capullo" style="--d:3.86s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:3.86s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
     </g>
   </g>
 </g>
 <g class="mata m3" data-razon="6" tabindex="-1" role="button">
-  <path class="tallo" pathLength="100" style="--d:2.00s" d="M236 316 C 233 234 239 202 236 180"/>
-  <g transform="rotate(24 236 246)"><path class="hoja" style="--d:2.71s" d="M236 246 C 202 230 178 237 172 249 C 194 262 224 258 236 246 Z" transform-origin="236 246"/></g>
-  <g class="brote" style="--d:2.00s;--sube:120px">
+  <path class="tallo" pathLength="100" style="--d:2.14s" d="M162 316 C 159 225 165 188 162 164"/>
+  <g transform="rotate(-24 162 239)"><path class="hoja" style="--d:2.85s" d="M162 239 C 196 223 220 230 226 242 C 204 255 174 251 162 239 Z" transform-origin="162 239"/></g>
+  <g class="brote" style="--d:2.14s;--sube:136px">
     <g class="rebote">
-    <g class="cabeza" transform="translate(236 180) scale(0.5)">
-      <circle class="halo" style="--d:3.44s" r="60" fill="url(#brilloFlor)"/>
+    <g class="cabeza" transform="translate(162 164) scale(0.58)">
+      <circle class="halo" style="--d:3.58s" r="60" fill="url(#brilloFlor)"/>
       <circle class="chispa" r="46" fill="url(#gChispa)"/>
-      <circle class="zona" r="76" fill="transparent"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:2.94s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(27.7)"><path class="lam" style="--d:2.98s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(55.4)"><path class="lam" style="--d:3.03s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(83.1)"><path class="lam" style="--d:3.07s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(110.8)"><path class="lam" style="--d:3.11s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(138.5)"><path class="lam" style="--d:3.15s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(166.2)"><path class="lam" style="--d:3.19s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(193.8)"><path class="lam" style="--d:3.24s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(221.5)"><path class="lam" style="--d:3.28s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(249.2)"><path class="lam" style="--d:3.32s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(276.9)"><path class="lam" style="--d:3.36s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(304.6)"><path class="lam" style="--d:3.40s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(332.3)"><path class="lam" style="--d:3.45s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(18.0)"><path class="lam" style="--d:3.14s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(58.0)"><path class="lam" style="--d:3.18s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(98.0)"><path class="lam" style="--d:3.22s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(138.0)"><path class="lam" style="--d:3.26s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(178.0)"><path class="lam" style="--d:3.29s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(218.0)"><path class="lam" style="--d:3.33s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(258.0)"><path class="lam" style="--d:3.37s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(298.0)"><path class="lam" style="--d:3.41s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(338.0)"><path class="lam" style="--d:3.45s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <circle class="corazon" style="--d:3.49s" r="15" fill="url(#cCafe)"/>
-      <circle class="semilla" style="--d:3.59s" cx="2.0" cy="-5.7" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.60s" cx="-2.7" cy="-2.4" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.62s" cx="-3.0" cy="1.1" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.63s" cx="-9.3" cy="-2.3" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.64s" cx="-4.7" cy="-5.3" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.65s" cx="-4.6" cy="3.6" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.66s" cx="-0.5" cy="-7.5" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.68s" cx="-6.5" cy="-6.3" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.69s" cx="2.1" cy="0.9" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.70s" cx="5.2" cy="-4.9" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.71s" cx="0.8" cy="-4.7" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.72s" cx="-3.1" cy="-2.0" r="1.5" fill="#63351a" opacity=".5"/>
-      <ellipse class="capullo" style="--d:2.94s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:2.94s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+      <circle class="zona" r="66" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:3.08s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(27.7)"><path class="lam" style="--d:3.12s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(55.4)"><path class="lam" style="--d:3.17s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(83.1)"><path class="lam" style="--d:3.21s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(110.8)"><path class="lam" style="--d:3.25s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(138.5)"><path class="lam" style="--d:3.29s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(166.2)"><path class="lam" style="--d:3.33s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(193.8)"><path class="lam" style="--d:3.38s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(221.5)"><path class="lam" style="--d:3.42s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(249.2)"><path class="lam" style="--d:3.46s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(276.9)"><path class="lam" style="--d:3.50s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(304.6)"><path class="lam" style="--d:3.55s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(332.3)"><path class="lam" style="--d:3.59s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(18.0)"><path class="lam" style="--d:3.28s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(58.0)"><path class="lam" style="--d:3.32s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(98.0)"><path class="lam" style="--d:3.36s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(138.0)"><path class="lam" style="--d:3.40s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(178.0)"><path class="lam" style="--d:3.44s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(218.0)"><path class="lam" style="--d:3.47s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(258.0)"><path class="lam" style="--d:3.51s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(298.0)"><path class="lam" style="--d:3.55s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(338.0)"><path class="lam" style="--d:3.59s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <circle class="corazon" style="--d:3.63s" r="15" fill="url(#cCafe)"/>
+      <circle class="semilla" style="--d:3.73s" cx="2.0" cy="-5.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.75s" cx="-2.7" cy="-2.4" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.76s" cx="-3.0" cy="1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.77s" cx="-9.3" cy="-2.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.78s" cx="-4.7" cy="-5.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.79s" cx="-4.6" cy="3.6" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.81s" cx="-0.5" cy="-7.5" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.82s" cx="-6.5" cy="-6.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.83s" cx="2.1" cy="0.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.84s" cx="5.2" cy="-4.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.85s" cx="0.8" cy="-4.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.87s" cx="-3.1" cy="-2.0" r="1.5" fill="#63351a" opacity=".5"/>
+      <ellipse class="capullo" style="--d:3.08s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:3.08s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
     </g>
   </g>
 </g>
 <g class="mata m1" data-razon="4" tabindex="-1" role="button">
-  <path class="tallo" pathLength="100" style="--d:1.40s" d="M78 316 C 84 227 72 192 78 168"/>
-  <g transform="rotate(-24 78 241)"><path class="hoja" style="--d:2.11s" d="M78 241 C 112 225 136 232 142 244 C 120 257 90 253 78 241 Z" transform-origin="78 241"/></g>
-  <g class="brote" style="--d:1.40s;--sube:132px">
+  <path class="tallo" pathLength="100" style="--d:1.52s" d="M72 316 C 78 208 66 162 72 132"/>
+  <g transform="rotate(-24 72 224)"><path class="hoja" style="--d:2.23s" d="M72 224 C 106 208 130 215 136 227 C 114 240 84 236 72 224 Z" transform-origin="72 224"/></g>
+  <g class="brote" style="--d:1.52s;--sube:168px">
     <g class="rebote">
-    <g class="cabeza" transform="translate(78 168) scale(0.62)">
-      <circle class="halo" style="--d:2.84s" r="60" fill="url(#brilloFlor)"/>
+    <g class="cabeza" transform="translate(72 132) scale(0.6)">
+      <circle class="halo" style="--d:2.96s" r="60" fill="url(#brilloFlor)"/>
       <circle class="chispa" r="46" fill="url(#gChispa)"/>
-      <circle class="zona" r="61" fill="transparent"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:2.34s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(27.7)"><path class="lam" style="--d:2.38s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(55.4)"><path class="lam" style="--d:2.43s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(83.1)"><path class="lam" style="--d:2.47s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(110.8)"><path class="lam" style="--d:2.51s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(138.5)"><path class="lam" style="--d:2.55s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(166.2)"><path class="lam" style="--d:2.59s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(193.8)"><path class="lam" style="--d:2.64s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(221.5)"><path class="lam" style="--d:2.68s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(249.2)"><path class="lam" style="--d:2.72s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(276.9)"><path class="lam" style="--d:2.76s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(304.6)"><path class="lam" style="--d:2.81s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(332.3)"><path class="lam" style="--d:2.85s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(18.0)"><path class="lam" style="--d:2.54s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(58.0)"><path class="lam" style="--d:2.58s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(98.0)"><path class="lam" style="--d:2.62s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(138.0)"><path class="lam" style="--d:2.66s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(178.0)"><path class="lam" style="--d:2.70s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(218.0)"><path class="lam" style="--d:2.73s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(258.0)"><path class="lam" style="--d:2.77s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(298.0)"><path class="lam" style="--d:2.81s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(338.0)"><path class="lam" style="--d:2.85s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <circle class="corazon" style="--d:2.89s" r="15" fill="url(#cCafe)"/>
-      <circle class="semilla" style="--d:2.99s" cx="-0.6" cy="2.0" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.00s" cx="6.5" cy="3.9" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.02s" cx="-5.6" cy="3.7" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.03s" cx="2.5" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.04s" cx="-0.2" cy="8.4" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.05s" cx="-2.2" cy="-0.2" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.06s" cx="-2.7" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.08s" cx="3.5" cy="2.8" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.09s" cx="2.0" cy="0.9" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.10s" cx="-1.5" cy="-3.5" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.11s" cx="2.2" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.12s" cx="-5.7" cy="5.7" r="1.5" fill="#63351a" opacity=".5"/>
-      <ellipse class="capullo" style="--d:2.34s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:2.34s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+      <circle class="zona" r="63" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:2.46s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(27.7)"><path class="lam" style="--d:2.50s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(55.4)"><path class="lam" style="--d:2.55s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(83.1)"><path class="lam" style="--d:2.59s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(110.8)"><path class="lam" style="--d:2.63s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(138.5)"><path class="lam" style="--d:2.67s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(166.2)"><path class="lam" style="--d:2.71s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(193.8)"><path class="lam" style="--d:2.76s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(221.5)"><path class="lam" style="--d:2.80s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(249.2)"><path class="lam" style="--d:2.84s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(276.9)"><path class="lam" style="--d:2.88s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(304.6)"><path class="lam" style="--d:2.93s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(332.3)"><path class="lam" style="--d:2.97s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(18.0)"><path class="lam" style="--d:2.66s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(58.0)"><path class="lam" style="--d:2.70s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(98.0)"><path class="lam" style="--d:2.74s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(138.0)"><path class="lam" style="--d:2.78s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(178.0)"><path class="lam" style="--d:2.82s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(218.0)"><path class="lam" style="--d:2.85s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(258.0)"><path class="lam" style="--d:2.89s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(298.0)"><path class="lam" style="--d:2.93s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(338.0)"><path class="lam" style="--d:2.97s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <circle class="corazon" style="--d:3.01s" r="15" fill="url(#cCafe)"/>
+      <circle class="semilla" style="--d:3.11s" cx="-0.6" cy="2.0" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.12s" cx="6.5" cy="3.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.14s" cx="-5.6" cy="3.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.15s" cx="2.5" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.16s" cx="-0.2" cy="8.4" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.17s" cx="-2.2" cy="-0.2" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.19s" cx="-2.7" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.20s" cx="3.5" cy="2.8" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.21s" cx="2.0" cy="0.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.22s" cx="-1.5" cy="-3.5" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.23s" cx="2.2" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.25s" cx="-5.7" cy="5.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <ellipse class="capullo" style="--d:2.46s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:2.46s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
     </g>
   </g>
 </g>
 <g class="mata m3 luminosa" data-razon="5" tabindex="-1" role="button">
-  <path class="tallo" pathLength="100" style="--d:1.70s" d="M336 316 C 333 219 339 179 336 152"/>
-  <g transform="rotate(24 336 233)"><path class="hoja" style="--d:2.41s" d="M336 233 C 302 217 278 224 272 236 C 294 249 324 245 336 233 Z" transform-origin="336 233"/></g>
-  <g class="brote" style="--d:1.70s;--sube:148px">
+  <path class="tallo" pathLength="100" style="--d:1.84s" d="M328 316 C 325 202 331 154 328 122"/>
+  <g transform="rotate(24 328 220)"><path class="hoja" style="--d:2.55s" d="M328 220 C 294 204 270 211 264 223 C 286 236 316 232 328 220 Z" transform-origin="328 220"/></g>
+  <g class="brote" style="--d:1.84s;--sube:178px">
     <g class="rebote">
-    <g class="cabeza" transform="translate(336 152) scale(0.66)">
-      <circle class="halo" style="--d:3.14s" r="60" fill="url(#brilloFlor)"/>
+    <g class="cabeza" transform="translate(328 122) scale(0.64)">
+      <circle class="halo" style="--d:3.28s" r="60" fill="url(#brilloFlor)"/>
       <circle class="chispa" r="46" fill="url(#gChispa)"/>
-      <circle class="zona" r="58" fill="transparent"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:2.64s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(60.0)"><path class="lam" style="--d:2.70s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(120.0)"><path class="lam" style="--d:2.76s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(180.0)"><path class="lam" style="--d:2.82s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(240.0)"><path class="lam" style="--d:2.88s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(300.0)"><path class="lam" style="--d:2.94s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(30.0)"><path class="lam" style="--d:2.80s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(90.0)"><path class="lam" style="--d:2.85s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(150.0)"><path class="lam" style="--d:2.90s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(210.0)"><path class="lam" style="--d:2.95s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(270.0)"><path class="lam" style="--d:3.00s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(330.0)"><path class="lam" style="--d:3.05s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <circle class="corazon lampara" style="--d:3.14s" r="26" fill="url(#gLuz)"/>
-      <ellipse class="corazon" style="--d:3.20s" cy="-1" rx="11" ry="8" fill="url(#gNucleo)"/>
-      <ellipse class="corazon" style="--d:3.26s" cy="-3" rx="5.5" ry="3.4" fill="#fffdf0"/>
-      <ellipse class="capullo" style="--d:2.64s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:2.64s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+      <circle class="zona" r="59" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:2.78s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(60.0)"><path class="lam" style="--d:2.84s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(120.0)"><path class="lam" style="--d:2.90s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:2.96s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(240.0)"><path class="lam" style="--d:3.02s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(300.0)"><path class="lam" style="--d:3.08s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(30.0)"><path class="lam" style="--d:2.94s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:2.99s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(150.0)"><path class="lam" style="--d:3.04s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(210.0)"><path class="lam" style="--d:3.09s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:3.14s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(330.0)"><path class="lam" style="--d:3.19s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <circle class="corazon lampara" style="--d:3.28s" r="26" fill="url(#gLuz)"/>
+      <ellipse class="corazon" style="--d:3.34s" cy="-1" rx="11" ry="8" fill="url(#gNucleo)"/>
+      <ellipse class="corazon" style="--d:3.40s" cy="-3" rx="5.5" ry="3.4" fill="#fffdf0"/>
+      <ellipse class="capullo" style="--d:2.78s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:2.78s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
     </g>
   </g>
 </g>
 <g class="mata m1" data-razon="2" tabindex="-1" role="button">
-  <path class="tallo" pathLength="100" style="--d:0.72s" d="M126 316 C 120 204 132 157 126 126"/>
-  <g transform="rotate(-24 126 222)"><path class="hoja" style="--d:1.43s" d="M126 222 C 160 206 184 213 190 225 C 168 238 138 234 126 222 Z" transform-origin="126 222"/></g>
-  <g class="brote" style="--d:0.72s;--sube:174px">
+  <path class="tallo" pathLength="100" style="--d:0.78s" d="M122 316 C 116 193 128 141 122 106"/>
+  <g transform="rotate(-24 122 213)"><path class="hoja" style="--d:1.49s" d="M122 213 C 156 197 180 204 186 216 C 164 229 134 225 122 213 Z" transform-origin="122 213"/></g>
+  <g class="brote" style="--d:0.78s;--sube:194px">
     <g class="rebote">
-    <g class="cabeza" transform="translate(126 126) scale(0.82)">
-      <circle class="halo" style="--d:2.16s" r="60" fill="url(#brilloFlor)"/>
+    <g class="cabeza" transform="translate(122 106) scale(0.74)">
+      <circle class="halo" style="--d:2.22s" r="60" fill="url(#brilloFlor)"/>
       <circle class="chispa" r="46" fill="url(#gChispa)"/>
-      <circle class="zona" r="50" fill="transparent"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:1.66s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(27.7)"><path class="lam" style="--d:1.70s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(55.4)"><path class="lam" style="--d:1.75s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(83.1)"><path class="lam" style="--d:1.79s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(110.8)"><path class="lam" style="--d:1.83s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(138.5)"><path class="lam" style="--d:1.87s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(166.2)"><path class="lam" style="--d:1.91s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(193.8)"><path class="lam" style="--d:1.96s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(221.5)"><path class="lam" style="--d:2.00s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(249.2)"><path class="lam" style="--d:2.04s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(276.9)"><path class="lam" style="--d:2.08s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(304.6)"><path class="lam" style="--d:2.12s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(332.3)"><path class="lam" style="--d:2.17s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(18.0)"><path class="lam" style="--d:1.86s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(58.0)"><path class="lam" style="--d:1.90s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(98.0)"><path class="lam" style="--d:1.94s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(138.0)"><path class="lam" style="--d:1.98s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(178.0)"><path class="lam" style="--d:2.01s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(218.0)"><path class="lam" style="--d:2.05s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(258.0)"><path class="lam" style="--d:2.09s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(298.0)"><path class="lam" style="--d:2.13s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(338.0)"><path class="lam" style="--d:2.17s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <circle class="corazon" style="--d:2.21s" r="15" fill="url(#cCafe)"/>
-      <circle class="semilla" style="--d:2.31s" cx="-0.3" cy="2.7" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.33s" cx="-5.1" cy="8.9" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.34s" cx="0.2" cy="-3.0" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.35s" cx="0.1" cy="2.9" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.36s" cx="8.2" cy="3.2" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.37s" cx="3.0" cy="6.1" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.39s" cx="-3.4" cy="1.2" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.40s" cx="-0.4" cy="-3.1" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.41s" cx="-1.9" cy="-2.3" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.42s" cx="-3.3" cy="1.8" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.43s" cx="-1.3" cy="10.2" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.45s" cx="1.5" cy="-4.3" r="1.5" fill="#63351a" opacity=".5"/>
-      <ellipse class="capullo" style="--d:1.66s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:1.66s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+      <circle class="zona" r="51" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:1.72s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(27.7)"><path class="lam" style="--d:1.76s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(55.4)"><path class="lam" style="--d:1.81s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(83.1)"><path class="lam" style="--d:1.85s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(110.8)"><path class="lam" style="--d:1.89s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(138.5)"><path class="lam" style="--d:1.93s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(166.2)"><path class="lam" style="--d:1.97s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(193.8)"><path class="lam" style="--d:2.02s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(221.5)"><path class="lam" style="--d:2.06s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(249.2)"><path class="lam" style="--d:2.10s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(276.9)"><path class="lam" style="--d:2.14s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(304.6)"><path class="lam" style="--d:2.19s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(332.3)"><path class="lam" style="--d:2.23s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(18.0)"><path class="lam" style="--d:1.92s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(58.0)"><path class="lam" style="--d:1.96s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(98.0)"><path class="lam" style="--d:2.00s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(138.0)"><path class="lam" style="--d:2.04s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(178.0)"><path class="lam" style="--d:2.07s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(218.0)"><path class="lam" style="--d:2.11s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(258.0)"><path class="lam" style="--d:2.15s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(298.0)"><path class="lam" style="--d:2.19s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(338.0)"><path class="lam" style="--d:2.23s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <circle class="corazon" style="--d:2.27s" r="15" fill="url(#cCafe)"/>
+      <circle class="semilla" style="--d:2.37s" cx="-0.3" cy="2.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.38s" cx="-5.1" cy="8.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.40s" cx="0.2" cy="-3.0" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.41s" cx="0.1" cy="2.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.42s" cx="8.2" cy="3.2" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.43s" cx="3.0" cy="6.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.44s" cx="-3.4" cy="1.2" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.46s" cx="-0.4" cy="-3.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.47s" cx="-1.9" cy="-2.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.48s" cx="-3.3" cy="1.8" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.49s" cx="-1.3" cy="10.2" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.50s" cx="1.5" cy="-4.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <ellipse class="capullo" style="--d:1.72s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:1.72s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
     </g>
   </g>
 </g>
 <g class="mata m2 luminosa" data-razon="3" tabindex="-1" role="button">
-  <path class="tallo" pathLength="100" style="--d:1.06s" d="M278 316 C 275 199 281 149 278 116"/>
-  <g transform="rotate(24 278 217)"><path class="hoja" style="--d:1.77s" d="M278 217 C 244 201 220 208 214 220 C 236 233 266 229 278 217 Z" transform-origin="278 217"/></g>
-  <g class="brote" style="--d:1.06s;--sube:184px">
+  <path class="tallo" pathLength="100" style="--d:1.16s" d="M280 316 C 277 189 283 134 280 98"/>
+  <g transform="rotate(24 280 209)"><path class="hoja" style="--d:1.87s" d="M280 209 C 246 193 222 200 216 212 C 238 225 268 221 280 209 Z" transform-origin="280 209"/></g>
+  <g class="brote" style="--d:1.16s;--sube:202px">
     <g class="rebote">
-    <g class="cabeza" transform="translate(278 116) scale(0.86)">
-      <circle class="halo" style="--d:2.50s" r="60" fill="url(#brilloFlor)"/>
+    <g class="cabeza" transform="translate(280 98) scale(0.78)">
+      <circle class="halo" style="--d:2.60s" r="60" fill="url(#brilloFlor)"/>
       <circle class="chispa" r="46" fill="url(#gChispa)"/>
       <circle class="zona" r="50" fill="transparent"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:2.00s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(60.0)"><path class="lam" style="--d:2.06s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(120.0)"><path class="lam" style="--d:2.12s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(180.0)"><path class="lam" style="--d:2.18s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(240.0)"><path class="lam" style="--d:2.24s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(300.0)"><path class="lam" style="--d:2.30s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(30.0)"><path class="lam" style="--d:2.16s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(90.0)"><path class="lam" style="--d:2.21s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(150.0)"><path class="lam" style="--d:2.26s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(210.0)"><path class="lam" style="--d:2.31s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(270.0)"><path class="lam" style="--d:2.36s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(330.0)"><path class="lam" style="--d:2.41s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <circle class="corazon lampara" style="--d:2.50s" r="26" fill="url(#gLuz)"/>
-      <ellipse class="corazon" style="--d:2.56s" cy="-1" rx="11" ry="8" fill="url(#gNucleo)"/>
-      <ellipse class="corazon" style="--d:2.62s" cy="-3" rx="5.5" ry="3.4" fill="#fffdf0"/>
-      <ellipse class="capullo" style="--d:2.00s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:2.00s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:2.10s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(60.0)"><path class="lam" style="--d:2.16s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(120.0)"><path class="lam" style="--d:2.22s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:2.28s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(240.0)"><path class="lam" style="--d:2.34s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(300.0)"><path class="lam" style="--d:2.40s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(30.0)"><path class="lam" style="--d:2.26s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:2.31s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(150.0)"><path class="lam" style="--d:2.36s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(210.0)"><path class="lam" style="--d:2.41s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:2.46s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(330.0)"><path class="lam" style="--d:2.51s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <circle class="corazon lampara" style="--d:2.60s" r="26" fill="url(#gLuz)"/>
+      <ellipse class="corazon" style="--d:2.66s" cy="-1" rx="11" ry="8" fill="url(#gNucleo)"/>
+      <ellipse class="corazon" style="--d:2.72s" cy="-3" rx="5.5" ry="3.4" fill="#fffdf0"/>
+      <ellipse class="capullo" style="--d:2.10s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:2.10s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
     </g>
   </g>
 </g>
 <g class="mata m1 luminosa" data-razon="1" tabindex="-1" role="button">
-  <path class="tallo" pathLength="100" style="--d:0.30s" d="M200 316 C 194 183 206 126 200 88"/>
-  <g transform="rotate(24 200 205)"><path class="hoja" style="--d:1.01s" d="M200 205 C 166 189 142 196 136 208 C 158 221 188 217 200 205 Z" transform-origin="200 205"/></g>
-  <g class="brote" style="--d:0.30s;--sube:212px">
+  <path class="tallo" pathLength="100" style="--d:0.35s" d="M200 316 C 194 181 206 123 200 84"/>
+  <g transform="rotate(24 200 203)"><path class="hoja" style="--d:1.06s" d="M200 203 C 166 187 142 194 136 206 C 158 219 188 215 200 203 Z" transform-origin="200 203"/></g>
+  <g class="brote" style="--d:0.35s;--sube:216px">
     <g class="rebote">
-    <g class="cabeza" transform="translate(200 88) scale(1.0)">
-      <circle class="halo" style="--d:1.74s" r="60" fill="url(#brilloFlor)"/>
+    <g class="cabeza" transform="translate(200 84) scale(0.95)">
+      <circle class="halo" style="--d:1.79s" r="60" fill="url(#brilloFlor)"/>
       <circle class="chispa" r="46" fill="url(#gChispa)"/>
       <circle class="zona" r="50" fill="transparent"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:1.24s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(60.0)"><path class="lam" style="--d:1.30s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(120.0)"><path class="lam" style="--d:1.36s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(180.0)"><path class="lam" style="--d:1.42s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(240.0)"><path class="lam" style="--d:1.48s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(300.0)"><path class="lam" style="--d:1.54s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
-      <g transform="rotate(30.0)"><path class="lam" style="--d:1.40s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(90.0)"><path class="lam" style="--d:1.45s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(150.0)"><path class="lam" style="--d:1.50s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(210.0)"><path class="lam" style="--d:1.55s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(270.0)"><path class="lam" style="--d:1.60s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <g transform="rotate(330.0)"><path class="lam" style="--d:1.65s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
-      <circle class="corazon lampara" style="--d:1.74s" r="26" fill="url(#gLuz)"/>
-      <ellipse class="corazon" style="--d:1.80s" cy="-1" rx="11" ry="8" fill="url(#gNucleo)"/>
-      <ellipse class="corazon" style="--d:1.86s" cy="-3" rx="5.5" ry="3.4" fill="#fffdf0"/>
-      <ellipse class="capullo" style="--d:1.24s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:1.24s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:1.29s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(60.0)"><path class="lam" style="--d:1.35s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(120.0)"><path class="lam" style="--d:1.41s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:1.47s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(240.0)"><path class="lam" style="--d:1.53s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(300.0)"><path class="lam" style="--d:1.59s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(30.0)"><path class="lam" style="--d:1.45s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:1.50s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(150.0)"><path class="lam" style="--d:1.55s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(210.0)"><path class="lam" style="--d:1.60s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:1.65s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(330.0)"><path class="lam" style="--d:1.70s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <circle class="corazon lampara" style="--d:1.79s" r="26" fill="url(#gLuz)"/>
+      <ellipse class="corazon" style="--d:1.85s" cy="-1" rx="11" ry="8" fill="url(#gNucleo)"/>
+      <ellipse class="corazon" style="--d:1.91s" cy="-3" rx="5.5" ry="3.4" fill="#fffdf0"/>
+      <ellipse class="capullo" style="--d:1.29s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:1.29s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
     </g>
   </g>
+</g>
+<g class="mataPasto">
+  <g transform="translate(8 268) rotate(-28.4)"><path class="brizna" style="--d:0.18s;--largo:158" pathLength="100" d="M0 0 C 0.7 -47 1.3 -88 2.4 -118" stroke="url(#gPasto)" stroke-width="3.5" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(8 268) rotate(-43.1)"><path class="brizna" style="--d:0.23s;--largo:126" pathLength="100" d="M0 0 C -1.6 -34 -2.8 -63 -5.3 -86" stroke="url(#gPasto)" stroke-width="5.4" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(8 268) rotate(14.8)"><path class="brizna" style="--d:0.28s;--largo:135" pathLength="100" d="M0 0 C -0.0 -38 -0.0 -71 -0.1 -95" stroke="url(#gPasto)" stroke-width="4.2" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(8 268) rotate(-32.0)"><path class="brizna" style="--d:0.33s;--largo:152" pathLength="100" d="M0 0 C -0.9 -45 -1.6 -83 -3.1 -112" stroke="url(#gPasto)" stroke-width="3.4" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(8 268) rotate(-49.9)"><path class="brizna" style="--d:0.38s;--largo:127" pathLength="100" d="M0 0 C 1.6 -35 3.0 -64 5.6 -87" stroke="url(#gPasto)" stroke-width="4.1" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(8 268) rotate(-12.6)"><path class="brizna" style="--d:0.43s;--largo:120" pathLength="100" d="M0 0 C 1.9 -32 3.3 -59 6.3 -80" stroke="url(#gPasto)" stroke-width="3.8" stroke-linecap="round" fill="none"/></g>
+</g>
+<g class="mataPasto">
+  <g transform="translate(392 268) rotate(-3.8)"><path class="brizna" style="--d:0.22s;--largo:128" pathLength="100" d="M0 0 C 1.3 -35 2.3 -65 4.4 -88" stroke="url(#gPasto)" stroke-width="3.5" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(392 268) rotate(-51.3)"><path class="brizna" style="--d:0.27s;--largo:134" pathLength="100" d="M0 0 C -2.2 -38 -3.9 -70 -7.4 -94" stroke="url(#gPasto)" stroke-width="5.2" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(392 268) rotate(5.6)"><path class="brizna" style="--d:0.32s;--largo:139" pathLength="100" d="M0 0 C -0.4 -40 -0.7 -73 -1.4 -99" stroke="url(#gPasto)" stroke-width="3.3" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(392 268) rotate(21.2)"><path class="brizna" style="--d:0.37s;--largo:132" pathLength="100" d="M0 0 C -1.6 -37 -3.0 -68 -5.6 -92" stroke="url(#gPasto)" stroke-width="4.8" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(392 268) rotate(-27.2)"><path class="brizna" style="--d:0.42s;--largo:117" pathLength="100" d="M0 0 C 1.8 -31 3.3 -57 6.2 -77" stroke="url(#gPasto)" stroke-width="4.3" stroke-linecap="round" fill="none"/></g>
+  <g transform="translate(392 268) rotate(9.4)"><path class="brizna" style="--d:0.47s;--largo:146" pathLength="100" d="M0 0 C 1.0 -42 1.8 -78 3.4 -106" stroke="url(#gPasto)" stroke-width="4.0" stroke-linecap="round" fill="none"/></g>
 </g>
   </svg>
 
@@ -671,6 +821,11 @@ body{
       <path d="M356 110 C 344 82 332 58 318 40" stroke="#3f8c3d" stroke-width="3.2" fill="none" stroke-linecap="round" opacity=".72"/>
       <path d="M186 110 C 176 84 168 64 158 48" stroke="#47953f" stroke-width="2.8" fill="none" stroke-linecap="round" opacity=".55"/>
       <path d="M262 110 C 272 86 278 66 288 50" stroke="#47953f" stroke-width="2.8" fill="none" stroke-linecap="round" opacity=".55"/>
+      <path d="M118 110 C 112 84 104 62 92 44" stroke="#4e9c46" stroke-width="3.2" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M212 110 C 216 88 224 70 236 54" stroke="#3f8c3d" stroke-width="3" fill="none" stroke-linecap="round" opacity=".62"/>
+      <path d="M300 110 C 294 84 288 64 276 46" stroke="#4e9c46" stroke-width="3.2" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M22 110 C 18 86 22 62 30 44" stroke="#3f8c3d" stroke-width="2.8" fill="none" stroke-linecap="round" opacity=".6"/>
+      <path d="M380 110 C 384 84 378 62 370 46" stroke="#47953f" stroke-width="3" fill="none" stroke-linecap="round" opacity=".62"/>
     </g>
   </svg>
 
@@ -685,8 +840,8 @@ body{
 
   <div class="contenido">
     <p class="fecha">21 de septiembre</p>
-    <p class="llamado" id="llamado">Bajo esta tierra hay algo para ti.</p>
-    <button class="boton" id="boton">Ábrelas</button>
+    <p class="llamado" id="llamado">Bajo esta tierra hay un jardín esperando.</p>
+    <button class="boton" id="boton">Hacerlo crecer</button>
 
     <div class="mensaje" id="mensaje" aria-live="polite">
       <h1 id="titulo">Flores amarillas para ti</h1>
@@ -695,7 +850,7 @@ body{
     </div>
   </div>
 
-  <p class="pistaToca" id="pistaToca">tócalas <span class="contador" id="contador">0 / 9</span></p>
+  <p class="pistaToca" id="pistaToca">toca cada flor para leer una razón <span class="contador" id="contador">0 / 9</span></p>
   <p class="cierre" id="cierre"></p>
 </div>
 
@@ -799,6 +954,7 @@ body{
     ubicar(mata);
     mata.classList.add('brilla');
     bloqueMensaje.style.setProperty('opacity','.14','important');
+    mata.classList.add('vista');
     if(!vistas[n]){
       vistas[n] = true;
       var total = Object.keys(vistas).length;
