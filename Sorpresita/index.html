@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Para ti</title>
+<title>Para mi Corazoncito</title>
 <meta name="description" content="21 de septiembre, flores amarillas.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -227,12 +227,35 @@ body{
   margin:0 auto;max-width:30ch;color:#fdf0e4;
   text-shadow:0 1px 14px rgba(30,10,40,.55);
 }
-.firma{
-  display:block;margin-top:18px;
-  font-family:var(--ui);font-weight:300;font-size:.78rem;letter-spacing:.3em;
-  color:#f2d8c6;
+.invita{
+  display:block;margin-top:22px;max-width:26ch;
+  font-family:var(--ui);font-weight:300;font-size:.92rem;line-height:1.6;
+  letter-spacing:.02em;color:#ffe6c9;
+  text-shadow:0 1px 12px rgba(30,12,40,.7);
+  opacity:0;transform:translateY(6px);
+  transition:opacity 1.6s ease, transform 1.6s ease;
+}
+.listo .invita{opacity:1;transform:none}
+.contador{
+  display:block;margin-top:8px;
+  font-family:var(--ui);font-size:.82rem;letter-spacing:.18em;
+  color:#ffd9a0;font-variant-numeric:tabular-nums;
 }
 @keyframes entra{to{opacity:1;transform:none}}
+
+/* polen que salta al tocar una flor */
+.polen{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
+.grano{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle,#fffdea 0%,#ffe48c 42%,rgba(255,206,90,0) 74%);
+  animation:vuela var(--t) cubic-bezier(.16,.68,.3,1) forwards;
+  will-change:transform,opacity;
+}
+@keyframes vuela{
+  0%{transform:translate(0,0) scale(.35);opacity:0}
+  12%{opacity:1}
+  100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0}
+}
 
 /* burbuja con cada razon */
 .razon{
@@ -251,30 +274,16 @@ body{
   pointer-events:none;
 }
 .razon.visible{opacity:1;transform:translateY(0) scale(1)}
-.pistaToca{
-  position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
-  transform:translateX(-50%);
-  z-index:6;
-  font-family:var(--ui);font-weight:300;font-size:.72rem;letter-spacing:.16em;
-  color:#f7e2cf;text-transform:lowercase;white-space:nowrap;
-  opacity:0;transition:opacity 1.2s ease;
-  text-shadow:0 1px 10px rgba(20,8,30,.7);
-  pointer-events:none;
-}
-.listo .pistaToca{opacity:.9}
-.contador{
-  display:inline-block;margin-left:10px;
-  font-variant-numeric:tabular-nums;color:#ffd9a0;letter-spacing:.14em;
-}
 .cierre{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.96);
+  position:absolute;left:50%;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);
+  transform:translate(-50%,0) scale(.96);
   z-index:7;width:min(340px,84vw);text-align:center;
   font-family:var(--display);font-style:italic;font-size:clamp(1.15rem,4.4vw,1.5rem);
   line-height:1.5;color:#fff6ea;
   text-shadow:0 2px 20px rgba(20,8,30,.75);
   opacity:0;pointer-events:none;transition:opacity 1.6s ease, transform 1.6s ease;
 }
-.cierre.visible{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.cierre.visible{opacity:1;transform:translate(-50%,0) scale(1)}
 
 @media (max-height:620px){
   .jardin{width:min(112vh,132vw,760px)}
@@ -294,6 +303,7 @@ body{
   <div class="cielo" aria-hidden="true"></div>
   <div class="sol" aria-hidden="true"></div>
   <div class="luces" id="luces" aria-hidden="true"></div>
+  <div class="polen" id="polen" aria-hidden="true"></div>
 
   <svg class="jardin" viewBox="0 0 400 300" aria-hidden="true">
     <defs>
@@ -844,13 +854,15 @@ body{
     <button class="boton" id="boton">Hacerlo crecer</button>
 
     <div class="mensaje" id="mensaje" aria-live="polite">
-      <h1 id="titulo">Flores amarillas para ti</h1>
+      <h1 id="titulo">Flores amarillas para mi Corazoncito</h1>
       <p id="texto">Hoy empieza la primavera y la tradición dice que este es el día de regalárselas a quien uno quiere. Estas no se marchitan.</p>
-      <span class="firma" id="firma">con cariño</span>
+      <span class="invita" id="invita">
+        <span id="invitaTexto">Toca cada flor para tener una razón por la cual la amo</span>
+        <span class="contador" id="contador">0 / 9</span>
+      </span>
     </div>
   </div>
 
-  <p class="pistaToca" id="pistaToca">toca cada flor para leer una razón <span class="contador" id="contador">0 / 9</span></p>
   <p class="cierre" id="cierre"></p>
 </div>
 
@@ -859,7 +871,7 @@ body{
   var q = new URLSearchParams(location.search);
   if(q.get('titulo')) document.getElementById('titulo').textContent = q.get('titulo');
   if(q.get('mensaje')) document.getElementById('texto').textContent = q.get('mensaje');
-  if(q.get('firma')) document.getElementById('firma').textContent = q.get('firma');
+  if(q.get('invitacion')) document.getElementById('invitaTexto').textContent = q.get('invitacion');
   if(q.get('boton')) document.getElementById('boton').textContent = q.get('boton');
   if(q.get('llamado')) document.getElementById('llamado').textContent = q.get('llamado');
 
@@ -948,11 +960,38 @@ body{
     burbuja.style.visibility = 'visible';
   }
 
+  var capaPolen = document.getElementById('polen');
+  function soltarPolen(mata){
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var c = mata.querySelector('.cabeza').getBoundingClientRect();
+    var e = escenaEl.getBoundingClientRect();
+    var cx = c.left + c.width/2 - e.left;
+    var cy = c.top + c.height/2 - e.top;
+    var n = 18;
+    for(var i=0;i<n;i++){
+      var g = document.createElement('div');
+      g.className = 'grano';
+      var d = 3 + Math.random()*4;
+      var ang = Math.random()*Math.PI*2;
+      var dist = 34 + Math.random()*82;
+      g.style.width = d + 'px';
+      g.style.height = d + 'px';
+      g.style.left = (cx + Math.cos(ang)*8) + 'px';
+      g.style.top = (cy + Math.sin(ang)*8) + 'px';
+      g.style.setProperty('--dx', (Math.cos(ang)*dist).toFixed(1) + 'px');
+      g.style.setProperty('--dy', (Math.sin(ang)*dist*0.55 - 30 - Math.random()*60).toFixed(1) + 'px');
+      g.style.setProperty('--t', (1.5 + Math.random()*1.4).toFixed(2) + 's');
+      capaPolen.appendChild(g);
+      (function(el){ setTimeout(function(){ el.remove(); }, 3200); })(g);
+    }
+  }
+
   function mostrar(mata){
     var n = mata.getAttribute('data-razon');
     burbujaTexto.textContent = RAZONES[parseInt(n,10)-1];
     ubicar(mata);
     mata.classList.add('brilla');
+    soltarPolen(mata);
     bloqueMensaje.style.setProperty('opacity','.14','important');
     mata.classList.add('vista');
     if(!vistas[n]){
