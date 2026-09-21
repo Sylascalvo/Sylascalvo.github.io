@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Para ti</title>
+<meta name="description" content="21 de septiembre, flores amarillas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;1,300&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cielo-alto:#1b1330;
+  --cielo-medio:#5b2f5e;
+  --cielo-rosa:#a8486a;
+  --cielo-naranja:#dd7a4c;
+  --horizonte:#f0a95f;
+  --petalo:#f3c04a;
+  --petalo-hondo:#e09a2d;
+  --corazon:#8a4a22;
+  --tallo:#3d6b4c;
+  --tierra:#170f22;
+  --texto:#fbe9dc;
+  --tenue:#d7aFA0;
+  --display:"Cormorant Garamond",Georgia,serif;
+  --ui:"Jost",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%}
+body{
+  margin:0;height:100%;
+  font-family:var(--ui);
+  color:var(--texto);
+  background:var(--cielo-alto);
+  overflow:hidden;
+  position:relative;
+}
+.escena{position:relative;height:100%;width:100%;overflow:hidden;isolation:isolate}
+
+/* ---------- cielo ---------- */
+.cielo{position:absolute;inset:0;z-index:0;
+  background:linear-gradient(180deg,
+    #14102a 0%, #2a1740 22%, #5b2f5e 44%, #a8486a 64%, #dd7a4c 80%, #f0a95f 92%, #f7c47a 100%);
+}
+.cielo::after{ /* calido que sube al abrir */
+  content:"";position:absolute;inset:0;opacity:0;transition:opacity 2.6s ease;
+  background:linear-gradient(180deg,
+    #201741 0%, #4a2557 20%, #97405f 40%, #d96f4f 62%, #f2a25a 80%, #ffd08a 100%);
+}
+.abierto .cielo::after{opacity:1}
+.sol{
+  position:absolute;left:50%;bottom:16%;width:min(46vw,290px);aspect-ratio:1;
+  transform:translate(-50%,42%);
+  border-radius:50%;
+  background:radial-gradient(circle,#ffe6a8 0%,#ffc06a 38%,rgba(255,150,80,.30) 62%,rgba(255,150,80,0) 72%);
+  filter:blur(1px);
+  transition:transform 3.2s cubic-bezier(.2,.7,.2,1), opacity 2.4s ease;
+  opacity:.8;z-index:1;
+}
+.abierto .sol{transform:translate(-50%,24%) scale(1.12);opacity:1}
+.estrella{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff3d6;opacity:0;animation:titila 4s ease-in-out infinite;z-index:1}
+@keyframes titila{0%,100%{opacity:.12;transform:scale(.7)}50%{opacity:.75;transform:scale(1)}}
+
+/* ---------- luciernagas ---------- */
+.luces{position:absolute;inset:0;z-index:3;pointer-events:none}
+.luz{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle,#fff6c4 0%,rgba(255,214,110,.75) 35%,rgba(255,190,80,0) 70%);
+  animation:flota linear infinite, parpadea ease-in-out infinite;
+  opacity:0;
+}
+@keyframes flota{
+  0%{transform:translate3d(0,0,0)}
+  25%{transform:translate3d(18px,-26px,0)}
+  50%{transform:translate3d(-12px,-52px,0)}
+  75%{transform:translate3d(22px,-80px,0)}
+  100%{transform:translate3d(0,-110px,0)}
+}
+@keyframes parpadea{0%,100%{opacity:0}18%{opacity:.85}45%{opacity:.25}70%{opacity:.95}}
+
+/* ---------- jardin ---------- */
+.jardin{
+  position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+  width:min(124vh,126vw,790px);
+  z-index:2;
+  display:block;
+}
+.suelo{
+  position:absolute;left:0;right:0;bottom:0;
+  width:100%;
+  height:calc(min(124vh,126vw,790px) * 0.175);
+  z-index:2;display:block;
+}
+.velo{
+  position:absolute;left:0;right:0;top:0;height:58%;
+  z-index:4;pointer-events:none;
+  background:linear-gradient(180deg,rgba(22,13,36,.62) 0%,rgba(22,13,36,.34) 42%,rgba(22,13,36,0) 100%);
+}
+.tallo{stroke:var(--tallo);stroke-width:6.5;stroke-linecap:round;fill:none;
+  stroke-dasharray:100 102;stroke-dashoffset:101}
+.abierto .tallo{animation:crece 1.15s cubic-bezier(.24,.72,.24,1) forwards;animation-delay:var(--d)}
+@keyframes crece{to{stroke-dashoffset:0}}
+.hoja{fill:#43734f;opacity:0;transform:scale(.15)}
+.abierto .hoja{animation:abreHoja .7s cubic-bezier(.2,1.2,.4,1) forwards;animation-delay:var(--d)}
+@keyframes abreHoja{to{opacity:1;transform:scale(1)}}
+.brote{transform:translateY(var(--sube))}
+.abierto .brote{animation:brota 1.15s cubic-bezier(.24,.72,.24,1) forwards;animation-delay:var(--d)}
+@keyframes brota{from{transform:translateY(var(--sube))}to{transform:translateY(0)}}
+.mata{transform-box:fill-box;transform-origin:50% 100%;animation:brisa 7.4s ease-in-out infinite}
+.mata.m2{animation-duration:8.8s;animation-delay:-2.4s}
+.mata.m3{animation-duration:6.4s;animation-delay:-4.6s}
+.pasto{stroke:#2c4a38;stroke-width:3.5;stroke-linecap:round;fill:none;opacity:.9}
+.mecer{transform-box:fill-box;transform-origin:50% 100%;animation:brisa 7s ease-in-out infinite}
+.mecer.b{animation-duration:8.6s;animation-delay:-2s}
+.mecer.c{animation-duration:6.2s;animation-delay:-4s}
+.halo{opacity:0}
+.abierto .halo{animation:abreHalo 1.8s ease forwards;animation-delay:var(--d)}
+@keyframes abreHalo{to{opacity:.85}}
+@keyframes brisa{0%,100%{transform:rotate(-1.1deg)}50%{transform:rotate(1.3deg)}}
+
+/* petalos cerrados */
+.lam{transform-box:fill-box;transform-origin:50% 100%;transform:scale(.34,.10);opacity:.85}
+.abierto .lam{animation:despliega 1.15s cubic-bezier(.18,1.35,.35,1) forwards;animation-delay:var(--d)}
+@keyframes despliega{
+  0%{transform:scale(.34,.10);opacity:.85}
+  60%{transform:scale(1.06,1.04)}
+  100%{transform:scale(1,1);opacity:1}
+}
+.corazon,.semilla{transform-box:fill-box;transform-origin:50% 50%;transform:scale(0);opacity:0}
+.abierto .corazon,.abierto .semilla{animation:aparecePunto .55s cubic-bezier(.2,1.5,.4,1) forwards;animation-delay:var(--d)}
+@keyframes aparecePunto{to{transform:scale(1);opacity:1}}
+.semilla{opacity:0}
+.capullo{transform-box:fill-box;transform-origin:50% 100%}
+.abierto .capullo{animation:cierraCapullo .45s ease forwards;animation-delay:var(--d)}
+@keyframes cierraCapullo{to{opacity:0;transform:scale(.25)}}
+
+/* ---------- contenido ---------- */
+.contenido{
+  position:relative;z-index:5;
+  height:100%;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;
+  padding:clamp(28px,7vh,72px) 20px 0;
+  text-align:center;
+  pointer-events:none;
+}
+.contenido > *{pointer-events:auto}
+.fecha{
+  font-family:var(--ui);font-weight:300;font-size:.8rem;letter-spacing:.34em;
+  text-transform:lowercase;color:var(--tenue);margin:0 0 10px;opacity:0;
+  animation:entra 1.4s .3s ease forwards;
+}
+.llamado{
+  font-family:var(--display);font-style:italic;font-weight:300;
+  font-size:clamp(1.65rem,5.6vw,2.6rem);line-height:1.2;
+  margin:0 0 26px;max-width:16ch;
+  text-shadow:0 2px 18px rgba(30,10,40,.45);
+  opacity:0;animation:entra 1.6s .6s ease forwards;
+}
+.boton{
+  font-family:var(--ui);font-weight:400;font-size:.94rem;letter-spacing:.12em;
+  color:#3a1c22;background:linear-gradient(180deg,#ffe9b0,#f4c264);
+  border:0;border-radius:999px;padding:14px 34px;cursor:pointer;
+  box-shadow:0 0 0 0 rgba(255,214,120,.55), 0 10px 26px rgba(60,20,40,.35);
+  animation:entra 1.4s 1.1s ease forwards, pulso 3.2s 2.4s ease-in-out infinite;
+  opacity:0;
+  transition:transform .18s ease;
+}
+.boton:hover{transform:translateY(-2px)}
+.boton:active{transform:translateY(1px) scale(.98)}
+.boton:focus-visible{outline:2px solid #fff3d0;outline-offset:4px}
+@keyframes pulso{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,214,120,.5),0 10px 26px rgba(60,20,40,.35)}
+  50%{box-shadow:0 0 0 16px rgba(255,214,120,0),0 10px 26px rgba(60,20,40,.35)}
+}
+.abierto .fecha,.abierto .llamado,.abierto .boton{opacity:0;transform:translateY(-8px);animation:none;transition:opacity .6s ease,transform .6s ease;pointer-events:none}
+
+.mensaje{
+  position:absolute;top:0;left:0;right:0;
+  padding:clamp(34px,8vh,80px) 26px 0;
+  opacity:0;visibility:hidden;
+}
+.abierto .mensaje{visibility:visible;animation:entra 2s 2.5s ease forwards}
+.mensaje h1{
+  font-family:var(--display);font-weight:300;font-style:italic;
+  font-size:clamp(1.75rem,6vw,2.9rem);line-height:1.1;
+  margin:0 auto 16px;max-width:17ch;
+  text-shadow:0 2px 22px rgba(30,10,40,.5);
+}
+.mensaje p{
+  font-family:var(--display);font-weight:300;
+  font-size:clamp(1.05rem,3.6vw,1.3rem);line-height:1.62;
+  margin:0 auto;max-width:30ch;color:#fdf0e4;
+  text-shadow:0 1px 14px rgba(30,10,40,.55);
+}
+.firma{
+  display:block;margin-top:18px;
+  font-family:var(--ui);font-weight:300;font-size:.78rem;letter-spacing:.3em;
+  color:#f2d8c6;
+}
+@keyframes entra{to{opacity:1;transform:none}}
+
+@media (max-height:620px){
+  .jardin{width:min(112vh,132vw,760px)}
+  .llamado{margin-bottom:18px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.2s !important}
+  .lam{transform:none;opacity:1}
+  .corazon,.semilla{transform:none;opacity:1}
+  .capullo{opacity:0}
+}
+</style>
+</head>
+<body>
+<div class="escena" id="escena">
+
+  <div class="cielo" aria-hidden="true"></div>
+  <div class="sol" aria-hidden="true"></div>
+  <div class="luces" id="luces" aria-hidden="true"></div>
+
+  <svg class="jardin" viewBox="0 0 400 300" aria-hidden="true">
+    <defs>
+      <linearGradient id="gGirasol" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#dd952c"/><stop offset="55%" stop-color="#f2c04c"/><stop offset="100%" stop-color="#ffe391"/>
+      </linearGradient>
+      <linearGradient id="gGirasolInt" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#c47a20"/><stop offset="100%" stop-color="#eab338"/>
+      </linearGradient>
+      <linearGradient id="gMargarita" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#f3dcc4"/><stop offset="60%" stop-color="#fdf1e2"/><stop offset="100%" stop-color="#fffaf3"/>
+      </linearGradient>
+      <linearGradient id="gCosmos" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#c8607f"/><stop offset="55%" stop-color="#e88aa2"/><stop offset="100%" stop-color="#f9b7c4"/>
+      </linearGradient>
+      <linearGradient id="gTulipanA" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#b8403f"/><stop offset="100%" stop-color="#e2685f"/>
+      </linearGradient>
+      <linearGradient id="gTulipanB" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#c94a46"/><stop offset="100%" stop-color="#f28374"/>
+      </linearGradient>
+      <radialGradient id="cCafe"><stop offset="0%" stop-color="#a55d27"/><stop offset="70%" stop-color="#7d4419"/><stop offset="100%" stop-color="#5d3011"/></radialGradient>
+      <radialGradient id="cAmbar"><stop offset="0%" stop-color="#ffd06a"/><stop offset="100%" stop-color="#d9892a"/></radialGradient>
+      <radialGradient id="cCrema"><stop offset="0%" stop-color="#fff3cf"/><stop offset="100%" stop-color="#e9b45f"/></radialGradient>
+      <radialGradient id="gCapullo"><stop offset="0%" stop-color="#5e8f5c"/><stop offset="100%" stop-color="#2f5738"/></radialGradient>
+      <radialGradient id="brilloFlor">
+        <stop offset="0%" stop-color="rgba(255,232,180,.5)"/>
+        <stop offset="45%" stop-color="rgba(255,205,130,.2)"/>
+        <stop offset="100%" stop-color="rgba(255,195,100,0)"/>
+      </radialGradient>
+    </defs>
+    <!-- pasto de fondo -->
+    <g class="pasto-grupo">
+      <path class="pasto mecer" d="M18 240 C 16 220 24 208 34 198"/>
+      <path class="pasto mecer b" d="M40 240 C 44 218 38 206 30 194"/>
+      <path class="pasto mecer c" d="M70 241 C 74 222 68 212 60 202"/>
+      <path class="pasto mecer" d="M150 238 C 144 220 148 210 140 200"/>
+      <path class="pasto mecer c" d="M172 238 C 176 220 172 210 180 200"/>
+      <path class="pasto mecer b" d="M246 239 C 252 220 246 210 254 200"/>
+      <path class="pasto mecer" d="M266 240 C 262 222 268 212 276 204"/>
+      <path class="pasto mecer c" d="M336 240 C 340 220 334 208 326 198"/>
+      <path class="pasto mecer b" d="M360 241 C 356 222 364 210 374 200"/>
+      <path class="pasto mecer" d="M388 240 C 392 222 386 212 380 204"/>
+    </g>
+
+    <!-- flores: nacen bajo la linea del suelo -->
+<g class="mata m3">
+  <path class="tallo" pathLength="100" style="--d:2.72s" d="M54 304 C 60 242 48 219 54 204"/>
+  <g transform="rotate(-24 54 250)"><path class="hoja" style="--d:3.43s" d="M54 250 C 88 234 112 241 118 253 C 96 266 66 262 54 250 Z" transform-origin="54 250"/></g>
+  <g class="brote" style="--d:2.72s;--sube:84px">
+    <g class="cabeza" transform="translate(54 204) scale(0.42)">
+      <circle class="halo" style="--d:4.16s" r="60" fill="url(#brilloFlor)"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:3.66s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(45.0)"><path class="lam" style="--d:3.72s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:3.77s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(135.0)"><path class="lam" style="--d:3.83s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:3.88s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(225.0)"><path class="lam" style="--d:3.94s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:3.99s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(315.0)"><path class="lam" style="--d:4.05s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <circle class="corazon" style="--d:4.08s" r="8" fill="url(#cCrema)"/>
+      <ellipse class="capullo" style="--d:3.66s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:3.66s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+  </g>
+</g>
+<g class="mata m2">
+  <path class="tallo" pathLength="100" style="--d:2.50s" d="M296 304 C 302 240 290 216 296 200"/>
+  <g transform="rotate(24 296 248)"><path class="hoja" style="--d:3.21s" d="M296 248 C 262 232 238 239 232 251 C 254 264 284 260 296 248 Z" transform-origin="296 248"/></g>
+  <g class="brote" style="--d:2.50s;--sube:88px">
+    <g class="cabeza" transform="translate(296 200) scale(0.46)">
+      <circle class="halo" style="--d:3.94s" r="60" fill="url(#brilloFlor)"/>
+      <path class="lam" style="--d:3.54s" d="M0 0 C -17 -8 -18 -32 -6 -46 C -2 -34 -2 -14 0 0 Z" fill="url(#gTulipanA)"/>
+      <path class="lam" style="--d:3.63s" d="M0 0 C 17 -8 18 -32 6 -46 C 2 -34 2 -14 0 0 Z" fill="url(#gTulipanA)"/>
+      <path class="lam" style="--d:3.72s" d="M0 0 C -12 -10 -12 -36 0 -50 C 12 -36 12 -10 0 0 Z" fill="url(#gTulipanB)"/>
+      <ellipse class="capullo" style="--d:3.44s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:3.44s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+  </g>
+</g>
+<g class="mata m1">
+  <path class="tallo" pathLength="100" style="--d:2.26s" d="M158 304 C 155 232 161 204 158 186"/>
+  <g transform="rotate(-24 158 242)"><path class="hoja" style="--d:2.97s" d="M158 242 C 192 226 216 233 222 245 C 200 258 170 254 158 242 Z" transform-origin="158 242"/></g>
+  <g class="brote" style="--d:2.26s;--sube:102px">
+    <g class="cabeza" transform="translate(158 186) scale(0.5)">
+      <circle class="halo" style="--d:3.70s" r="60" fill="url(#brilloFlor)"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:3.20s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(45.0)"><path class="lam" style="--d:3.26s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:3.31s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(135.0)"><path class="lam" style="--d:3.37s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:3.42s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(225.0)"><path class="lam" style="--d:3.48s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:3.53s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(315.0)"><path class="lam" style="--d:3.59s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <circle class="corazon" style="--d:3.62s" r="8" fill="url(#cCrema)"/>
+      <ellipse class="capullo" style="--d:3.20s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:3.20s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+  </g>
+</g>
+<g class="mata m3">
+  <path class="tallo" pathLength="100" style="--d:2.00s" d="M244 304 C 250 228 238 198 244 178"/>
+  <g transform="rotate(24 244 238)"><path class="hoja" style="--d:2.71s" d="M244 238 C 210 222 186 230 180 242 C 202 254 232 250 244 238 Z" transform-origin="244 238"/></g>
+  <g class="brote" style="--d:2.00s;--sube:110px">
+    <g class="cabeza" transform="translate(244 178) scale(0.54)">
+      <circle class="halo" style="--d:3.44s" r="60" fill="url(#brilloFlor)"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:2.94s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(24.0)"><path class="lam" style="--d:2.98s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(48.0)"><path class="lam" style="--d:3.01s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(72.0)"><path class="lam" style="--d:3.05s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(96.0)"><path class="lam" style="--d:3.09s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(120.0)"><path class="lam" style="--d:3.12s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(144.0)"><path class="lam" style="--d:3.16s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(168.0)"><path class="lam" style="--d:3.19s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(192.0)"><path class="lam" style="--d:3.23s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(216.0)"><path class="lam" style="--d:3.27s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(240.0)"><path class="lam" style="--d:3.30s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(264.0)"><path class="lam" style="--d:3.34s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(288.0)"><path class="lam" style="--d:3.37s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(312.0)"><path class="lam" style="--d:3.41s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(336.0)"><path class="lam" style="--d:3.45s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <circle class="corazon" style="--d:3.44s" r="11" fill="url(#cAmbar)"/>
+      <ellipse class="capullo" style="--d:2.94s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:2.94s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+  </g>
+</g>
+<g class="mata m3">
+  <path class="tallo" pathLength="100" style="--d:1.70s" d="M328 304 C 322 212 334 175 328 150"/>
+  <g transform="rotate(24 328 226)"><path class="hoja" style="--d:2.41s" d="M328 226 C 294 210 270 217 264 229 C 286 242 316 238 328 226 Z" transform-origin="328 226"/></g>
+  <g class="brote" style="--d:1.70s;--sube:138px">
+    <g class="cabeza" transform="translate(328 150) scale(0.62)">
+      <circle class="halo" style="--d:3.14s" r="60" fill="url(#brilloFlor)"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:2.64s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(27.7)"><path class="lam" style="--d:2.68s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(55.4)"><path class="lam" style="--d:2.73s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(83.1)"><path class="lam" style="--d:2.77s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(110.8)"><path class="lam" style="--d:2.81s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(138.5)"><path class="lam" style="--d:2.85s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(166.2)"><path class="lam" style="--d:2.89s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(193.8)"><path class="lam" style="--d:2.94s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(221.5)"><path class="lam" style="--d:2.98s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(249.2)"><path class="lam" style="--d:3.02s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(276.9)"><path class="lam" style="--d:3.06s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(304.6)"><path class="lam" style="--d:3.10s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(332.3)"><path class="lam" style="--d:3.15s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(18.0)"><path class="lam" style="--d:2.84s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(58.0)"><path class="lam" style="--d:2.88s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(98.0)"><path class="lam" style="--d:2.92s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(138.0)"><path class="lam" style="--d:2.96s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(178.0)"><path class="lam" style="--d:3.00s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(218.0)"><path class="lam" style="--d:3.03s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(258.0)"><path class="lam" style="--d:3.07s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(298.0)"><path class="lam" style="--d:3.11s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(338.0)"><path class="lam" style="--d:3.15s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <circle class="corazon" style="--d:3.19s" r="15" fill="url(#cCafe)"/>
+      <circle class="semilla" style="--d:3.29s" cx="-2.7" cy="-2.4" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.30s" cx="-3.0" cy="1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.32s" cx="-9.3" cy="-2.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.33s" cx="-4.7" cy="-5.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.34s" cx="-4.6" cy="3.6" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.35s" cx="-0.5" cy="-7.5" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.36s" cx="-6.5" cy="-6.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.38s" cx="2.1" cy="0.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.39s" cx="5.2" cy="-4.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.40s" cx="0.8" cy="-4.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.41s" cx="-3.1" cy="-2.0" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.42s" cx="0.5" cy="4.5" r="1.5" fill="#63351a" opacity=".5"/>
+      <ellipse class="capullo" style="--d:2.64s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:2.64s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+  </g>
+</g>
+<g class="mata m2">
+  <path class="tallo" pathLength="100" style="--d:1.40s" d="M76 304 C 70 222 82 190 76 168"/>
+  <g transform="rotate(-24 76 234)"><path class="hoja" style="--d:2.11s" d="M76 234 C 110 218 134 225 140 237 C 118 250 88 246 76 234 Z" transform-origin="76 234"/></g>
+  <g class="brote" style="--d:1.40s;--sube:120px">
+    <g class="cabeza" transform="translate(76 168) scale(0.66)">
+      <circle class="halo" style="--d:2.84s" r="60" fill="url(#brilloFlor)"/>
+      <path class="lam" style="--d:2.44s" d="M0 0 C -17 -8 -18 -32 -6 -46 C -2 -34 -2 -14 0 0 Z" fill="url(#gTulipanA)"/>
+      <path class="lam" style="--d:2.53s" d="M0 0 C 17 -8 18 -32 6 -46 C 2 -34 2 -14 0 0 Z" fill="url(#gTulipanA)"/>
+      <path class="lam" style="--d:2.62s" d="M0 0 C -12 -10 -12 -36 0 -50 C 12 -36 12 -10 0 0 Z" fill="url(#gTulipanB)"/>
+      <ellipse class="capullo" style="--d:2.34s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:2.34s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+  </g>
+</g>
+<g class="mata m2">
+  <path class="tallo" pathLength="100" style="--d:0.72s" d="M124 304 C 127 202 121 160 124 132"/>
+  <g transform="rotate(-24 124 218)"><path class="hoja" style="--d:1.43s" d="M124 218 C 158 202 182 209 188 221 C 166 234 136 230 124 218 Z" transform-origin="124 218"/></g>
+  <g class="brote" style="--d:0.72s;--sube:156px">
+    <g class="cabeza" transform="translate(124 132) scale(0.78)">
+      <circle class="halo" style="--d:2.16s" r="60" fill="url(#brilloFlor)"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:1.66s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(24.0)"><path class="lam" style="--d:1.70s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(48.0)"><path class="lam" style="--d:1.73s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(72.0)"><path class="lam" style="--d:1.77s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(96.0)"><path class="lam" style="--d:1.81s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(120.0)"><path class="lam" style="--d:1.84s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(144.0)"><path class="lam" style="--d:1.88s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(168.0)"><path class="lam" style="--d:1.91s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(192.0)"><path class="lam" style="--d:1.95s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(216.0)"><path class="lam" style="--d:1.99s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(240.0)"><path class="lam" style="--d:2.02s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(264.0)"><path class="lam" style="--d:2.06s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(288.0)"><path class="lam" style="--d:2.09s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(312.0)"><path class="lam" style="--d:2.13s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(336.0)"><path class="lam" style="--d:2.17s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <circle class="corazon" style="--d:2.16s" r="11" fill="url(#cAmbar)"/>
+      <ellipse class="capullo" style="--d:1.66s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:1.66s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+  </g>
+</g>
+<g class="mata m3">
+  <path class="tallo" pathLength="100" style="--d:1.06s" d="M276 304 C 270 198 282 154 276 124"/>
+  <g transform="rotate(24 276 214)"><path class="hoja" style="--d:1.77s" d="M276 214 C 242 198 218 205 212 217 C 234 230 264 226 276 214 Z" transform-origin="276 214"/></g>
+  <g class="brote" style="--d:1.06s;--sube:164px">
+    <g class="cabeza" transform="translate(276 124) scale(0.8)">
+      <circle class="halo" style="--d:2.50s" r="60" fill="url(#brilloFlor)"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:2.00s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(45.0)"><path class="lam" style="--d:2.06s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:2.11s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(135.0)"><path class="lam" style="--d:2.17s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:2.22s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(225.0)"><path class="lam" style="--d:2.28s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:2.33s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(315.0)"><path class="lam" style="--d:2.39s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <circle class="corazon" style="--d:2.42s" r="8" fill="url(#cCrema)"/>
+      <ellipse class="capullo" style="--d:2.00s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:2.00s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+  </g>
+</g>
+<g class="mata m1">
+  <path class="tallo" pathLength="100" style="--d:0.30s" d="M200 304 C 194 180 206 127 200 92"/>
+  <g transform="rotate(24 200 200)"><path class="hoja" style="--d:1.01s" d="M200 200 C 166 184 142 191 136 203 C 158 216 188 212 200 200 Z" transform-origin="200 200"/></g>
+  <g class="brote" style="--d:0.30s;--sube:196px">
+    <g class="cabeza" transform="translate(200 92) scale(1.0)">
+      <circle class="halo" style="--d:1.74s" r="60" fill="url(#brilloFlor)"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:1.24s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(27.7)"><path class="lam" style="--d:1.28s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(55.4)"><path class="lam" style="--d:1.33s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(83.1)"><path class="lam" style="--d:1.37s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(110.8)"><path class="lam" style="--d:1.41s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(138.5)"><path class="lam" style="--d:1.45s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(166.2)"><path class="lam" style="--d:1.49s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(193.8)"><path class="lam" style="--d:1.54s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(221.5)"><path class="lam" style="--d:1.58s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(249.2)"><path class="lam" style="--d:1.62s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(276.9)"><path class="lam" style="--d:1.66s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(304.6)"><path class="lam" style="--d:1.70s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(332.3)"><path class="lam" style="--d:1.75s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(18.0)"><path class="lam" style="--d:1.44s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(58.0)"><path class="lam" style="--d:1.48s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(98.0)"><path class="lam" style="--d:1.52s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(138.0)"><path class="lam" style="--d:1.56s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(178.0)"><path class="lam" style="--d:1.59s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(218.0)"><path class="lam" style="--d:1.63s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(258.0)"><path class="lam" style="--d:1.67s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(298.0)"><path class="lam" style="--d:1.71s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(338.0)"><path class="lam" style="--d:1.75s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <circle class="corazon" style="--d:1.79s" r="15" fill="url(#cCafe)"/>
+      <circle class="semilla" style="--d:1.89s" cx="-0.2" cy="8.4" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:1.91s" cx="-2.2" cy="-0.2" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:1.92s" cx="-2.7" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:1.93s" cx="3.5" cy="2.8" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:1.94s" cx="2.0" cy="0.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:1.95s" cx="-1.5" cy="-3.5" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:1.97s" cx="2.2" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:1.98s" cx="-5.7" cy="5.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:1.99s" cx="-6.0" cy="3.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.00s" cx="2.5" cy="7.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.01s" cx="-2.4" cy="4.0" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.02s" cx="5.5" cy="0.5" r="1.5" fill="#63351a" opacity=".5"/>
+      <ellipse class="capullo" style="--d:1.24s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:1.24s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+  </g>
+</g>
+  </svg>
+
+  <svg class="suelo" viewBox="0 0 400 56" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 14 C 60 -2 96 10 140 3 C 190 -6 214 10 262 5 C 312 0 350 13 400 7 L400 56 L0 56 Z"
+          fill="#1a1024"/>
+  </svg>
+
+  <div class="velo" aria-hidden="true"></div>
+
+  <div class="contenido">
+    <p class="fecha">21 de septiembre</p>
+    <p class="llamado" id="llamado">Aquí hay algo que todavía no se abre.</p>
+    <button class="boton" id="boton">Ábrelas</button>
+
+    <div class="mensaje" id="mensaje" aria-live="polite">
+      <h1 id="titulo">Flores amarillas para ti</h1>
+      <p id="texto">Hoy empieza la primavera y la tradición dice que este es el día de regalárselas a quien uno quiere. Estas no se marchitan.</p>
+      <span class="firma" id="firma">con cariño</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  if(q.get('titulo')) document.getElementById('titulo').textContent = q.get('titulo');
+  if(q.get('mensaje')) document.getElementById('texto').textContent = q.get('mensaje');
+  if(q.get('firma')) document.getElementById('firma').textContent = q.get('firma');
+  if(q.get('boton')) document.getElementById('boton').textContent = q.get('boton');
+  if(q.get('llamado')) document.getElementById('llamado').textContent = q.get('llamado');
+
+  /* estrellas */
+  var cielo = document.querySelector('.escena');
+  for(var i=0;i<46;i++){
+    var s = document.createElement('div');
+    s.className = 'estrella';
+    s.style.left = (Math.random()*100).toFixed(2) + 'vw';
+    s.style.top = (Math.random()*46).toFixed(2) + 'vh';
+    s.style.animationDelay = (-Math.random()*4).toFixed(2) + 's';
+    var t = (0.6 + Math.random()*1.8).toFixed(1);
+    s.style.width = t + 'px'; s.style.height = t + 'px';
+    cielo.insertBefore(s, cielo.children[2]);
+  }
+
+  /* luciernagas */
+  var luces = document.getElementById('luces');
+  function encender(n, zona){
+    for(var i=0;i<n;i++){
+      var l = document.createElement('div');
+      l.className = 'luz';
+      var d = 4 + Math.random()*9;
+      l.style.width = d + 'px'; l.style.height = d + 'px';
+      l.style.left = (Math.random()*100).toFixed(2) + 'vw';
+      l.style.top = (zona + Math.random()*(96-zona)).toFixed(2) + 'vh';
+      l.style.animationDuration = (11 + Math.random()*12).toFixed(1) + 's, ' + (2.6 + Math.random()*3).toFixed(1) + 's';
+      l.style.animationDelay = (-Math.random()*14).toFixed(1) + 's, ' + (-Math.random()*5).toFixed(1) + 's';
+      luces.appendChild(l);
+    }
+  }
+  encender(14, 48);
+
+  /* abrir */
+  var boton = document.getElementById('boton');
+  boton.addEventListener('click', function(){
+    if(document.body.classList.contains('abierto')) return;
+    document.body.classList.add('abierto');
+    boton.setAttribute('aria-hidden','true');
+    boton.tabIndex = -1;
+    setTimeout(function(){ encender(20, 28); }, 900);
+    setTimeout(function(){ encender(14, 10); }, 2200);
+  });
+})();
+</script>
+</body>
+</html>
