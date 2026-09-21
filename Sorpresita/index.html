@@ -88,10 +88,17 @@ body{
   z-index:2;
   display:block;
 }
+.hierba{
+  position:absolute;left:50%;bottom:0;
+  transform:translateX(-50%);
+  width:min(124vh,126vw,790px);
+  z-index:3;display:block;pointer-events:none;
+}
+.hojaLarga{transform-box:fill-box;transform-origin:50% 100%;animation:brisa 9s ease-in-out infinite}
 .suelo{
   position:absolute;left:0;right:0;bottom:0;
   width:100%;
-  height:calc(min(124vh,126vw,790px) * 0.175);
+  height:calc(min(124vh,126vw,790px) * 0.152);
   z-index:2;display:block;
 }
 .velo{
@@ -109,6 +116,17 @@ body{
 .brote{transform:translateY(var(--sube))}
 .abierto .brote{animation:brota 1.15s cubic-bezier(.24,.72,.24,1) forwards;animation-delay:var(--d)}
 @keyframes brota{from{transform:translateY(var(--sube))}to{transform:translateY(0)}}
+.secundaria{opacity:.68}
+.luminosa .lampara{animation:pulsoLuz 4.2s ease-in-out infinite 4.6s}
+@keyframes pulsoLuz{0%,100%{opacity:1}50%{opacity:.72}}
+.jardin,.suelo,.hierba{pointer-events:none}
+.listo .escena{cursor:pointer}
+.chispa{opacity:0;transition:opacity .45s ease}
+.mata.brilla .chispa{opacity:1}
+.mata.brilla .rebote{animation:saluda 1s ease}
+@keyframes saluda{0%,100%{transform:translateY(0)}32%{transform:translateY(-7px)}}
+.mata:focus{outline:none}
+.mata:focus-visible .chispa{opacity:1}
 .mata{transform-box:fill-box;transform-origin:50% 100%;animation:brisa 7.4s ease-in-out infinite}
 .mata.m2{animation-duration:8.8s;animation-delay:-2.4s}
 .mata.m3{animation-duration:6.4s;animation-delay:-4.6s}
@@ -178,6 +196,7 @@ body{
 }
 .abierto .fecha,.abierto .llamado,.abierto .boton{opacity:0;transform:translateY(-8px);animation:none;transition:opacity .6s ease,transform .6s ease;pointer-events:none}
 
+.contenido .mensaje{pointer-events:none;transition:opacity .5s ease}
 .mensaje{
   position:absolute;top:0;left:0;right:0;
   padding:clamp(34px,8vh,80px) 26px 0;
@@ -202,6 +221,48 @@ body{
   color:#f2d8c6;
 }
 @keyframes entra{to{opacity:1;transform:none}}
+
+/* burbuja con cada razon */
+.razon{
+  position:absolute;z-index:6;
+  width:min(300px,78vw);
+  padding:14px 18px;
+  border-radius:14px;
+  background:rgba(38,20,48,.72);
+  border:1px solid rgba(255,214,140,.28);
+  backdrop-filter:blur(6px);
+  box-shadow:0 12px 34px rgba(20,8,30,.45);
+  font-family:var(--display);font-size:1.06rem;line-height:1.5;
+  color:#fff3e2;text-align:center;
+  opacity:0;transform:translateY(8px) scale(.96);
+  transition:opacity .45s ease, transform .45s cubic-bezier(.2,1.2,.4,1);
+  pointer-events:none;
+}
+.razon.visible{opacity:1;transform:translateY(0) scale(1)}
+.pistaToca{
+  position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
+  transform:translateX(-50%);
+  z-index:6;
+  font-family:var(--ui);font-weight:300;font-size:.74rem;letter-spacing:.26em;
+  color:#f3d9c4;text-transform:lowercase;white-space:nowrap;
+  opacity:0;transition:opacity 1.2s ease;
+  text-shadow:0 1px 10px rgba(20,8,30,.7);
+  pointer-events:none;
+}
+.listo .pistaToca{opacity:.9}
+.contador{
+  display:inline-block;margin-left:10px;
+  font-variant-numeric:tabular-nums;color:#ffd9a0;letter-spacing:.14em;
+}
+.cierre{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.96);
+  z-index:7;width:min(340px,84vw);text-align:center;
+  font-family:var(--display);font-style:italic;font-size:clamp(1.15rem,4.4vw,1.5rem);
+  line-height:1.5;color:#fff6ea;
+  text-shadow:0 2px 20px rgba(20,8,30,.75);
+  opacity:0;pointer-events:none;transition:opacity 1.6s ease, transform 1.6s ease;
+}
+.cierre.visible{opacity:1;transform:translate(-50%,-50%) scale(1)}
 
 @media (max-height:620px){
   .jardin{width:min(112vh,132vw,760px)}
@@ -242,6 +303,26 @@ body{
       <linearGradient id="gTulipanB" x1="0" y1="1" x2="0" y2="0">
         <stop offset="0%" stop-color="#c94a46"/><stop offset="100%" stop-color="#f28374"/>
       </linearGradient>
+      <linearGradient id="gCopa" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#d9a41f"/><stop offset="45%" stop-color="#f6cf2e"/><stop offset="100%" stop-color="#ffe95f"/>
+      </linearGradient>
+      <linearGradient id="gCopaInt" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#e0ad1c"/><stop offset="100%" stop-color="#ffdf4a"/>
+      </linearGradient>
+      <radialGradient id="gLuz">
+        <stop offset="0%" stop-color="rgba(255,252,214,.95)"/>
+        <stop offset="28%" stop-color="rgba(255,236,150,.6)"/>
+        <stop offset="62%" stop-color="rgba(255,214,90,.22)"/>
+        <stop offset="100%" stop-color="rgba(255,206,70,0)"/>
+      </radialGradient>
+      <radialGradient id="gNucleo">
+        <stop offset="0%" stop-color="#fffef6"/><stop offset="70%" stop-color="#fff3b0"/><stop offset="100%" stop-color="#f4d15c"/>
+      </radialGradient>
+      <radialGradient id="gChispa">
+        <stop offset="0%" stop-color="rgba(255,248,205,.55)"/>
+        <stop offset="55%" stop-color="rgba(255,226,140,.2)"/>
+        <stop offset="100%" stop-color="rgba(255,220,120,0)"/>
+      </radialGradient>
       <radialGradient id="cCafe"><stop offset="0%" stop-color="#a55d27"/><stop offset="70%" stop-color="#7d4419"/><stop offset="100%" stop-color="#5d3011"/></radialGradient>
       <radialGradient id="cAmbar"><stop offset="0%" stop-color="#ffd06a"/><stop offset="100%" stop-color="#d9892a"/></radialGradient>
       <radialGradient id="cCrema"><stop offset="0%" stop-color="#fff3cf"/><stop offset="100%" stop-color="#e9b45f"/></radialGradient>
@@ -267,240 +348,330 @@ body{
     </g>
 
     <!-- flores: nacen bajo la linea del suelo -->
-<g class="mata m3">
-  <path class="tallo" pathLength="100" style="--d:2.72s" d="M54 304 C 60 242 48 219 54 204"/>
-  <g transform="rotate(-24 54 250)"><path class="hoja" style="--d:3.43s" d="M54 250 C 88 234 112 241 118 253 C 96 266 66 262 54 250 Z" transform-origin="54 250"/></g>
-  <g class="brote" style="--d:2.72s;--sube:84px">
-    <g class="cabeza" transform="translate(54 204) scale(0.42)">
-      <circle class="halo" style="--d:4.16s" r="60" fill="url(#brilloFlor)"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:3.66s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(45.0)"><path class="lam" style="--d:3.72s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(90.0)"><path class="lam" style="--d:3.77s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(135.0)"><path class="lam" style="--d:3.83s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(180.0)"><path class="lam" style="--d:3.88s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(225.0)"><path class="lam" style="--d:3.94s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(270.0)"><path class="lam" style="--d:3.99s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(315.0)"><path class="lam" style="--d:4.05s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <circle class="corazon" style="--d:4.08s" r="8" fill="url(#cCrema)"/>
-      <ellipse class="capullo" style="--d:3.66s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:3.66s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+<g class="mata m3 secundaria" data-razon="9" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:2.80s" d="M104 316 C 110 243 98 215 104 196"/>
+  <g transform="rotate(-24 104 253)"><path class="hoja" style="--d:3.51s" d="M104 253 C 138 237 162 244 168 256 C 146 269 116 265 104 253 Z" transform-origin="104 253"/></g>
+  <g class="brote" style="--d:2.80s;--sube:104px">
+    <g class="rebote">
+    <g class="cabeza" transform="translate(104 196) scale(0.3)">
+      <circle class="halo" style="--d:4.24s" r="60" fill="url(#brilloFlor)"/>
+      <circle class="chispa" r="46" fill="url(#gChispa)"/>
+      <circle class="zona" r="127" fill="transparent"/>
+      <path class="lam" style="--d:3.84s" d="M0 0 C -17 -8 -18 -32 -6 -46 C -2 -34 -2 -14 0 0 Z" fill="url(#gTulipanA)"/>
+      <path class="lam" style="--d:3.93s" d="M0 0 C 17 -8 18 -32 6 -46 C 2 -34 2 -14 0 0 Z" fill="url(#gTulipanA)"/>
+      <path class="lam" style="--d:4.02s" d="M0 0 C -12 -10 -12 -36 0 -50 C 12 -36 12 -10 0 0 Z" fill="url(#gTulipanB)"/>
+      <ellipse class="capullo" style="--d:3.74s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:3.74s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
     </g>
   </g>
 </g>
-<g class="mata m2">
-  <path class="tallo" pathLength="100" style="--d:2.50s" d="M296 304 C 302 240 290 216 296 200"/>
-  <g transform="rotate(24 296 248)"><path class="hoja" style="--d:3.21s" d="M296 248 C 262 232 238 239 232 251 C 254 264 284 260 296 248 Z" transform-origin="296 248"/></g>
-  <g class="brote" style="--d:2.50s;--sube:88px">
-    <g class="cabeza" transform="translate(296 200) scale(0.46)">
-      <circle class="halo" style="--d:3.94s" r="60" fill="url(#brilloFlor)"/>
-      <path class="lam" style="--d:3.54s" d="M0 0 C -17 -8 -18 -32 -6 -46 C -2 -34 -2 -14 0 0 Z" fill="url(#gTulipanA)"/>
-      <path class="lam" style="--d:3.63s" d="M0 0 C 17 -8 18 -32 6 -46 C 2 -34 2 -14 0 0 Z" fill="url(#gTulipanA)"/>
-      <path class="lam" style="--d:3.72s" d="M0 0 C -12 -10 -12 -36 0 -50 C 12 -36 12 -10 0 0 Z" fill="url(#gTulipanB)"/>
-      <ellipse class="capullo" style="--d:3.44s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:3.44s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+<g class="mata m2 secundaria" data-razon="8" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:2.56s" d="M292 316 C 298 240 286 210 292 190"/>
+  <g transform="rotate(24 292 250)"><path class="hoja" style="--d:3.27s" d="M292 250 C 258 234 234 242 228 254 C 250 266 280 262 292 250 Z" transform-origin="292 250"/></g>
+  <g class="brote" style="--d:2.56s;--sube:110px">
+    <g class="rebote">
+    <g class="cabeza" transform="translate(292 190) scale(0.32)">
+      <circle class="halo" style="--d:4.00s" r="60" fill="url(#brilloFlor)"/>
+      <circle class="chispa" r="46" fill="url(#gChispa)"/>
+      <circle class="zona" r="119" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:3.50s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(45.0)"><path class="lam" style="--d:3.56s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:3.61s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(135.0)"><path class="lam" style="--d:3.67s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:3.72s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(225.0)"><path class="lam" style="--d:3.78s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:3.83s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <g transform="rotate(315.0)"><path class="lam" style="--d:3.89s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
+      <circle class="corazon" style="--d:3.92s" r="8" fill="url(#cCrema)"/>
+      <ellipse class="capullo" style="--d:3.50s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:3.50s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
     </g>
   </g>
 </g>
-<g class="mata m1">
-  <path class="tallo" pathLength="100" style="--d:2.26s" d="M158 304 C 155 232 161 204 158 186"/>
-  <g transform="rotate(-24 158 242)"><path class="hoja" style="--d:2.97s" d="M158 242 C 192 226 216 233 222 245 C 200 258 170 254 158 242 Z" transform-origin="158 242"/></g>
-  <g class="brote" style="--d:2.26s;--sube:102px">
-    <g class="cabeza" transform="translate(158 186) scale(0.5)">
-      <circle class="halo" style="--d:3.70s" r="60" fill="url(#brilloFlor)"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:3.20s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(45.0)"><path class="lam" style="--d:3.26s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(90.0)"><path class="lam" style="--d:3.31s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(135.0)"><path class="lam" style="--d:3.37s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(180.0)"><path class="lam" style="--d:3.42s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(225.0)"><path class="lam" style="--d:3.48s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(270.0)"><path class="lam" style="--d:3.53s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(315.0)"><path class="lam" style="--d:3.59s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <circle class="corazon" style="--d:3.62s" r="8" fill="url(#cCrema)"/>
-      <ellipse class="capullo" style="--d:3.20s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:3.20s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+<g class="mata m1 secundaria" data-razon="7" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:2.30s" d="M158 316 C 155 238 161 208 158 188"/>
+  <g transform="rotate(-24 158 250)"><path class="hoja" style="--d:3.01s" d="M158 250 C 192 234 216 241 222 253 C 200 266 170 262 158 250 Z" transform-origin="158 250"/></g>
+  <g class="brote" style="--d:2.30s;--sube:112px">
+    <g class="rebote">
+    <g class="cabeza" transform="translate(158 188) scale(0.34)">
+      <circle class="halo" style="--d:3.74s" r="60" fill="url(#brilloFlor)"/>
+      <circle class="chispa" r="46" fill="url(#gChispa)"/>
+      <circle class="zona" r="112" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:3.24s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(24.0)"><path class="lam" style="--d:3.28s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(48.0)"><path class="lam" style="--d:3.31s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(72.0)"><path class="lam" style="--d:3.35s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(96.0)"><path class="lam" style="--d:3.39s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(120.0)"><path class="lam" style="--d:3.42s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(144.0)"><path class="lam" style="--d:3.46s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(168.0)"><path class="lam" style="--d:3.49s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(192.0)"><path class="lam" style="--d:3.53s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(216.0)"><path class="lam" style="--d:3.57s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(240.0)"><path class="lam" style="--d:3.60s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(264.0)"><path class="lam" style="--d:3.64s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(288.0)"><path class="lam" style="--d:3.67s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(312.0)"><path class="lam" style="--d:3.71s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <g transform="rotate(336.0)"><path class="lam" style="--d:3.75s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
+      <circle class="corazon" style="--d:3.74s" r="11" fill="url(#cAmbar)"/>
+      <ellipse class="capullo" style="--d:3.24s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:3.24s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
     </g>
   </g>
 </g>
-<g class="mata m3">
-  <path class="tallo" pathLength="100" style="--d:2.00s" d="M244 304 C 250 228 238 198 244 178"/>
-  <g transform="rotate(24 244 238)"><path class="hoja" style="--d:2.71s" d="M244 238 C 210 222 186 230 180 242 C 202 254 232 250 244 238 Z" transform-origin="244 238"/></g>
-  <g class="brote" style="--d:2.00s;--sube:110px">
-    <g class="cabeza" transform="translate(244 178) scale(0.54)">
+<g class="mata m3" data-razon="6" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:2.00s" d="M236 316 C 233 234 239 202 236 180"/>
+  <g transform="rotate(24 236 246)"><path class="hoja" style="--d:2.71s" d="M236 246 C 202 230 178 237 172 249 C 194 262 224 258 236 246 Z" transform-origin="236 246"/></g>
+  <g class="brote" style="--d:2.00s;--sube:120px">
+    <g class="rebote">
+    <g class="cabeza" transform="translate(236 180) scale(0.5)">
       <circle class="halo" style="--d:3.44s" r="60" fill="url(#brilloFlor)"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:2.94s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(24.0)"><path class="lam" style="--d:2.98s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(48.0)"><path class="lam" style="--d:3.01s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(72.0)"><path class="lam" style="--d:3.05s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(96.0)"><path class="lam" style="--d:3.09s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(120.0)"><path class="lam" style="--d:3.12s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(144.0)"><path class="lam" style="--d:3.16s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(168.0)"><path class="lam" style="--d:3.19s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(192.0)"><path class="lam" style="--d:3.23s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(216.0)"><path class="lam" style="--d:3.27s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(240.0)"><path class="lam" style="--d:3.30s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(264.0)"><path class="lam" style="--d:3.34s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(288.0)"><path class="lam" style="--d:3.37s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(312.0)"><path class="lam" style="--d:3.41s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(336.0)"><path class="lam" style="--d:3.45s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <circle class="corazon" style="--d:3.44s" r="11" fill="url(#cAmbar)"/>
+      <circle class="chispa" r="46" fill="url(#gChispa)"/>
+      <circle class="zona" r="76" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:2.94s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(27.7)"><path class="lam" style="--d:2.98s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(55.4)"><path class="lam" style="--d:3.03s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(83.1)"><path class="lam" style="--d:3.07s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(110.8)"><path class="lam" style="--d:3.11s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(138.5)"><path class="lam" style="--d:3.15s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(166.2)"><path class="lam" style="--d:3.19s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(193.8)"><path class="lam" style="--d:3.24s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(221.5)"><path class="lam" style="--d:3.28s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(249.2)"><path class="lam" style="--d:3.32s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(276.9)"><path class="lam" style="--d:3.36s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(304.6)"><path class="lam" style="--d:3.40s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(332.3)"><path class="lam" style="--d:3.45s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(18.0)"><path class="lam" style="--d:3.14s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(58.0)"><path class="lam" style="--d:3.18s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(98.0)"><path class="lam" style="--d:3.22s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(138.0)"><path class="lam" style="--d:3.26s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(178.0)"><path class="lam" style="--d:3.29s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(218.0)"><path class="lam" style="--d:3.33s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(258.0)"><path class="lam" style="--d:3.37s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(298.0)"><path class="lam" style="--d:3.41s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(338.0)"><path class="lam" style="--d:3.45s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <circle class="corazon" style="--d:3.49s" r="15" fill="url(#cCafe)"/>
+      <circle class="semilla" style="--d:3.59s" cx="2.0" cy="-5.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.60s" cx="-2.7" cy="-2.4" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.62s" cx="-3.0" cy="1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.63s" cx="-9.3" cy="-2.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.64s" cx="-4.7" cy="-5.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.65s" cx="-4.6" cy="3.6" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.66s" cx="-0.5" cy="-7.5" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.68s" cx="-6.5" cy="-6.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.69s" cx="2.1" cy="0.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.70s" cx="5.2" cy="-4.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.71s" cx="0.8" cy="-4.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.72s" cx="-3.1" cy="-2.0" r="1.5" fill="#63351a" opacity=".5"/>
       <ellipse class="capullo" style="--d:2.94s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
       <path class="capullo" style="--d:2.94s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
-  </g>
-</g>
-<g class="mata m3">
-  <path class="tallo" pathLength="100" style="--d:1.70s" d="M328 304 C 322 212 334 175 328 150"/>
-  <g transform="rotate(24 328 226)"><path class="hoja" style="--d:2.41s" d="M328 226 C 294 210 270 217 264 229 C 286 242 316 238 328 226 Z" transform-origin="328 226"/></g>
-  <g class="brote" style="--d:1.70s;--sube:138px">
-    <g class="cabeza" transform="translate(328 150) scale(0.62)">
-      <circle class="halo" style="--d:3.14s" r="60" fill="url(#brilloFlor)"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:2.64s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(27.7)"><path class="lam" style="--d:2.68s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(55.4)"><path class="lam" style="--d:2.73s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(83.1)"><path class="lam" style="--d:2.77s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(110.8)"><path class="lam" style="--d:2.81s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(138.5)"><path class="lam" style="--d:2.85s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(166.2)"><path class="lam" style="--d:2.89s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(193.8)"><path class="lam" style="--d:2.94s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(221.5)"><path class="lam" style="--d:2.98s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(249.2)"><path class="lam" style="--d:3.02s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(276.9)"><path class="lam" style="--d:3.06s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(304.6)"><path class="lam" style="--d:3.10s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(332.3)"><path class="lam" style="--d:3.15s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(18.0)"><path class="lam" style="--d:2.84s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(58.0)"><path class="lam" style="--d:2.88s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(98.0)"><path class="lam" style="--d:2.92s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(138.0)"><path class="lam" style="--d:2.96s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(178.0)"><path class="lam" style="--d:3.00s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(218.0)"><path class="lam" style="--d:3.03s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(258.0)"><path class="lam" style="--d:3.07s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(298.0)"><path class="lam" style="--d:3.11s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(338.0)"><path class="lam" style="--d:3.15s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <circle class="corazon" style="--d:3.19s" r="15" fill="url(#cCafe)"/>
-      <circle class="semilla" style="--d:3.29s" cx="-2.7" cy="-2.4" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.30s" cx="-3.0" cy="1.1" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.32s" cx="-9.3" cy="-2.3" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.33s" cx="-4.7" cy="-5.3" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.34s" cx="-4.6" cy="3.6" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.35s" cx="-0.5" cy="-7.5" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.36s" cx="-6.5" cy="-6.3" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.38s" cx="2.1" cy="0.9" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.39s" cx="5.2" cy="-4.9" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.40s" cx="0.8" cy="-4.7" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.41s" cx="-3.1" cy="-2.0" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:3.42s" cx="0.5" cy="4.5" r="1.5" fill="#63351a" opacity=".5"/>
-      <ellipse class="capullo" style="--d:2.64s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:2.64s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
   </g>
 </g>
-<g class="mata m2">
-  <path class="tallo" pathLength="100" style="--d:1.40s" d="M76 304 C 70 222 82 190 76 168"/>
-  <g transform="rotate(-24 76 234)"><path class="hoja" style="--d:2.11s" d="M76 234 C 110 218 134 225 140 237 C 118 250 88 246 76 234 Z" transform-origin="76 234"/></g>
-  <g class="brote" style="--d:1.40s;--sube:120px">
-    <g class="cabeza" transform="translate(76 168) scale(0.66)">
+<g class="mata m1" data-razon="4" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:1.40s" d="M78 316 C 84 227 72 192 78 168"/>
+  <g transform="rotate(-24 78 241)"><path class="hoja" style="--d:2.11s" d="M78 241 C 112 225 136 232 142 244 C 120 257 90 253 78 241 Z" transform-origin="78 241"/></g>
+  <g class="brote" style="--d:1.40s;--sube:132px">
+    <g class="rebote">
+    <g class="cabeza" transform="translate(78 168) scale(0.62)">
       <circle class="halo" style="--d:2.84s" r="60" fill="url(#brilloFlor)"/>
-      <path class="lam" style="--d:2.44s" d="M0 0 C -17 -8 -18 -32 -6 -46 C -2 -34 -2 -14 0 0 Z" fill="url(#gTulipanA)"/>
-      <path class="lam" style="--d:2.53s" d="M0 0 C 17 -8 18 -32 6 -46 C 2 -34 2 -14 0 0 Z" fill="url(#gTulipanA)"/>
-      <path class="lam" style="--d:2.62s" d="M0 0 C -12 -10 -12 -36 0 -50 C 12 -36 12 -10 0 0 Z" fill="url(#gTulipanB)"/>
+      <circle class="chispa" r="46" fill="url(#gChispa)"/>
+      <circle class="zona" r="61" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:2.34s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(27.7)"><path class="lam" style="--d:2.38s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(55.4)"><path class="lam" style="--d:2.43s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(83.1)"><path class="lam" style="--d:2.47s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(110.8)"><path class="lam" style="--d:2.51s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(138.5)"><path class="lam" style="--d:2.55s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(166.2)"><path class="lam" style="--d:2.59s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(193.8)"><path class="lam" style="--d:2.64s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(221.5)"><path class="lam" style="--d:2.68s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(249.2)"><path class="lam" style="--d:2.72s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(276.9)"><path class="lam" style="--d:2.76s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(304.6)"><path class="lam" style="--d:2.81s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(332.3)"><path class="lam" style="--d:2.85s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(18.0)"><path class="lam" style="--d:2.54s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(58.0)"><path class="lam" style="--d:2.58s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(98.0)"><path class="lam" style="--d:2.62s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(138.0)"><path class="lam" style="--d:2.66s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(178.0)"><path class="lam" style="--d:2.70s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(218.0)"><path class="lam" style="--d:2.73s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(258.0)"><path class="lam" style="--d:2.77s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(298.0)"><path class="lam" style="--d:2.81s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(338.0)"><path class="lam" style="--d:2.85s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <circle class="corazon" style="--d:2.89s" r="15" fill="url(#cCafe)"/>
+      <circle class="semilla" style="--d:2.99s" cx="-0.6" cy="2.0" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.00s" cx="6.5" cy="3.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.02s" cx="-5.6" cy="3.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.03s" cx="2.5" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.04s" cx="-0.2" cy="8.4" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.05s" cx="-2.2" cy="-0.2" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.06s" cx="-2.7" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.08s" cx="3.5" cy="2.8" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.09s" cx="2.0" cy="0.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.10s" cx="-1.5" cy="-3.5" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.11s" cx="2.2" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:3.12s" cx="-5.7" cy="5.7" r="1.5" fill="#63351a" opacity=".5"/>
       <ellipse class="capullo" style="--d:2.34s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
       <path class="capullo" style="--d:2.34s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
+    </g>
   </g>
 </g>
-<g class="mata m2">
-  <path class="tallo" pathLength="100" style="--d:0.72s" d="M124 304 C 127 202 121 160 124 132"/>
-  <g transform="rotate(-24 124 218)"><path class="hoja" style="--d:1.43s" d="M124 218 C 158 202 182 209 188 221 C 166 234 136 230 124 218 Z" transform-origin="124 218"/></g>
-  <g class="brote" style="--d:0.72s;--sube:156px">
-    <g class="cabeza" transform="translate(124 132) scale(0.78)">
+<g class="mata m3 luminosa" data-razon="5" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:1.70s" d="M336 316 C 333 219 339 179 336 152"/>
+  <g transform="rotate(24 336 233)"><path class="hoja" style="--d:2.41s" d="M336 233 C 302 217 278 224 272 236 C 294 249 324 245 336 233 Z" transform-origin="336 233"/></g>
+  <g class="brote" style="--d:1.70s;--sube:148px">
+    <g class="rebote">
+    <g class="cabeza" transform="translate(336 152) scale(0.66)">
+      <circle class="halo" style="--d:3.14s" r="60" fill="url(#brilloFlor)"/>
+      <circle class="chispa" r="46" fill="url(#gChispa)"/>
+      <circle class="zona" r="58" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:2.64s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(60.0)"><path class="lam" style="--d:2.70s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(120.0)"><path class="lam" style="--d:2.76s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:2.82s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(240.0)"><path class="lam" style="--d:2.88s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(300.0)"><path class="lam" style="--d:2.94s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(30.0)"><path class="lam" style="--d:2.80s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:2.85s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(150.0)"><path class="lam" style="--d:2.90s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(210.0)"><path class="lam" style="--d:2.95s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:3.00s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(330.0)"><path class="lam" style="--d:3.05s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <circle class="corazon lampara" style="--d:3.14s" r="26" fill="url(#gLuz)"/>
+      <ellipse class="corazon" style="--d:3.20s" cy="-1" rx="11" ry="8" fill="url(#gNucleo)"/>
+      <ellipse class="corazon" style="--d:3.26s" cy="-3" rx="5.5" ry="3.4" fill="#fffdf0"/>
+      <ellipse class="capullo" style="--d:2.64s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:2.64s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+    </g>
+  </g>
+</g>
+<g class="mata m1" data-razon="2" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:0.72s" d="M126 316 C 120 204 132 157 126 126"/>
+  <g transform="rotate(-24 126 222)"><path class="hoja" style="--d:1.43s" d="M126 222 C 160 206 184 213 190 225 C 168 238 138 234 126 222 Z" transform-origin="126 222"/></g>
+  <g class="brote" style="--d:0.72s;--sube:174px">
+    <g class="rebote">
+    <g class="cabeza" transform="translate(126 126) scale(0.82)">
       <circle class="halo" style="--d:2.16s" r="60" fill="url(#brilloFlor)"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:1.66s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(24.0)"><path class="lam" style="--d:1.70s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(48.0)"><path class="lam" style="--d:1.73s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(72.0)"><path class="lam" style="--d:1.77s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(96.0)"><path class="lam" style="--d:1.81s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(120.0)"><path class="lam" style="--d:1.84s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(144.0)"><path class="lam" style="--d:1.88s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(168.0)"><path class="lam" style="--d:1.91s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(192.0)"><path class="lam" style="--d:1.95s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(216.0)"><path class="lam" style="--d:1.99s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(240.0)"><path class="lam" style="--d:2.02s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(264.0)"><path class="lam" style="--d:2.06s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(288.0)"><path class="lam" style="--d:2.09s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(312.0)"><path class="lam" style="--d:2.13s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <g transform="rotate(336.0)"><path class="lam" style="--d:2.17s" d="M0 0 C -5.5 -14 -5 -34 0 -44 C 5 -34 5.5 -14 0 0 Z" fill="url(#gMargarita)"/></g>
-      <circle class="corazon" style="--d:2.16s" r="11" fill="url(#cAmbar)"/>
+      <circle class="chispa" r="46" fill="url(#gChispa)"/>
+      <circle class="zona" r="50" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:1.66s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(27.7)"><path class="lam" style="--d:1.70s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(55.4)"><path class="lam" style="--d:1.75s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(83.1)"><path class="lam" style="--d:1.79s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(110.8)"><path class="lam" style="--d:1.83s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(138.5)"><path class="lam" style="--d:1.87s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(166.2)"><path class="lam" style="--d:1.91s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(193.8)"><path class="lam" style="--d:1.96s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(221.5)"><path class="lam" style="--d:2.00s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(249.2)"><path class="lam" style="--d:2.04s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(276.9)"><path class="lam" style="--d:2.08s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(304.6)"><path class="lam" style="--d:2.12s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(332.3)"><path class="lam" style="--d:2.17s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
+      <g transform="rotate(18.0)"><path class="lam" style="--d:1.86s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(58.0)"><path class="lam" style="--d:1.90s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(98.0)"><path class="lam" style="--d:1.94s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(138.0)"><path class="lam" style="--d:1.98s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(178.0)"><path class="lam" style="--d:2.01s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(218.0)"><path class="lam" style="--d:2.05s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(258.0)"><path class="lam" style="--d:2.09s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(298.0)"><path class="lam" style="--d:2.13s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <g transform="rotate(338.0)"><path class="lam" style="--d:2.17s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
+      <circle class="corazon" style="--d:2.21s" r="15" fill="url(#cCafe)"/>
+      <circle class="semilla" style="--d:2.31s" cx="-0.3" cy="2.7" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.33s" cx="-5.1" cy="8.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.34s" cx="0.2" cy="-3.0" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.35s" cx="0.1" cy="2.9" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.36s" cx="8.2" cy="3.2" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.37s" cx="3.0" cy="6.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.39s" cx="-3.4" cy="1.2" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.40s" cx="-0.4" cy="-3.1" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.41s" cx="-1.9" cy="-2.3" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.42s" cx="-3.3" cy="1.8" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.43s" cx="-1.3" cy="10.2" r="1.5" fill="#63351a" opacity=".5"/>
+      <circle class="semilla" style="--d:2.45s" cx="1.5" cy="-4.3" r="1.5" fill="#63351a" opacity=".5"/>
       <ellipse class="capullo" style="--d:1.66s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
       <path class="capullo" style="--d:1.66s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
+    </g>
   </g>
 </g>
-<g class="mata m3">
-  <path class="tallo" pathLength="100" style="--d:1.06s" d="M276 304 C 270 198 282 154 276 124"/>
-  <g transform="rotate(24 276 214)"><path class="hoja" style="--d:1.77s" d="M276 214 C 242 198 218 205 212 217 C 234 230 264 226 276 214 Z" transform-origin="276 214"/></g>
-  <g class="brote" style="--d:1.06s;--sube:164px">
-    <g class="cabeza" transform="translate(276 124) scale(0.8)">
+<g class="mata m2 luminosa" data-razon="3" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:1.06s" d="M278 316 C 275 199 281 149 278 116"/>
+  <g transform="rotate(24 278 217)"><path class="hoja" style="--d:1.77s" d="M278 217 C 244 201 220 208 214 220 C 236 233 266 229 278 217 Z" transform-origin="278 217"/></g>
+  <g class="brote" style="--d:1.06s;--sube:184px">
+    <g class="rebote">
+    <g class="cabeza" transform="translate(278 116) scale(0.86)">
       <circle class="halo" style="--d:2.50s" r="60" fill="url(#brilloFlor)"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:2.00s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(45.0)"><path class="lam" style="--d:2.06s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(90.0)"><path class="lam" style="--d:2.11s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(135.0)"><path class="lam" style="--d:2.17s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(180.0)"><path class="lam" style="--d:2.22s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(225.0)"><path class="lam" style="--d:2.28s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(270.0)"><path class="lam" style="--d:2.33s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <g transform="rotate(315.0)"><path class="lam" style="--d:2.39s" d="M0 0 C -15 -12 -14 -33 0 -38 C 14 -33 15 -12 0 0 Z" fill="url(#gCosmos)"/></g>
-      <circle class="corazon" style="--d:2.42s" r="8" fill="url(#cCrema)"/>
+      <circle class="chispa" r="46" fill="url(#gChispa)"/>
+      <circle class="zona" r="50" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:2.00s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(60.0)"><path class="lam" style="--d:2.06s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(120.0)"><path class="lam" style="--d:2.12s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:2.18s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(240.0)"><path class="lam" style="--d:2.24s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(300.0)"><path class="lam" style="--d:2.30s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(30.0)"><path class="lam" style="--d:2.16s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:2.21s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(150.0)"><path class="lam" style="--d:2.26s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(210.0)"><path class="lam" style="--d:2.31s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:2.36s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(330.0)"><path class="lam" style="--d:2.41s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <circle class="corazon lampara" style="--d:2.50s" r="26" fill="url(#gLuz)"/>
+      <ellipse class="corazon" style="--d:2.56s" cy="-1" rx="11" ry="8" fill="url(#gNucleo)"/>
+      <ellipse class="corazon" style="--d:2.62s" cy="-3" rx="5.5" ry="3.4" fill="#fffdf0"/>
       <ellipse class="capullo" style="--d:2.00s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
       <path class="capullo" style="--d:2.00s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
-  </g>
-</g>
-<g class="mata m1">
-  <path class="tallo" pathLength="100" style="--d:0.30s" d="M200 304 C 194 180 206 127 200 92"/>
-  <g transform="rotate(24 200 200)"><path class="hoja" style="--d:1.01s" d="M200 200 C 166 184 142 191 136 203 C 158 216 188 212 200 200 Z" transform-origin="200 200"/></g>
-  <g class="brote" style="--d:0.30s;--sube:196px">
-    <g class="cabeza" transform="translate(200 92) scale(1.0)">
-      <circle class="halo" style="--d:1.74s" r="60" fill="url(#brilloFlor)"/>
-      <g transform="rotate(0.0)"><path class="lam" style="--d:1.24s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(27.7)"><path class="lam" style="--d:1.28s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(55.4)"><path class="lam" style="--d:1.33s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(83.1)"><path class="lam" style="--d:1.37s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(110.8)"><path class="lam" style="--d:1.41s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(138.5)"><path class="lam" style="--d:1.45s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(166.2)"><path class="lam" style="--d:1.49s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(193.8)"><path class="lam" style="--d:1.54s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(221.5)"><path class="lam" style="--d:1.58s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(249.2)"><path class="lam" style="--d:1.62s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(276.9)"><path class="lam" style="--d:1.66s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(304.6)"><path class="lam" style="--d:1.70s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(332.3)"><path class="lam" style="--d:1.75s" d="M0 0 C -10 -16 -9 -38 0 -52 C 9 -38 10 -16 0 0 Z" fill="url(#gGirasol)"/></g>
-      <g transform="rotate(18.0)"><path class="lam" style="--d:1.44s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(58.0)"><path class="lam" style="--d:1.48s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(98.0)"><path class="lam" style="--d:1.52s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(138.0)"><path class="lam" style="--d:1.56s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(178.0)"><path class="lam" style="--d:1.59s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(218.0)"><path class="lam" style="--d:1.63s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(258.0)"><path class="lam" style="--d:1.67s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(298.0)"><path class="lam" style="--d:1.71s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <g transform="rotate(338.0)"><path class="lam" style="--d:1.75s" d="M0 0 C -7 -11 -6 -25 0 -34 C 6 -25 7 -11 0 0 Z" fill="url(#gGirasolInt)"/></g>
-      <circle class="corazon" style="--d:1.79s" r="15" fill="url(#cCafe)"/>
-      <circle class="semilla" style="--d:1.89s" cx="-0.2" cy="8.4" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:1.91s" cx="-2.2" cy="-0.2" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:1.92s" cx="-2.7" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:1.93s" cx="3.5" cy="2.8" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:1.94s" cx="2.0" cy="0.9" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:1.95s" cx="-1.5" cy="-3.5" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:1.97s" cx="2.2" cy="-1.1" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:1.98s" cx="-5.7" cy="5.7" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:1.99s" cx="-6.0" cy="3.3" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.00s" cx="2.5" cy="7.3" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.01s" cx="-2.4" cy="4.0" r="1.5" fill="#63351a" opacity=".5"/>
-      <circle class="semilla" style="--d:2.02s" cx="5.5" cy="0.5" r="1.5" fill="#63351a" opacity=".5"/>
-      <ellipse class="capullo" style="--d:1.24s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
-      <path class="capullo" style="--d:1.24s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
     </g>
   </g>
 </g>
+<g class="mata m1 luminosa" data-razon="1" tabindex="-1" role="button">
+  <path class="tallo" pathLength="100" style="--d:0.30s" d="M200 316 C 194 183 206 126 200 88"/>
+  <g transform="rotate(24 200 205)"><path class="hoja" style="--d:1.01s" d="M200 205 C 166 189 142 196 136 208 C 158 221 188 217 200 205 Z" transform-origin="200 205"/></g>
+  <g class="brote" style="--d:0.30s;--sube:212px">
+    <g class="rebote">
+    <g class="cabeza" transform="translate(200 88) scale(1.0)">
+      <circle class="halo" style="--d:1.74s" r="60" fill="url(#brilloFlor)"/>
+      <circle class="chispa" r="46" fill="url(#gChispa)"/>
+      <circle class="zona" r="50" fill="transparent"/>
+      <g transform="rotate(0.0)"><path class="lam" style="--d:1.24s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(60.0)"><path class="lam" style="--d:1.30s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(120.0)"><path class="lam" style="--d:1.36s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(180.0)"><path class="lam" style="--d:1.42s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(240.0)"><path class="lam" style="--d:1.48s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(300.0)"><path class="lam" style="--d:1.54s" d="M0 0 C -21 -9 -24 -34 -9 -44 C -3 -48 3 -48 9 -44 C 24 -34 21 -9 0 0 Z" fill="url(#gCopa)"/></g>
+      <g transform="rotate(30.0)"><path class="lam" style="--d:1.40s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(90.0)"><path class="lam" style="--d:1.45s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(150.0)"><path class="lam" style="--d:1.50s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(210.0)"><path class="lam" style="--d:1.55s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(270.0)"><path class="lam" style="--d:1.60s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <g transform="rotate(330.0)"><path class="lam" style="--d:1.65s" d="M0 0 C -14 -7 -16 -25 0 -31 C 16 -25 14 -7 0 0 Z" fill="url(#gCopaInt)"/></g>
+      <circle class="corazon lampara" style="--d:1.74s" r="26" fill="url(#gLuz)"/>
+      <ellipse class="corazon" style="--d:1.80s" cy="-1" rx="11" ry="8" fill="url(#gNucleo)"/>
+      <ellipse class="corazon" style="--d:1.86s" cy="-3" rx="5.5" ry="3.4" fill="#fffdf0"/>
+      <ellipse class="capullo" style="--d:1.24s" cy="-8" rx="13" ry="19" fill="url(#gCapullo)"/>
+      <path class="capullo" style="--d:1.24s" d="M-12 0 C -7 -16 7 -16 12 0 C 5 8 -5 8 -12 0 Z" fill="#35603c"/>
+    </g>
+    </g>
+  </g>
+</g>
+  </svg>
+
+  <svg class="hierba" viewBox="0 0 400 104" aria-hidden="true">
+    <g class="hojaLarga">
+      <path d="M46 110 C 30 78 26 50 34 22" stroke="#4e9c46" stroke-width="3.6" fill="none" stroke-linecap="round" opacity=".8"/>
+      <path d="M62 110 C 62 80 70 54 84 34" stroke="#3f8c3d" stroke-width="3.2" fill="none" stroke-linecap="round" opacity=".72"/>
+      <path d="M338 110 C 350 80 356 52 350 26" stroke="#4e9c46" stroke-width="3.6" fill="none" stroke-linecap="round" opacity=".8"/>
+      <path d="M356 110 C 344 82 332 58 318 40" stroke="#3f8c3d" stroke-width="3.2" fill="none" stroke-linecap="round" opacity=".72"/>
+      <path d="M186 110 C 176 84 168 64 158 48" stroke="#47953f" stroke-width="2.8" fill="none" stroke-linecap="round" opacity=".55"/>
+      <path d="M262 110 C 272 86 278 66 288 50" stroke="#47953f" stroke-width="2.8" fill="none" stroke-linecap="round" opacity=".55"/>
+    </g>
   </svg>
 
   <svg class="suelo" viewBox="0 0 400 56" preserveAspectRatio="none" aria-hidden="true">
@@ -510,9 +681,11 @@ body{
 
   <div class="velo" aria-hidden="true"></div>
 
+  <div class="razon" id="razon" role="status" aria-live="polite"><span id="razonTexto"></span></div>
+
   <div class="contenido">
     <p class="fecha">21 de septiembre</p>
-    <p class="llamado" id="llamado">Aquí hay algo que todavía no se abre.</p>
+    <p class="llamado" id="llamado">Bajo esta tierra hay algo para ti.</p>
     <button class="boton" id="boton">Ábrelas</button>
 
     <div class="mensaje" id="mensaje" aria-live="polite">
@@ -521,6 +694,9 @@ body{
       <span class="firma" id="firma">con cariño</span>
     </div>
   </div>
+
+  <p class="pistaToca" id="pistaToca">tócalas <span class="contador" id="contador">0 / 9</span></p>
+  <p class="cierre" id="cierre"></p>
 </div>
 
 <script>
@@ -569,9 +745,115 @@ body{
     document.body.classList.add('abierto');
     boton.setAttribute('aria-hidden','true');
     boton.tabIndex = -1;
-    setTimeout(function(){ encender(20, 28); }, 900);
-    setTimeout(function(){ encender(14, 10); }, 2200);
+    setTimeout(function(){ encender(18, 28); }, 900);
+    setTimeout(function(){ encender(12, 10); }, 2200);
+    setTimeout(activarRazones, 4900);
   });
+
+  /* ---- las nueve razones ---- */
+  var RAZONES = [
+    'La forma tan dulce con la que siempre me trata.',
+    'Su personalidad cálida, y peculiar en el mejor de los sentidos.',
+    'Sus ojitos de amor con los que siempre me mira.',
+    'Sus ganas de mejorar por ella, por mí y por lo nuestro.',
+    'Me ayuda a crecer y a ser mejor persona.',
+    'Su belleza, que llega de aquí pasando por cada una de las estrellas que existen.',
+    'Hace que mi corazón se sienta en paz, y también que se agite.',
+    'Es la mujer que siempre soñé.',
+    'Con ella me proyecto de aquí al infinito. Quiero una vida.'
+  ];
+  for(var r=1;r<=9;r++){
+    var v = q.get('r'+r);
+    if(v) RAZONES[r-1] = v;
+  }
+  var CIERRE = q.get('cierre') || 'Nueve razones, y son solo las que caben en un jardín.';
+
+  var burbuja = document.getElementById('razon');
+  var burbujaTexto = document.getElementById('razonTexto');
+  var contador = document.getElementById('contador');
+  var cierre = document.getElementById('cierre');
+  var escenaEl = document.getElementById('escena');
+  var bloqueMensaje = document.getElementById('mensaje');
+  var vistas = {};
+  var temporizador = null;
+
+  function ubicar(mata){
+    var cabeza = mata.querySelector('.cabeza');
+    var c = cabeza.getBoundingClientRect();
+    var e = escenaEl.getBoundingClientRect();
+    burbuja.style.visibility = 'hidden';
+    burbuja.classList.add('visible');
+    var ancho = burbuja.offsetWidth, alto = burbuja.offsetHeight;
+    var x = c.left + c.width/2 - e.left - ancho/2;
+    x = Math.max(12, Math.min(e.width - ancho - 12, x));
+    var y = c.top - e.top - alto - 16;
+    if(y < 12) y = c.bottom - e.top + 16;
+    burbuja.style.left = x + 'px';
+    burbuja.style.top = y + 'px';
+    burbuja.style.visibility = 'visible';
+  }
+
+  function mostrar(mata){
+    var n = mata.getAttribute('data-razon');
+    burbujaTexto.textContent = RAZONES[parseInt(n,10)-1];
+    ubicar(mata);
+    mata.classList.add('brilla');
+    bloqueMensaje.style.setProperty('opacity','.14','important');
+    if(!vistas[n]){
+      vistas[n] = true;
+      var total = Object.keys(vistas).length;
+      contador.textContent = total + ' / 9';
+      if(total === 9){
+        setTimeout(function(){
+          cierre.textContent = CIERRE;
+          cierre.classList.add('visible');
+        }, 2600);
+      }
+    }
+    clearTimeout(temporizador);
+    temporizador = setTimeout(function(){
+      burbuja.classList.remove('visible');
+      mata.classList.remove('brilla');
+      bloqueMensaje.style.removeProperty('opacity');
+    }, 5200);
+  }
+
+  /* la flor mas cercana al toque, asi no hay zonas muertas en el celular */
+  function masCercana(px, py){
+    var matas = document.querySelectorAll('.mata[data-razon]');
+    var mejor = null, menor = Infinity;
+    Array.prototype.forEach.call(matas, function(m){
+      var c = m.querySelector('.cabeza').getBoundingClientRect();
+      var dx = (c.left + c.width/2) - px, dy = (c.top + c.height/2) - py;
+      var d = Math.sqrt(dx*dx + dy*dy);
+      if(d < menor){ menor = d; mejor = m; }
+    });
+    return menor < 150 ? mejor : null;
+  }
+
+  function activarRazones(){
+    document.body.classList.add('listo');
+    escenaEl.addEventListener('click', function(ev){
+      if(!document.body.classList.contains('listo')) return;
+      var m = masCercana(ev.clientX, ev.clientY);
+      if(m) mostrar(m);
+    });
+    /* recorrido con teclado */
+    var matas = document.querySelectorAll('.mata[data-razon]');
+    var orden = Array.prototype.slice.call(matas).sort(function(a,b){
+      return a.getAttribute('data-razon') - b.getAttribute('data-razon');
+    });
+    var foco = -1;
+    document.addEventListener('keydown', function(ev){
+      if(!document.body.classList.contains('listo')) return;
+      if(ev.key === 'ArrowRight' || ev.key === 'ArrowLeft' || ev.key === 'Enter' || ev.key === ' '){
+        ev.preventDefault();
+        if(ev.key === 'ArrowLeft') foco = (foco - 1 + orden.length) % orden.length;
+        else foco = (foco + 1) % orden.length;
+        mostrar(orden[foco]);
+      }
+    });
+  }
 })();
 </script>
 </body>
