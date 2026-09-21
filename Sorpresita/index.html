@@ -82,6 +82,12 @@ body{
 @keyframes parpadea{0%,100%{opacity:0}18%{opacity:.85}45%{opacity:.25}70%{opacity:.95}}
 
 /* ---------- jardin ---------- */
+.seto{
+  position:absolute;left:0;right:0;width:100%;
+  bottom:calc(min(124vh,126vw,790px) * 0.075);
+  height:calc(min(124vh,126vw,790px) * 0.13);
+  z-index:2;display:block;pointer-events:none;
+}
 .jardin{
   position:absolute;left:50%;bottom:0;transform:translateX(-50%);
   width:min(124vh,126vw,790px);
@@ -92,14 +98,21 @@ body{
   position:absolute;left:50%;bottom:0;
   transform:translateX(-50%);
   width:min(124vh,126vw,790px);
-  z-index:3;display:block;pointer-events:none;
+  z-index:2;display:block;pointer-events:none;
 }
 .hojaLarga{transform-box:fill-box;transform-origin:50% 100%;animation:brisa 9s ease-in-out infinite}
 .suelo{
   position:absolute;left:0;right:0;bottom:0;
   width:100%;
-  height:calc(min(124vh,126vw,790px) * 0.152);
+  height:calc(min(124vh,126vw,790px) * 0.118);
   z-index:2;display:block;
+}
+.borde{
+  position:absolute;left:0;right:0;
+  bottom:calc(min(124vh,126vw,790px) * 0.088);
+  height:46px;
+  background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22180%22%20height%3D%2246%22%20viewBox%3D%220%200%20180%2046%22%3E%3Cg%20fill%3D%22%231a1024%22%3E%3Cpath%20d%3D%22M8.9%2047%20C%207.6%2037.5%205.5%2030.5%204.0%2025.8%20C%208.9%2031.3%2011.0%2038.1%2012.2%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M16.9%2047%20C%2019.4%2036.9%2024.0%2029.5%2027.0%2024.6%20C%2026.4%2030.4%2021.9%2037.6%2019.3%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M30.3%2047%20C%2029.6%2041.6%2028.3%2037.6%2027.5%2034.9%20C%2031.3%2038.1%2032.6%2041.9%2033.3%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M28.0%2047%20C%2026.5%2033.7%2023.8%2024.0%2022.1%2017.5%20C%2026.4%2025.2%2029.0%2034.6%2030.5%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M27.6%2047%20C%2028.9%2031.7%2031.3%2020.5%2032.8%2013.1%20C%2034.7%2021.9%2032.3%2032.7%2031.0%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M35.6%2047%20C%2034.7%2041.3%2033.0%2037.1%2031.9%2034.3%20C%2035.9%2037.6%2037.6%2041.6%2038.5%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M60.1%2047%20C%2057.5%2032.3%2052.7%2021.5%2049.6%2014.4%20C%2056.0%2022.9%2060.7%2033.3%2063.3%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M52.2%2047%20C%2049.6%2033.6%2044.8%2023.8%2041.7%2017.2%20C%2047.3%2025.0%2052.0%2034.5%2054.7%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M83.8%2047%20C%2082.1%2036.8%2079.0%2029.3%2076.9%2024.3%20C%2081.2%2030.2%2084.3%2037.5%2086.1%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M91.1%2047%20C%2092.7%2039.3%2095.4%2033.6%2097.3%2029.8%20C%2097.9%2034.3%2095.2%2039.8%2093.6%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M92.6%2047%20C%2094.0%2032.7%2096.5%2022.3%2098.2%2015.3%20C%2099.8%2023.6%2097.2%2033.7%2095.8%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M87.1%2047%20C%2085.1%2034.4%2081.3%2025.1%2078.8%2018.9%20C%2084.2%2026.2%2087.9%2035.2%2090.0%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M107.8%2047%20C%20109.9%2032.5%20113.8%2021.8%20116.3%2014.7%20C%20116.6%2023.1%20112.7%2033.4%20110.6%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M110.1%2047%20C%20109.5%2037.1%20108.4%2029.9%20107.6%2025.1%20C%20111.9%2030.8%20113.1%2037.8%20113.7%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M110.4%2047%20C%20108.2%2041.3%20104.1%2037.2%20101.5%2034.4%20C%20107.4%2037.7%20111.4%2041.7%20113.6%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M131.0%2047%20C%20131.6%2040.9%20132.6%2036.4%20133.2%2033.5%20C%20135.5%2037.0%20134.5%2041.3%20134.0%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M139.0%2047%20C%20141.6%2038.4%20146.4%2032.2%20149.6%2028.0%20C%20148.8%2032.9%20144.0%2039.0%20141.4%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M140.4%2047%20C%20142.2%2035.4%20145.5%2026.9%20147.7%2021.2%20C%20148.2%2027.9%20144.9%2036.2%20143.0%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M172.0%2047%20C%20170.2%2039.2%20166.9%2033.4%20164.7%2029.6%20C%20170.4%2034.1%20173.7%2039.7%20175.5%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M161.4%2047%20C%20159.6%2037.4%20156.2%2030.3%20154.0%2025.6%20C%20158.4%2031.1%20161.8%2038.0%20163.7%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M166.3%2047%20C%20164.9%2035.1%20162.3%2026.3%20160.6%2020.5%20C%20165.8%2027.4%20168.3%2035.9%20169.8%2047%20Z%22%2F%3E%3Cpath%20d%3D%22M161.3%2047%20C%20158.6%2034.3%20153.8%2024.9%20150.6%2018.7%20C%20156.5%2026.0%20161.3%2035.1%20164.0%2047%20Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") repeat-x left bottom;
+  z-index:3;pointer-events:none;
 }
 .velo{
   position:absolute;left:0;right:0;top:0;height:58%;
@@ -228,10 +241,15 @@ body{
   text-shadow:0 1px 14px rgba(30,10,40,.55);
 }
 .invita{
-  display:block;margin-top:22px;max-width:26ch;
+  display:inline-block;margin-top:22px;max-width:26ch;
+  padding:10px 18px 12px;border-radius:18px;
+  background:rgba(28,12,38,.66);
+  border:1px solid rgba(255,214,140,.2);
+  box-shadow:0 10px 28px rgba(18,6,26,.35);
+  backdrop-filter:blur(5px);
   font-family:var(--ui);font-weight:300;font-size:.92rem;line-height:1.6;
-  letter-spacing:.02em;color:#ffe6c9;
-  text-shadow:0 1px 12px rgba(30,12,40,.7);
+  letter-spacing:.02em;color:#fff2e0;
+  text-shadow:0 1px 10px rgba(18,6,26,.9);
   opacity:0;transform:translateY(6px);
   transition:opacity 1.6s ease, transform 1.6s ease;
 }
@@ -305,6 +323,13 @@ body{
   <div class="luces" id="luces" aria-hidden="true"></div>
   <div class="polen" id="polen" aria-hidden="true"></div>
 
+  <svg class="seto" viewBox="0 0 400 44" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 44 L0 26 C 22 14 42 22 60 16 C 82 9 98 20 120 15 C 142 10 158 21 182 17
+             C 206 13 222 22 246 16 C 268 11 286 21 308 15 C 330 9 350 20 374 15 C 386 13 394 18 400 22
+             L400 44 Z" fill="#17443f" opacity=".92"/>
+    <path d="M0 44 L0 34 C 26 26 48 33 74 28 C 100 23 118 32 146 29 C 176 26 196 34 226 30
+             C 254 26 276 34 304 29 C 332 24 356 33 400 29 L400 44 Z" fill="#123a36" opacity=".95"/>
+  </svg>
   <svg class="jardin" viewBox="0 0 400 300" aria-hidden="true">
     <defs>
       <linearGradient id="gGirasol" x1="0" y1="1" x2="0" y2="0">
@@ -839,10 +864,12 @@ body{
     </g>
   </svg>
 
-  <svg class="suelo" viewBox="0 0 400 56" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M0 14 C 60 -2 96 10 140 3 C 190 -6 214 10 262 5 C 312 0 350 13 400 7 L400 56 L0 56 Z"
+  <svg class="suelo" viewBox="0 0 400 46" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 13 C 54 2 92 14 140 6 C 188 -2 214 13 262 7 C 310 1 352 15 400 8 L400 46 L0 46 Z"
           fill="#1a1024"/>
   </svg>
+
+  <div class="borde" aria-hidden="true"></div>
 
   <div class="velo" aria-hidden="true"></div>
 
@@ -857,7 +884,7 @@ body{
       <h1 id="titulo">Flores amarillas para mi Corazoncito</h1>
       <p id="texto">Hoy empieza la primavera y la tradición dice que este es el día de regalárselas a quien uno quiere. Estas no se marchitan.</p>
       <span class="invita" id="invita">
-        <span id="invitaTexto">Toca cada flor para tener una razón por la cual la amo</span>
+        <span id="invitaTexto">Toque cada flor para tener una razón por la cual la amo</span>
         <span class="contador" id="contador">0 / 9</span>
       </span>
     </div>
